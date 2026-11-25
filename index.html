@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-<title>Pet Pals Defense 2: 3D War · 2.5D 测试版</title>
+<title>Pet Pals Defense 2: 3D War · 萌宠防线 2：3D战争</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
   html, body {
@@ -17,25 +17,27 @@
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
     pointer-events: none; z-index: 10;
   }
-  .pill-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .pill-group { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
   .pill {
     pointer-events: auto;
     background: #fffaf0; color: #24183a;
     border: 3px solid #24183a; border-radius: 999px;
-    padding: 5px 13px; font-weight: 900; font-size: 14px; line-height: 1.2;
+    padding: 5px 13px; font-weight: 900; font-size: 13.5px; line-height: 1.2;
     box-shadow: 2px 3px 0 #24183a;
-    display: inline-flex; align-items: center; gap: 6px;
+    display: inline-flex; align-items: center; gap: 5px;
+    white-space: nowrap;
   }
+  .pill-title .zh-sub { opacity: 0.85; font-size: 12.5px; }
   .pill-btn {
     cursor: pointer; background: #ffe478; transition: transform 0.08s ease;
   }
   .pill-btn:active { transform: translate(1px, 2px); box-shadow: 1px 1px 0 #24183a; }
   .pill-btn.active { background: #ff9c54; }
   .hint {
-    position: fixed; bottom: max(12px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
-    background: rgba(255, 250, 240, 0.94); color: #24183a;
+    position: fixed; bottom: max(10px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+    background: rgba(255, 250, 240, 0.95); color: #24183a;
     border: 2.5px solid #24183a; border-radius: 999px;
-    padding: 5px 15px; font-weight: 800; font-size: 13px; white-space: nowrap;
+    padding: 5px 14px; font-weight: 800; font-size: 13px; white-space: nowrap;
     box-shadow: 2px 3px 0 #24183a; pointer-events: none; z-index: 10;
   }
   .overlay {
@@ -47,7 +49,7 @@
     background: #fffaf0; color: #24183a;
     border: 4px solid #24183a; border-radius: 26px;
     box-shadow: 6px 7px 0 #24183a;
-    padding: 24px 28px; max-width: 360px; width: 100%; text-align: center;
+    padding: 24px 28px; max-width: 370px; width: 100%; text-align: center;
   }
   .card h1 { margin: 0 0 8px; font-size: 27px; font-weight: 900; }
   .card p { margin: 0 0 18px; font-size: 15px; font-weight: 700; color: #4c3b64; line-height: 1.45; }
@@ -59,9 +61,13 @@
     box-shadow: 3px 4px 0 #24183a; transition: transform 0.08s ease;
   }
   .big-btn:active { transform: translate(2px, 2px); box-shadow: 1px 2px 0 #24183a; }
-  @media (max-width: 520px) {
-    .pill { font-size: 12px; padding: 4px 9px; border-width: 2.5px; }
-    .hint { font-size: 12px; padding: 4px 11px; }
+  @media (max-width: 680px) {
+    .hud { left: 8px; right: 8px; gap: 5px; align-items: flex-start; }
+    .pill-group { gap: 5px; }
+    .pill-group.right { flex-wrap: nowrap; }
+    .pill { font-size: 11px; padding: 4px 8px; border-width: 2.5px; box-shadow: 1.5px 2px 0 #24183a; }
+    .pill-title .zh-sub { display: none; }
+    .hint { font-size: 11.5px; padding: 4px 11px; }
   }
 </style>
 </head>
@@ -70,10 +76,10 @@
 
 <div class="hud">
   <div class="pill-group">
-    <div class="pill">🌶️ 椒椒鼠 · 2.5D</div>
+    <div class="pill pill-title">🌶️ Pet Pals Defense 2: 3D War <span class="zh-sub">· 萌宠防线 2：3D战争</span></div>
     <div class="pill" id="hud-wave">Wave 1 / 3</div>
   </div>
-  <div class="pill-group">
+  <div class="pill-group right">
     <div class="pill" id="hud-life">❤️ 1</div>
     <button class="pill pill-btn" id="btn-speed" type="button">1×</button>
     <button class="pill pill-btn" id="btn-reset" type="button">↺</button>
@@ -97,9 +103,8 @@
   const OL = "#24183a";
   const TAU = Math.PI * 2;
   const COLS = 6, ROWS = 5;
-  const PERSP_K = 0.048; // True 2.5D perspective foreshortening factor
+  const PERSP_K = 0.048;
 
-  // Winding lane from Burrow (0,1) to Cozy Nest (5,3)
   const PATH = [
     [0, 1], [0, 2], [1, 2], [2, 2], [2, 1],
     [3, 1], [4, 1], [4, 2], [4, 3], [5, 3]
@@ -107,38 +112,43 @@
   const PATH_SET = new Set(PATH.map(([x, y]) => x + "," + y));
   const DEFAULT_PET_TILE = { x: 3, y: 2 };
 
-  // Scenic outer-edge corner tiles reserved for 2.5D crayon trees/rocks (non-blocking)
+  // Rich 2.5D perimeter props (trees, bushes, rocks, wooden fences, signpost)
   const SCENIC_PROPS = [
-    { kind: "tree", gx: -0.35, gy: 0.25, scale: 1.05, seed: 11 },
-    { kind: "tree", gx: 5.75, gy: -0.25, scale: 0.95, seed: 22 },
-    { kind: "bush", gx: 1.5, gy: -0.32, scale: 0.85, seed: 33 },
-    { kind: "rock", gx: -0.3, gy: 3.4, scale: 0.8, seed: 44 },
-    { kind: "tree", gx: 6.22, gy: 2.2, scale: 0.92, seed: 55 },
-    { kind: "bush", gx: 2.6, gy: 5.28, scale: 0.8, seed: 66 },
-    { kind: "sign", gx: 0.85, gy: 2.85, scale: 0.9, seed: 77 }
+    { kind: "tree",  gx: -0.22, gy: 0.18, scale: 1.05, seed: 11 },
+    { kind: "tree",  gx: 5.75,  gy: -0.22, scale: 0.96, seed: 22 },
+    { kind: "bush",  gx: 1.55,  gy: -0.26, scale: 0.92, seed: 33 },
+    { kind: "bush",  gx: 3.4,   gy: -0.26, scale: 0.85, seed: 38 },
+    { kind: "rock",  gx: -0.25, gy: 3.35, scale: 0.88, seed: 44 },
+    { kind: "tree",  gx: 6.18,  gy: 2.15, scale: 0.95, seed: 55 },
+    { kind: "bush",  gx: 2.5,   gy: 5.22, scale: 0.88, seed: 66 },
+    { kind: "rock",  gx: 5.2,   gy: 5.22, scale: 0.78, seed: 69 },
+    { kind: "sign",  gx: 0.92,  gy: 2.92, scale: 0.95, seed: 77 },
+    { kind: "fence", gx0: 0.1, gy0: 5.12, gx1: 2.0, gy1: 5.12, seed: 81 },
+    { kind: "fence", gx0: 3.2, gy0: 5.12, gx1: 4.8, gy1: 5.12, seed: 82 },
+    { kind: "fence", gx0: 6.12, gy0: 3.2, gx1: 6.12, gy1: 4.85, seed: 83 }
   ];
 
   const WAVES = [
     [
-      { kind: "z1", delay: 0.35 },
-      { kind: "z1", delay: 1.45 },
-      { kind: "z1", delay: 1.35 },
-      { kind: "z1", delay: 1.3 }
-    ],
-    [
-      { kind: "z1", delay: 1.6 },
-      { kind: "z2", delay: 1.4 },
-      { kind: "z1", delay: 1.25 },
-      { kind: "z2", delay: 1.4 },
+      { kind: "z1", delay: 0.28 },
+      { kind: "z1", delay: 1.4 },
+      { kind: "z1", delay: 1.3 },
       { kind: "z1", delay: 1.25 }
     ],
     [
-      { kind: "z2", delay: 1.6 },
+      { kind: "z1", delay: 1.55 },
+      { kind: "z2", delay: 1.35 },
+      { kind: "z1", delay: 1.25 },
+      { kind: "z2", delay: 1.35 },
+      { kind: "z1", delay: 1.2 }
+    ],
+    [
+      { kind: "z2", delay: 1.55 },
       { kind: "z1", delay: 1.15 },
-      { kind: "z3", delay: 1.45 },
-      { kind: "z2", delay: 1.25 },
       { kind: "z3", delay: 1.4 },
-      { kind: "z3", delay: 1.5, boss: true }
+      { kind: "z2", delay: 1.25 },
+      { kind: "z3", delay: 1.35 },
+      { kind: "z3", delay: 1.45, boss: true }
     ]
   ];
 
@@ -206,7 +216,7 @@
     const pat = ensureGrain(c);
     if (!pat) return;
     c.save();
-    c.globalAlpha = alpha == null ? 0.65 : alpha;
+    c.globalAlpha = alpha == null ? 0.68 : alpha;
     c.fillStyle = pat;
     c.fill();
     c.restore();
@@ -275,13 +285,12 @@
         c.restore();
       }
       if (o.hi) {
-        // Warm sunlit rim highlight along top-left edge
         c.save();
         c.clip();
         c.strokeStyle = o.hi;
         c.lineWidth = o.hiW || 4;
         c.lineCap = "round";
-        c.globalAlpha = o.hiAlpha ?? 0.45;
+        c.globalAlpha = o.hiAlpha ?? 0.48;
         c.beginPath();
         c.moveTo(ptsOut[0][0], ptsOut[0][1]);
         for (let i = 1; i < Math.min(ptsOut.length, 4); i++) c.lineTo(ptsOut[i][0], ptsOut[i][1]);
@@ -297,7 +306,7 @@
       c.lineWidth = lw;
       buildJitterPath(c, pts, seed, amp, subdiv, true);
       c.stroke();
-      c.globalAlpha *= 0.6;
+      c.globalAlpha *= 0.58;
       c.lineWidth = lw * 0.52;
       buildJitterPath(c, pts, seed + 37, amp * 1.15, subdiv, true);
       c.stroke();
@@ -331,11 +340,11 @@
     crayonPoly(c, pts, fill, seed, { ...o, subdiv: 1 });
   }
 
-  /* ================= 2.5D Perspective Projection ================= */
+  /* ================= 2.5D Perspective Camera (Fills Frame!) ================= */
   const canvas = document.getElementById("c");
   const ctx = canvas.getContext("2d");
   let W = 1280, H = 720, DPR = 1;
-  let cam = { ox: 640, oy: 360, tw: 80, th: 40, zs: 74, slab: 30, portrait: false };
+  let cam = { ox: 640, oy: 360, tw: 90, th: 36, zs: 84, slab: 40, margin: 0.45, portrait: false };
   let bgCache = null;
 
   function updateLayout() {
@@ -346,29 +355,26 @@
     canvas.height = Math.round(H * DPR);
 
     const portrait = W < H;
-    const tilt = portrait ? 0.60 : 0.45;
-    const spanX = COLS + ROWS; // 11
-    const maxTwByW = (W * (portrait ? 0.84 : 0.72)) / (spanX * 1.15);
-    const maxTwByH = (H * (portrait ? 0.56 : 0.64)) / (spanX * tilt * 1.15 + 2.3);
-    const tw = Math.max(22, Math.min(maxTwByW, maxTwByH));
+    const margin = portrait ? 0.36 : 0.42;
+    const tilt = portrait ? 0.62 : 0.38;
+    // Total horizontal span across island corners is ~ (COLS + ROWS + 2 * margin) * tw * ~1.03
+    const spanU = COLS + ROWS + margin * 2;
+    const maxTwByW = (W * (portrait ? 0.96 : 0.85)) / (spanU * 1.02);
+    const maxTwByH = (H * (portrait ? 0.68 : 0.72)) / (spanU * tilt * 1.12 + 1.9);
+    const tw = Math.max(24, Math.min(maxTwByW, maxTwByH));
     const th = tw * tilt;
+
     cam = {
       ox: W * 0.5,
-      oy: H * (portrait ? 0.54 : 0.55),
+      oy: H * (portrait ? 0.52 : 0.47),
       tw,
       th,
-      zs: tw * (portrait ? 1.08 : 0.98),
-      slab: Math.max(18, tw * 0.46),
+      zs: tw * (portrait ? 1.18 : 0.98),
+      slab: Math.max(22, tw * 0.52),
+      margin,
       portrait
     };
     bgCache = null;
-  }
-
-  function perspScale(gx, gy) {
-    const cx = gx - COLS * 0.5;
-    const cy = gy - ROWS * 0.5;
-    const v = cx + cy;
-    return 1 / (1 - v * PERSP_K);
   }
 
   function proj(gx, gy, gz = 0) {
@@ -405,63 +411,63 @@
     ];
   }
 
-  /* ================= Sunlit Storybook Horizon & 2.5D Diorama Base ================= */
+  /* ================= Sunlit Storybook World & Rich 2.5D Diorama ================= */
   function drawBackdropAndDiorama(c) {
-    // 1. Warm sunlit crayon sky -> meadow cream gradient (no dark backgrounds!)
+    // 1. Warm sunlit sky -> soft meadow cream
     const grad = c.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, "#fdf6de");
-    grad.addColorStop(0.45, "#f8eed2");
-    grad.addColorStop(1, "#efe3c1");
+    grad.addColorStop(0, "#fdf6dc");
+    grad.addColorStop(0.42, "#f7eccb");
+    grad.addColorStop(1, "#e8f0cf");
     c.fillStyle = grad;
     c.fillRect(0, 0, W, H);
     applyGrain(c, 0.28);
 
-    // Warm diagonal sunlight beams from top-left (subtle flat wax bands, not blurred)
+    // Warm diagonal sunbeams
     c.save();
-    c.fillStyle = "rgba(255, 253, 240, 0.42)";
+    c.fillStyle = "rgba(255, 253, 242, 0.45)";
     for (let i = 0; i < 3; i++) {
-      const bx = W * (0.04 + i * 0.22);
+      const bx = W * (0.02 + i * 0.24);
       c.beginPath();
       c.moveTo(bx, 0);
-      c.lineTo(bx + W * 0.12, 0);
-      c.lineTo(bx + W * 0.36, H);
-      c.lineTo(bx + W * 0.16, H);
+      c.lineTo(bx + W * 0.13, 0);
+      c.lineTo(bx + W * 0.38, H);
+      c.lineTo(bx + W * 0.18, H);
       c.closePath();
       c.fill();
     }
     c.restore();
 
-    // Distant rolling crayon hills behind the floating diorama
-    const hillY = cam.oy - cam.th * (cam.portrait ? 1.8 : 3.2);
+    // Distant rolling crayon hills behind the diorama
+    const hillY = cam.oy - cam.th * (cam.portrait ? 2.4 : 2.6);
     c.save();
     const hillPts1 = [[0, H], [0, hillY + 26]];
     for (let x = 0; x <= W + 60; x += 60) {
-      hillPts1.push([x, hillY + Math.sin(x * 0.0055 + 0.7) * 26 + 18]);
+      hillPts1.push([x, hillY + Math.sin(x * 0.0055 + 0.7) * 24 + 18]);
     }
-    hillPts1.push([W, H]);
+    hillPts1.push([W + 60, H]);
     c.beginPath();
     hillPts1.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y));
     c.closePath();
-    c.fillStyle = "rgba(182, 217, 134, 0.38)";
+    c.fillStyle = "rgba(182, 220, 134, 0.45)";
     c.fill();
     applyGrain(c, 0.25);
 
-    const hillPts2 = [[0, H], [0, hillY + 54]];
+    const hillPts2 = [[0, H], [0, hillY + 58]];
     for (let x = 0; x <= W + 50; x += 50) {
-      hillPts2.push([x, hillY + 46 + Math.cos(x * 0.007 - 0.5) * 20]);
+      hillPts2.push([x, hillY + 48 + Math.cos(x * 0.007 - 0.5) * 18]);
     }
-    hillPts2.push([W, H]);
+    hillPts2.push([W + 50, H]);
     c.beginPath();
     hillPts2.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y));
     c.closePath();
-    c.fillStyle = "rgba(155, 200, 108, 0.30)";
+    c.fillStyle = "rgba(154, 202, 106, 0.34)";
     c.fill();
     c.restore();
 
-    // Cute hand-drawn crayon sun in upper-left sky
-    const sunX = W * (cam.portrait ? 0.16 : 0.12);
-    const sunY = H * (cam.portrait ? 0.15 : 0.18);
-    const sunR = Math.min(W, H) * 0.046;
+    // Hand-drawn crayon sun
+    const sunX = W * (cam.portrait ? 0.15 : 0.09);
+    const sunY = H * (cam.portrait ? 0.14 : 0.19);
+    const sunR = Math.min(W, H) * 0.045;
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * TAU;
       crayonStroke(c, [
@@ -471,8 +477,10 @@
     }
     crayonEllipse(c, sunX, sunY, sunR, sunR, "#ffe564", 20, { lw: 2.8, amp: 1.4, grain: 0.5 });
 
-    // 2. Outer Scenic Island Margin (-0.65 .. COLS+0.65, -0.6 .. ROWS+0.6)
-    const M = 0.55;
+
+
+    // 2. Floating 2.5D Island Base
+    const M = cam.margin;
     const iT = proj(-M, -M, 0);
     const iR = proj(COLS + M, -M, 0);
     const iB = proj(COLS + M, ROWS + M, 0);
@@ -483,42 +491,42 @@
 
     // Ground drop shadow under floating island
     c.save();
-    c.fillStyle = "rgba(62, 42, 34, 0.18)";
+    c.fillStyle = "rgba(62, 42, 34, 0.20)";
     buildJitterPath(c, [
       [iT[0] + 14, iT[1] + sB + 22],
       [iR[0] + 22, iR[1] + sR + 24],
-      [iB[0] + 18, iB[1] + sB + 28],
+      [iB[0] + 16, iB[1] + sB + 30],
       [iL[0] + 4, iL[1] + sL + 22]
     ], 510, 2.5, 3, true);
     c.fill();
     c.restore();
 
-    // Extruded soil & rock cliff walls (2 layers: rocky bottom + topsoil + overhanging turf lip)
-    const cliffL = [iL, iB, [iB[0] - 8 * iB[2], iB[1] + sB * 1.35], [iL[0] + 8 * iL[2], iL[1] + sL * 1.35]];
-    crayonPoly(c, cliffL, "#9f6f46", 111, {
-      amp: 2.0, lw: 3.2, grain: 0.78, hatch: "#6b4324", hatchStep: 11, hatchAlpha: 0.28
+    // Two-tone extruded earth & bedrock cliffs
+    const cliffL = [iL, iB, [iB[0] - 8 * iB[2], iB[1] + sB * 1.38], [iL[0] + 8 * iL[2], iL[1] + sL * 1.38]];
+    crayonPoly(c, cliffL, "#a67449", 111, {
+      amp: 2.0, lw: 3.2, grain: 0.8, hatch: "#6b4324", hatchStep: 11, hatchAlpha: 0.28
     });
-    const cliffR = [iB, iR, [iR[0] - 8 * iR[2], iR[1] + sR * 1.35], [iB[0] - 8 * iB[2], iB[1] + sB * 1.35]];
-    crayonPoly(c, cliffR, "#7d5230", 112, {
-      amp: 2.0, lw: 3.2, grain: 0.78, hatch: "#4c2d16", hatchStep: 11, hatchAlpha: 0.32
+    const cliffR = [iB, iR, [iR[0] - 8 * iR[2], iR[1] + sR * 1.38], [iB[0] - 8 * iB[2], iB[1] + sB * 1.38]];
+    crayonPoly(c, cliffR, "#805330", 112, {
+      amp: 2.0, lw: 3.2, grain: 0.8, hatch: "#4c2d16", hatchStep: 11, hatchAlpha: 0.32
     });
 
-    // Embedded cliff stones & trailing roots
-    for (let i = 0; i < 7; i++) {
-      const t = (i + 0.5) / 7;
+    // Cliff rocks, strata cracks & hanging crayon grass roots
+    for (let i = 0; i < 8; i++) {
+      const t = (i + 0.45) / 8;
       const px = lerp(iL[0], iB[0], t);
-      const py = lerp(iL[1], iB[1], t) + lerp(sL, sB, t) * (0.45 + hash(i, 71) * 0.42);
-      crayonEllipse(c, px, py, cam.tw * 0.1, cam.tw * 0.06, "#c89b6e", 210 + i, { lw: 2, amp: 0.9 });
+      const py = lerp(iL[1], iB[1], t) + lerp(sL, sB, t) * (0.48 + hash(i, 71) * 0.44);
+      crayonEllipse(c, px, py, cam.tw * 0.11, cam.tw * 0.065, i % 2 ? "#c89b6e" : "#8b5d38", 210 + i, { lw: 2.0, amp: 0.9 });
     }
-    for (let i = 0; i < 6; i++) {
-      const t = (i + 0.5) / 6;
+    for (let i = 0; i < 7; i++) {
+      const t = (i + 0.45) / 7;
       const px = lerp(iB[0], iR[0], t);
-      const py = lerp(iB[1], iR[1], t) + lerp(sB, sR, t) * (0.45 + hash(i, 83) * 0.42);
-      crayonEllipse(c, px, py, cam.tw * 0.09, cam.tw * 0.055, "#9c6d44", 230 + i, { lw: 2, amp: 0.9 });
+      const py = lerp(iB[1], iR[1], t) + lerp(sB, sR, t) * (0.48 + hash(i, 83) * 0.44);
+      crayonEllipse(c, px, py, cam.tw * 0.095, cam.tw * 0.055, i % 2 ? "#9c6d44" : "#6b4324", 230 + i, { lw: 2.0, amp: 0.9 });
     }
 
-    // Overhanging bright green turf lip along island rim
-    const lipScale = 0.36;
+    // Overhanging bright turf lip
+    const lipScale = 0.35;
     crayonPoly(c, [iL, iB, [iB[0], iB[1] + sB * lipScale], [iL[0], iL[1] + sL * lipScale]], "#74c94c", 113, {
       amp: 2.2, lw: 2.8, grain: 0.65
     });
@@ -526,12 +534,12 @@
       amp: 2.2, lw: 2.8, grain: 0.65
     });
 
-    // Scenic island grassy outer shelf
+    // Outer island grassy deck
     crayonPoly(c, [iT, iR, iB, iL], "#7fcf55", 115, {
       amp: 1.8, lw: 3.2, grain: 0.72, hi: "#c4f58f", hiW: 5, hiAlpha: 0.4
     });
 
-    // 3. Playable 6x5 Grid Tiles (back-to-front)
+    // 3. Playable 6x5 Tiles (richer grass + sunken flagstone dirt path)
     for (let d = 0; d <= COLS + ROWS - 2; d++) {
       for (let tx = 0; tx < COLS; tx++) {
         const ty = d - tx;
@@ -539,14 +547,13 @@
         const isPath = PATH_SET.has(tx + "," + ty);
         const corners = tileCorners(tx, ty, 0, 0);
         if (isPath) {
-          // Sunlit sandy path with carved depth border
           crayonPoly(c, corners, "#edd49f", 300 + tx * 11 + ty, {
             amp: 1.2, lw: 2.0, ol: "rgba(116, 78, 42, 0.65)", grain: 0.78
           });
-          // Top-left recessed bevel shadow for sunken path depth
+          // Carved sunken path bevel shadow
           c.save();
-          c.strokeStyle = "rgba(128, 86, 42, 0.42)";
-          c.lineWidth = Math.max(3, cam.tw * 0.075 * corners[0][2]);
+          c.strokeStyle = "rgba(128, 86, 42, 0.44)";
+          c.lineWidth = Math.max(3, cam.tw * 0.08 * corners[0][2]);
           c.lineCap = "round";
           c.beginPath();
           c.moveTo(corners[3][0], corners[3][1]);
@@ -555,25 +562,25 @@
           c.stroke();
           c.restore();
 
-          // Crayon stepping stones on path
-          for (let k = 0; k < 2; k++) {
-            const gx = tx + 0.25 + hash(tx * 7 + k, ty * 13) * 0.5;
-            const gy = ty + 0.25 + hash(tx * 17, ty * 5 + k) * 0.5;
+          // Warm crayon flagstones / pebbles
+          for (let k = 0; k < 3; k++) {
+            const gx = tx + 0.20 + hash(tx * 7 + k, ty * 13) * 0.60;
+            const gy = ty + 0.20 + hash(tx * 17, ty * 5 + k) * 0.60;
             const [px, py, pp] = proj(gx, gy, 0);
-            crayonEllipse(c, px, py, cam.tw * 0.085 * pp, cam.th * 0.085 * pp, k ? "#d7b67f" : "#f7e5be", 400 + tx * 9 + ty + k, { lw: 1.6, amp: 0.7 });
+            crayonEllipse(c, px, py, cam.tw * (0.07 + k * 0.018) * pp, cam.th * (0.07 + k * 0.015) * pp,
+              k === 0 ? "#d7b67f" : (k === 1 ? "#f7e5be" : "#e3c48e"),
+              400 + tx * 9 + ty + k, { lw: 1.6, amp: 0.7 });
           }
         } else {
-          // Checkered sunlit crayon grass tile
           const even = (tx + ty) % 2 === 0;
-          crayonPoly(c, corners, even ? "#9ee067" : "#8dd458", 500 + tx * 13 + ty, {
-            amp: 1.1, lw: 1.7, ol: "rgba(52, 98, 34, 0.48)", grain: 0.72,
-            hi: even ? "#cdf694" : "#b8ec82", hiW: 2.5, hiAlpha: 0.4
+          crayonPoly(c, corners, even ? "#a1e269" : "#90d658", 500 + tx * 13 + ty, {
+            amp: 1.1, lw: 1.7, ol: "rgba(52, 98, 34, 0.48)", grain: 0.74,
+            hi: even ? "#d0f898" : "#bcefa6", hiW: 2.6, hiAlpha: 0.4
           });
-          // Subtle dashed crayon placement marker
           const inner = tileCorners(tx, ty, 0.14, 0);
           c.save();
           c.setLineDash([5, 5]);
-          c.strokeStyle = "rgba(255, 255, 240, 0.62)";
+          c.strokeStyle = "rgba(255, 255, 240, 0.65)";
           c.lineWidth = 1.6;
           c.beginPath();
           c.moveTo(inner[0][0], inner[0][1]);
@@ -584,20 +591,19 @@
           c.stroke();
           c.restore();
 
-          // Cute flower / grass tuft on select tiles
           const rnd = hash(tx + 5, ty + 11);
-          if (rnd > 0.6) {
-            const [gx, gy, pp] = proj(tx + 0.22, ty + 0.78, 0);
+          if (rnd > 0.45) {
+            const [gx, gy, pp] = proj(tx + 0.20 + rnd * 0.12, ty + 0.78, 0);
             c.save();
-            c.strokeStyle = "#488f2c";
-            c.lineWidth = 2.1;
+            c.strokeStyle = "#458d2a";
+            c.lineWidth = 2.2;
             c.lineCap = "round";
             c.beginPath();
-            c.moveTo(gx, gy); c.lineTo(gx - 3 * pp, gy - 7 * pp);
-            c.moveTo(gx + 2 * pp, gy); c.lineTo(gx + 4 * pp, gy - 8 * pp);
+            c.moveTo(gx, gy); c.lineTo(gx - 3.5 * pp, gy - 7.5 * pp);
+            c.moveTo(gx + 2 * pp, gy); c.lineTo(gx + 4.5 * pp, gy - 8.5 * pp);
             c.stroke();
-            if (rnd > 0.82) {
-              crayonEllipse(c, gx + 4 * pp, gy - 8 * pp, 3.2 * pp, 3.2 * pp, "#ff92b4", 77 + tx, { lw: 1.3, amp: 0.4 });
+            if (rnd > 0.72) {
+              crayonEllipse(c, gx + 4.5 * pp, gy - 8.5 * pp, 3.6 * pp, 3.6 * pp, rnd > 0.86 ? "#ffe054" : "#ff94b8", 77 + tx, { lw: 1.4, amp: 0.4 });
             }
             c.restore();
           }
@@ -605,9 +611,8 @@
       }
     }
 
-    // Crisp rim around playable 6x5 grid
     const gT = proj(0, 0, 0), gR = proj(COLS, 0, 0), gB = proj(COLS, ROWS, 0), gL = proj(0, ROWS, 0);
-    crayonPoly(c, [gT, gR, gB, gL], null, 901, { amp: 1.4, lw: 2.8, ol: "rgba(36, 24, 58, 0.65)" });
+    crayonPoly(c, [gT, gR, gB, gL], null, 901, { amp: 1.4, lw: 2.8, ol: "rgba(36, 24, 58, 0.68)" });
   }
 
   function ensureBgCache() {
@@ -631,7 +636,7 @@
     game = {
       waveIdx: 0,
       spawnIdx: 0,
-      spawnTimer: 0.35,
+      spawnTimer: 0.25,
       wavePause: 0,
       lives: 1,
       over: false,
@@ -647,9 +652,9 @@
         toX: DEFAULT_PET_TILE.x + 0.5,
         toY: DEFAULT_PET_TILE.y + 0.5,
         hopT: 1,
-        hopDur: 0.26,
+        hopDur: 0.25,
         range: 2.18,
-        atkCd: 0.15,
+        atkCd: 0.12,
         atkRate: 0.54,
         dmg: 28,
         burnDmg: 8,
@@ -701,14 +706,14 @@
     return [lerp(a[0] + 0.5, b[0] + 0.5, f), lerp(a[1] + 0.5, b[1] + 0.5, f)];
   }
 
-  /* ================= Spawn Juicy Doodle FX ================= */
+  /* ================= Spawn BIG Juicy Doodle FX ================= */
   const HIT_WORDS = ["POW!", "BOOM!", "ZAP!", "啪!", "轰!"];
   function addFx(obj) { game.fx.push(obj); }
 
   function spawnCastDoodle(gx, gy, gz, dx, dy) {
     addFx({
       k: "cast", gx, gy, gz, dx, dy,
-      life: 0.28, max: 0.28, seed: Math.floor(Math.random() * 9999)
+      life: 0.30, max: 0.30, seed: Math.floor(Math.random() * 9999)
     });
   }
 
@@ -716,23 +721,23 @@
     const word = HIT_WORDS[Math.floor(Math.random() * HIT_WORDS.length)];
     addFx({
       k: "hit", gx, gy, gz, word, big: !!isKill,
-      life: 0.40, max: 0.40, seed: Math.floor(Math.random() * 9999)
+      life: 0.44, max: 0.44, seed: Math.floor(Math.random() * 9999)
     });
-    const count = isKill ? 6 : 5;
+    const count = isKill ? 7 : 5;
     for (let i = 0; i < count; i++) {
       const a = (i / count) * TAU + Math.random() * 0.35;
-      const spd = 1.15 + Math.random() * 0.95;
+      const spd = 1.25 + Math.random() * 1.0;
       addFx({
         k: "doodleBit",
         shape: i % 3 === 0 ? "star" : (i % 3 === 1 ? "flame" : "spiral"),
-        gx: gx + Math.cos(a) * 0.24,
-        gy: gy + Math.sin(a) * 0.24,
-        gz: gz + 0.08,
+        gx: gx + Math.cos(a) * 0.28,
+        gy: gy + Math.sin(a) * 0.28,
+        gz: gz + 0.10,
         vx: Math.cos(a) * spd,
         vy: Math.sin(a) * spd,
-        vz: 1.45 + Math.random() * 1.0,
-        life: 0.42 + Math.random() * 0.12,
-        max: 0.54,
+        vz: 1.65 + Math.random() * 1.0,
+        life: 0.44 + Math.random() * 0.12,
+        max: 0.56,
         col: i % 2 ? "#ffe24a" : "#ff5321",
         seed: Math.floor(Math.random() * 9999)
       });
@@ -741,9 +746,9 @@
 
   function spawnDeathPuff(gx, gy, tint) {
     addFx({
-      k: "puff", gx, gy, gz: 0.30,
+      k: "puff", gx, gy, gz: 0.36,
       tint: tint || "#a8e878",
-      life: 0.56, max: 0.56, seed: Math.floor(Math.random() * 9999)
+      life: 0.60, max: 0.60, seed: Math.floor(Math.random() * 9999)
     });
     game.scorch.push({ gx, gy, life: 1.9, max: 1.9, seed: Math.floor(Math.random() * 999) });
   }
@@ -758,7 +763,7 @@
   function spawnDmgPop(gx, gy, gz, text, col) {
     addFx({
       k: "pop", gx, gy, gz, text, col: col || "#ffe45c",
-      life: 0.62, max: 0.62, seed: Math.floor(Math.random() * 9999)
+      life: 0.65, max: 0.65, seed: Math.floor(Math.random() * 9999)
     });
   }
 
@@ -766,7 +771,6 @@
   function step(dt) {
     if (!game || game.over) return;
 
-    // 1. Spawner
     const wave = WAVES[game.waveIdx];
     if (wave && game.spawnIdx < wave.length) {
       game.spawnTimer -= dt;
@@ -789,15 +793,14 @@
           hitFlash: 0,
           burnT: 0,
           burnTick: 0.38,
-          burnSeed: Math.floor(Math.random() * 9999),
-          lastHopBounce: 0
+          burnSeed: Math.floor(Math.random() * 9999)
         });
         if (game.spawnIdx < wave.length) game.spawnTimer = wave[game.spawnIdx].delay;
       }
     } else if (game.enemies.length === 0) {
       if (game.waveIdx + 1 < WAVES.length) {
         game.wavePause += dt;
-        if (game.wavePause >= 1.0) {
+        if (game.wavePause >= 0.95) {
           game.waveIdx++;
           game.spawnIdx = 0;
           game.spawnTimer = 0.35;
@@ -812,17 +815,16 @@
       }
     }
 
-    // 2. Chili Mouse hop & attack
     const pet = game.pet;
     pet.recoil = Math.max(0, pet.recoil - dt * 4.5);
     pet.fireGlow = Math.max(0, pet.fireGlow - dt * 3.0);
-    pet.rangeGlow = Math.max(0.26, pet.rangeGlow - dt * 0.7);
+    pet.rangeGlow = Math.max(0.28, pet.rangeGlow - dt * 0.7);
     if (pet.hopT < 1) {
       pet.hopT = Math.min(1, pet.hopT + dt / pet.hopDur);
       const t = pet.hopT;
       pet.gx = lerp(pet.fromX, pet.toX, t);
       pet.gy = lerp(pet.fromY, pet.toY, t);
-      pet.gz = Math.sin(t * Math.PI) * 0.62;
+      pet.gz = Math.sin(t * Math.PI) * 0.65;
       if (pet.hopT >= 1) {
         pet.gz = 0;
         spawnDustPuff(pet.gx, pet.gy);
@@ -846,18 +848,18 @@
           const [tsx] = proj(target.gx, target.gy, 0);
           pet.facing = tsx >= psx ? 1 : -1;
 
-          const startZ = 0.46;
+          const startZ = 0.55;
           const dx = target.gx - pet.gx, dy = target.gy - pet.gy;
           const dist = Math.max(0.1, Math.hypot(dx, dy));
           const ux = dx / dist, uy = dy / dist;
-          const mx = pet.gx + ux * 0.42, my = pet.gy + uy * 0.42;
+          const mx = pet.gx + ux * 0.48, my = pet.gy + uy * 0.48;
           spawnCastDoodle(mx, my, startZ, dx, dy);
           game.shots.push({
             sx: mx, sy: my, sz: startZ,
             gx: mx, gy: my, gz: startZ,
             target,
-            tx: target.gx, ty: target.gy, tz: 0.34,
-            t: 0, dur: clamp(Math.hypot(dx, dy) * 0.15, 0.22, 0.38),
+            tx: target.gx, ty: target.gy, tz: 0.42,
+            t: 0, dur: clamp(dist * 0.15, 0.22, 0.36),
             dmg: pet.dmg,
             burnDmg: pet.burnDmg,
             burnDur: pet.burnDur,
@@ -868,19 +870,18 @@
       }
     }
 
-    // 3. Projectiles
     for (let i = game.shots.length - 1; i >= 0; i--) {
       const s = game.shots[i];
       if (s.target && s.target.hp > 0) {
         s.tx = s.target.gx;
         s.ty = s.target.gy;
-        s.tz = s.target.gz + 0.30;
+        s.tz = s.target.gz + 0.40;
       }
       s.t += dt / s.dur;
       const p = clamp(s.t, 0, 1);
       s.gx = lerp(s.sx, s.tx, p);
       s.gy = lerp(s.sy, s.ty, p);
-      s.gz = lerp(s.sz, s.tz, p) + Math.sin(p * Math.PI) * 0.72;
+      s.gz = lerp(s.sz, s.tz, p) + Math.sin(p * Math.PI) * 0.78;
 
       if (!s.lastTrail || Math.hypot(s.gx - s.lastTrail[0], s.gy - s.lastTrail[1]) > 0.16) {
         s.trail.push({ gx: s.gx, gy: s.gy, gz: s.gz });
@@ -893,7 +894,7 @@
           damageEnemy(s.target, s.dmg, false);
           s.target.burnT = s.burnDur;
           s.target.burnTick = Math.min(s.target.burnTick, 0.34);
-          spawnImpactDoodle(s.gx, s.gy, s.gz + 0.08, s.target.hp <= 0);
+          spawnImpactDoodle(s.gx, s.gy, s.gz + 0.12, s.target.hp <= 0);
         } else {
           spawnImpactDoodle(s.gx, s.gy, s.gz, false);
         }
@@ -901,7 +902,6 @@
       }
     }
 
-    // 4. Enemies
     const maxDist = PATH.length - 1;
     for (let i = game.enemies.length - 1; i >= 0; i--) {
       const e = game.enemies[i];
@@ -927,12 +927,12 @@
       const [nx, ny] = pathPos(e.dist);
       e.gx = nx;
       e.gy = ny;
-      e.gz = Math.abs(Math.sin(e.hopPhase)) * 0.18;
+      e.gz = Math.abs(Math.sin(e.hopPhase)) * 0.20;
 
       if (e.dist >= maxDist) {
         game.lives = 0;
         syncHud();
-        spawnImpactDoodle(e.gx, e.gy, 0.38, true);
+        spawnImpactDoodle(e.gx, e.gy, 0.45, true);
         game.enemies.splice(i, 1);
         game.over = true;
         game.won = false;
@@ -941,7 +941,6 @@
       }
     }
 
-    // 5. FX & Scorch
     for (let i = game.fx.length - 1; i >= 0; i--) {
       const f = game.fx[i];
       f.life -= dt;
@@ -951,7 +950,7 @@
         f.gz = Math.max(0, f.gz + f.vz * dt);
         f.vz -= 4.2 * dt;
       } else if (f.k === "pop") {
-        f.gz += 0.65 * dt;
+        f.gz += 0.7 * dt;
       }
       if (f.life <= 0) game.fx.splice(i, 1);
     }
@@ -963,17 +962,17 @@
 
   function damageEnemy(e, dmg, isBurn) {
     e.hp -= dmg;
-    e.hitFlash = isBurn ? 0.42 : 1.0;
+    e.hitFlash = isBurn ? 0.45 : 1.0;
     spawnDmgPop(
       e.gx + (Math.random() - 0.5) * 0.18,
       e.gy + (Math.random() - 0.5) * 0.18,
-      e.gz + 0.85,
+      e.gz + 1.05,
       (isBurn ? "🔥-" : "-") + dmg,
       isBurn ? "#ff6828" : "#ffe24a"
     );
   }
 
-  /* ================= Juicy Hand-Drawn Crayon Doodle FX ================= */
+  /* ================= BIG Hand-Drawn Crayon Doodle FX ================= */
   function getBoil() { return Math.floor(simTime * 11); }
 
   function drawDoodleFlame(c, sx, sy, scale, seed, boil) {
@@ -982,61 +981,58 @@
     const sway = Math.sin(simTime * 13 + seed) * s * 0.13;
     const stretch = 1 + Math.sin(simTime * 16 + seed * 2) * 0.11;
 
-    // Outer fiery red-orange crayon flame with dramatic licks
     const outerPts = [
       [sx, sy + s * 0.22],
-      [sx - s * 0.46, sy + s * 0.08],
-      [sx - s * 0.62, sy - s * 0.28],
+      [sx - s * 0.48, sy + s * 0.08],
+      [sx - s * 0.64, sy - s * 0.28],
       [sx - s * 0.34, sy - s * 0.23],
-      [sx - s * 0.42, sy - s * 0.70 * stretch],
+      [sx - s * 0.44, sy - s * 0.72 * stretch],
       [sx - s * 0.14, sy - s * 0.48],
-      [sx + sway, sy - s * 1.12 * stretch],
-      [sx + s * 0.22, sy - s * 0.52],
-      [sx + s * 0.48, sy - s * 0.72 * stretch],
+      [sx + sway, sy - s * 1.15 * stretch],
+      [sx + s * 0.24, sy - s * 0.52],
+      [sx + s * 0.50, sy - s * 0.74 * stretch],
       [sx + s * 0.38, sy - s * 0.25],
-      [sx + s * 0.60, sy - s * 0.20],
-      [sx + s * 0.44, sy + s * 0.10]
+      [sx + s * 0.62, sy - s * 0.20],
+      [sx + s * 0.46, sy + s * 0.10]
     ];
     crayonPoly(c, outerPts, "#ff4d1c", bSeed, {
-      amp: s * 0.08, lw: Math.max(2.6, s * 0.11), subdiv: 1,
-      grain: 0.78, hatch: "#d62208", hatchStep: Math.max(4, s * 0.22), hatchAlpha: 0.32
+      amp: s * 0.075, lw: Math.max(2.6, s * 0.085), subdiv: 1,
+      grain: 0.78, hatch: "#d62208", hatchStep: Math.max(5, s * 0.20), hatchAlpha: 0.32
     });
 
-    // Mid-layer bright tangerine-gold tongue
     const innerPts = [
       [sx, sy + s * 0.14],
       [sx - s * 0.26, sy + s * 0.02],
       [sx - s * 0.25, sy - s * 0.36],
       [sx - s * 0.07, sy - s * 0.26],
-      [sx + sway * 0.75, sy - s * 0.70 * stretch],
+      [sx + sway * 0.75, sy - s * 0.72 * stretch],
       [sx + s * 0.13, sy - s * 0.28],
       [sx + s * 0.28, sy - s * 0.38],
       [sx + s * 0.24, sy + s * 0.03]
     ];
     crayonPoly(c, innerPts, "#ffe24a", bSeed + 9, {
-      amp: s * 0.055, lw: Math.max(1.8, s * 0.075), subdiv: 1, grain: 0.55
+      amp: s * 0.05, lw: Math.max(1.8, s * 0.055), subdiv: 1, grain: 0.55
     });
 
-    // Rising detached crayon ember teardrop + tiny smoke curl
-    const emY = sy - s * (1.24 + ((simTime * 2.1 + seed) % 0.48));
+    const emY = sy - s * (1.28 + ((simTime * 2.1 + seed) % 0.48));
     const emX = sx + sway * 1.5 + Math.sin(simTime * 9 + seed) * s * 0.18;
-    const er = Math.max(2.8, s * 0.14);
+    const er = Math.max(3.2, s * 0.13);
     crayonPoly(c, [
       [emX, emY - er * 1.5],
       [emX + er, emY],
       [emX, emY + er],
       [emX - er, emY]
-    ], "#ffe047", bSeed + 23, { amp: 0.8, lw: 1.9, subdiv: 1 });
+    ], "#ffe047", bSeed + 23, { amp: 0.8, lw: 2.0, subdiv: 1 });
   }
 
   function drawDoodleStar(c, x, y, r, fill, seed, boil) {
     const pts = [];
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * TAU - Math.PI / 2;
-      const rr = i % 2 === 0 ? r : r * 0.36;
+      const rr = i % 2 === 0 ? r : r * 0.38;
       pts.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]);
     }
-    crayonPoly(c, pts, fill, seed + boil * 13, { amp: r * 0.1, lw: 2.2, subdiv: 1, grain: 0.45 });
+    crayonPoly(c, pts, fill, seed + boil * 13, { amp: r * 0.09, lw: 2.2, subdiv: 1, grain: 0.45 });
   }
 
   function drawDoodleSpiral(c, x, y, r, col, seed, boil) {
@@ -1046,10 +1042,9 @@
       const a = t * TAU * 1.3 + seed;
       pts.push([x + Math.cos(a) * r * t, y + Math.sin(a) * r * t]);
     }
-    crayonStroke(c, pts, col, 2.4, seed + boil, 0.9);
+    crayonStroke(c, pts, col, 2.8, seed + boil, 0.9);
   }
 
-  // Directional cast shadow angled toward bottom-right (warm sunlight from top-left)
   function drawDirectionalShadow(c, sx, sy, rx, ry, alpha = 0.28) {
     c.save();
     c.translate(sx + rx * 0.18, sy + ry * 0.16);
@@ -1066,12 +1061,14 @@
     const aspect = im.naturalWidth / im.naturalHeight;
     const wPx = hPx * aspect;
     c.save();
+    c.imageSmoothingEnabled = true;
+    c.imageSmoothingQuality = "high";
     c.translate(sx, sy);
     c.scale(facing * (1 + squash * 0.16), 1 - squash * 0.14);
     c.drawImage(im, -wPx * 0.5, -hPx, wPx, hPx);
     if (flash > 0.05) {
       c.globalCompositeOperation = "lighter";
-      c.globalAlpha = Math.min(0.65, flash * 0.65);
+      c.globalAlpha = Math.min(0.68, flash * 0.68);
       c.drawImage(im, -wPx * 0.5, -hPx, wPx, hPx);
     }
     c.restore();
@@ -1079,50 +1076,71 @@
 
   /* ================= 2.5D Scenic Props ================= */
   function drawScenicProp(c, prop, boil) {
+    if (prop.kind === "fence") {
+      const steps = 4;
+      const posts = [];
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const [px, py, pp] = proj(lerp(prop.gx0, prop.gx1, t), lerp(prop.gy0, prop.gy1, t), 0);
+        posts.push([px, py, pp]);
+      }
+      // Horizontal rails
+      const h1 = cam.tw * 0.16, h2 = cam.tw * 0.30;
+      crayonStroke(c, posts.map(([x, y, p]) => [x, y - h1 * p]), "#c99254", 3.4, prop.seed, 0.8);
+      crayonStroke(c, posts.map(([x, y, p]) => [x, y - h2 * p]), "#d9a362", 3.4, prop.seed + 1, 0.8);
+      // Vertical posts
+      for (let i = 0; i < posts.length; i++) {
+        const [x, y, p] = posts[i];
+        const ph = cam.tw * 0.40 * p;
+        const pw = cam.tw * 0.055 * p;
+        crayonPoly(c, [
+          [x - pw, y], [x - pw, y - ph], [x, y - ph * 1.15], [x + pw, y - ph], [x + pw, y]
+        ], "#e2b270", prop.seed + 10 + i, { lw: 2.2, amp: 0.7, subdiv: 1 });
+      }
+      return;
+    }
+
     const [sx, sy, pp] = proj(prop.gx, prop.gy, 0);
     const s = cam.tw * prop.scale * pp;
     if (prop.kind === "tree") {
-      drawDirectionalShadow(c, sx, sy + 2, s * 0.54, s * 0.24, 0.25);
-      // Trunk
+      drawDirectionalShadow(c, sx, sy + 2, s * 0.58, s * 0.25, 0.26);
       crayonPoly(c, [
-        [sx - s * 0.12, sy],
-        [sx - s * 0.09, sy - s * 0.55],
-        [sx + s * 0.09, sy - s * 0.55],
-        [sx + s * 0.13, sy]
+        [sx - s * 0.13, sy],
+        [sx - s * 0.10, sy - s * 0.62],
+        [sx + s * 0.10, sy - s * 0.62],
+        [sx + s * 0.14, sy]
       ], "#9a663b", prop.seed, { lw: 2.8, amp: 1.3, hatch: "#6b4222", hatchStep: 6 });
-      // Shaded lower canopy + sunlit upper canopy
-      crayonEllipse(c, sx + s * 0.16, sy - s * 0.66, s * 0.36, s * 0.28, "#4ba236", prop.seed + 1, { lw: 2.8, amp: 1.8 });
-      crayonEllipse(c, sx - s * 0.16, sy - s * 0.72, s * 0.38, s * 0.30, "#62bd44", prop.seed + 2, { lw: 2.8, amp: 1.8 });
-      crayonEllipse(c, sx, sy - s * 0.92, s * 0.42, s * 0.33, "#83d857", prop.seed + 3, { lw: 2.8, amp: 1.8, hi: "#c7f794", hiW: 3.5 });
-      // Red crayon apples
-      crayonEllipse(c, sx - s * 0.18, sy - s * 0.76, s * 0.08, s * 0.085, "#ee3e32", prop.seed + 5, { lw: 2.0, amp: 0.6 });
-      crayonEllipse(c, sx + s * 0.16, sy - s * 0.85, s * 0.075, s * 0.08, "#ee3e32", prop.seed + 6, { lw: 2.0, amp: 0.6 });
+      crayonEllipse(c, sx + s * 0.18, sy - s * 0.74, s * 0.38, s * 0.30, "#4ba236", prop.seed + 1, { lw: 2.8, amp: 1.8 });
+      crayonEllipse(c, sx - s * 0.18, sy - s * 0.80, s * 0.40, s * 0.32, "#62bd44", prop.seed + 2, { lw: 2.8, amp: 1.8 });
+      crayonEllipse(c, sx, sy - s * 1.02, s * 0.45, s * 0.35, "#86dc59", prop.seed + 3, { lw: 2.8, amp: 1.8, hi: "#c7f794", hiW: 3.5 });
+      crayonEllipse(c, sx - s * 0.20, sy - s * 0.84, s * 0.085, s * 0.09, "#ee3e32", prop.seed + 5, { lw: 2.0, amp: 0.6 });
+      crayonEllipse(c, sx + s * 0.18, sy - s * 0.94, s * 0.08, s * 0.085, "#ee3e32", prop.seed + 6, { lw: 2.0, amp: 0.6 });
     } else if (prop.kind === "bush") {
-      drawDirectionalShadow(c, sx, sy + 2, s * 0.44, s * 0.18, 0.24);
-      crayonEllipse(c, sx - s * 0.18, sy - s * 0.16, s * 0.24, s * 0.19, "#5cb43e", prop.seed, { lw: 2.5, amp: 1.4 });
-      crayonEllipse(c, sx + s * 0.16, sy - s * 0.15, s * 0.22, s * 0.18, "#4c9e32", prop.seed + 1, { lw: 2.5, amp: 1.4 });
-      crayonEllipse(c, sx, sy - s * 0.25, s * 0.26, s * 0.21, "#82d458", prop.seed + 2, { lw: 2.5, amp: 1.4 });
-      crayonEllipse(c, sx - s * 0.08, sy - s * 0.28, s * 0.055, s * 0.055, "#ff8eb8", prop.seed + 4, { lw: 1.5, amp: 0.4 });
-      crayonEllipse(c, sx + s * 0.11, sy - s * 0.18, s * 0.05, s * 0.05, "#ffe464", prop.seed + 5, { lw: 1.5, amp: 0.4 });
+      drawDirectionalShadow(c, sx, sy + 2, s * 0.46, s * 0.19, 0.25);
+      crayonEllipse(c, sx - s * 0.20, sy - s * 0.18, s * 0.26, s * 0.20, "#5cb43e", prop.seed, { lw: 2.5, amp: 1.4 });
+      crayonEllipse(c, sx + s * 0.18, sy - s * 0.17, s * 0.24, s * 0.19, "#4c9e32", prop.seed + 1, { lw: 2.5, amp: 1.4 });
+      crayonEllipse(c, sx, sy - s * 0.28, s * 0.28, s * 0.22, "#84d65a", prop.seed + 2, { lw: 2.5, amp: 1.4 });
+      crayonEllipse(c, sx - s * 0.09, sy - s * 0.30, s * 0.06, s * 0.06, "#ff8eb8", prop.seed + 4, { lw: 1.5, amp: 0.4 });
+      crayonEllipse(c, sx + s * 0.12, sy - s * 0.20, s * 0.055, s * 0.055, "#ffe464", prop.seed + 5, { lw: 1.5, amp: 0.4 });
     } else if (prop.kind === "rock") {
-      drawDirectionalShadow(c, sx, sy + 2, s * 0.36, s * 0.16, 0.24);
+      drawDirectionalShadow(c, sx, sy + 2, s * 0.38, s * 0.16, 0.24);
       crayonPoly(c, [
-        [sx - s * 0.32, sy],
-        [sx - s * 0.24, sy - s * 0.28],
-        [sx + s * 0.06, sy - s * 0.34],
-        [sx + s * 0.32, sy - s * 0.14],
-        [sx + s * 0.28, sy + s * 0.04]
+        [sx - s * 0.34, sy],
+        [sx - s * 0.25, sy - s * 0.30],
+        [sx + s * 0.06, sy - s * 0.36],
+        [sx + s * 0.34, sy - s * 0.15],
+        [sx + s * 0.30, sy + s * 0.04]
       ], "#b8b0a2", prop.seed, { lw: 2.6, amp: 1.4, hatch: "#867e72", hatchStep: 7, hi: "#ece6da", hiW: 3 });
     } else if (prop.kind === "sign") {
-      drawDirectionalShadow(c, sx, sy + 1, s * 0.22, s * 0.10, 0.24);
-      crayonStroke(c, [[sx, sy], [sx, sy - s * 0.46]], "#8a5a34", 3.6, prop.seed, 0.8);
+      drawDirectionalShadow(c, sx, sy + 1, s * 0.24, s * 0.11, 0.24);
+      crayonStroke(c, [[sx, sy], [sx, sy - s * 0.50]], "#8a5a34", 3.8, prop.seed, 0.8);
       crayonPoly(c, [
-        [sx - s * 0.26, sy - s * 0.56],
-        [sx + s * 0.18, sy - s * 0.58],
-        [sx + s * 0.32, sy - s * 0.44],
-        [sx + s * 0.16, sy - s * 0.32],
-        [sx - s * 0.26, sy - s * 0.34]
-      ], "#e7ba6a", prop.seed + 2 + Math.floor(boil * 0), { lw: 2.4, amp: 1.0 });
+        [sx - s * 0.28, sy - s * 0.62],
+        [sx + s * 0.20, sy - s * 0.64],
+        [sx + s * 0.35, sy - s * 0.48],
+        [sx + s * 0.18, sy - s * 0.34],
+        [sx - s * 0.28, sy - s * 0.36]
+      ], "#e7ba6a", prop.seed + 2, { lw: 2.6, amp: 1.0 });
     }
   }
 
@@ -1134,22 +1152,22 @@
     ctx.drawImage(bg, 0, 0);
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 
-    // Subtle animated drifting crayon clouds kept right of the sun
+    // Animated drifting crayon clouds (clear of the sun)
     ctx.save();
     for (let i = 0; i < 3; i++) {
-      const minX = W * 0.30;
+      const minX = W * 0.28;
       const span = W * 0.78;
       const cx = minX + ((i * span * 0.36 + simTime * (6 + i * 2)) % span);
       const cy = H * (0.11 + (i % 2) * 0.055);
-      const cw = (cam.portrait ? 28 : 38) + i * 7;
-      crayonEllipse(ctx, cx, cy, cw, cw * 0.46, "#fffdf6", 30 + i, { lw: 2.0, ol: "rgba(36,24,58,0.24)", amp: 1.2, grain: 0.2 });
+      const cw = (cam.portrait ? 30 : 42) + i * 8;
+      crayonEllipse(ctx, cx, cy, cw, cw * 0.46, "#fffdf6", 30 + i, { lw: 2.2, ol: "rgba(36,24,58,0.26)", amp: 1.2, grain: 0.2 });
     }
     ctx.restore();
 
     // Directional chalk chevrons along path
     ctx.save();
-    ctx.strokeStyle = "rgba(130, 86, 42, 0.45)";
-    ctx.lineWidth = 2.6;
+    ctx.strokeStyle = "rgba(130, 86, 42, 0.48)";
+    ctx.lineWidth = 2.8;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     for (let i = 0; i < PATH.length - 1; i += 2) {
@@ -1157,7 +1175,7 @@
       const b = proj(PATH[i + 1][0] + 0.5, PATH[i + 1][1] + 0.5, 0);
       const mx = lerp(a[0], b[0], 0.5), my = lerp(a[1], b[1], 0.5);
       const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
-      const sz = Math.max(5, cam.tw * 0.12 * a[2]);
+      const sz = Math.max(6, cam.tw * 0.13 * a[2]);
       ctx.beginPath();
       ctx.moveTo(mx - Math.cos(ang - 0.65) * sz, my - Math.sin(ang - 0.65) * sz);
       ctx.lineTo(mx, my);
@@ -1169,23 +1187,23 @@
     // Hovered grass tile highlight
     if (hoverTile && !PATH_SET.has(hoverTile.x + "," + hoverTile.y)) {
       const hc = tileCorners(hoverTile.x, hoverTile.y, 0.06, 0);
-      crayonPoly(ctx, hc, "rgba(255, 246, 158, 0.46)", 701 + boil, {
-        amp: 1.3, lw: 2.8, ol: "#ff8c24", subdiv: 1, grain: 0.3
+      crayonPoly(ctx, hc, "rgba(255, 246, 158, 0.48)", 701 + boil, {
+        amp: 1.3, lw: 3.0, ol: "#ff8c24", subdiv: 1, grain: 0.3
       });
     }
 
     // Chili Mouse pedestal highlight & 2.5D perspective range ellipse
     const pet = game.pet;
     const petTileCorners = tileCorners(pet.tx, pet.ty, 0.07, 0);
-    crayonPoly(ctx, petTileCorners, "rgba(255, 224, 92, 0.36)", 720, {
-      amp: 1.2, lw: 2.8, ol: "#e65b25", subdiv: 1, grain: 0.3
+    crayonPoly(ctx, petTileCorners, "rgba(255, 224, 92, 0.38)", 720, {
+      amp: 1.2, lw: 3.0, ol: "#e65b25", subdiv: 1, grain: 0.3
     });
 
     ctx.save();
     ctx.globalAlpha = pet.rangeGlow;
-    ctx.setLineDash([8, 7]);
+    ctx.setLineDash([9, 7]);
     ctx.strokeStyle = "#ff5a22";
-    ctx.lineWidth = 2.6;
+    ctx.lineWidth = 2.8;
     ctx.beginPath();
     const rn = 28;
     for (let i = 0; i <= rn; i++) {
@@ -1202,11 +1220,11 @@
     for (const sc of game.scorch) {
       const a = Math.min(1, sc.life / sc.max);
       const [sx, sy, pp] = proj(sc.gx, sc.gy, 0);
-      const sz = cam.tw * 0.14 * pp;
+      const sz = cam.tw * 0.16 * pp;
       ctx.save();
-      ctx.globalAlpha = a * 0.58;
+      ctx.globalAlpha = a * 0.6;
       ctx.strokeStyle = "#4d3528";
-      ctx.lineWidth = 2.6;
+      ctx.lineWidth = 2.8;
       ctx.lineCap = "round";
       ctx.beginPath();
       ctx.moveTo(sx - sz, sy - sz * 0.5); ctx.lineTo(sx + sz, sy + sz * 0.5);
@@ -1215,12 +1233,14 @@
       ctx.restore();
     }
 
-    // Collect depth-sorted 2.5D entities
     const drawList = [];
 
     for (const prop of SCENIC_PROPS) {
+      const depth = prop.kind === "fence"
+        ? (prop.gx0 + prop.gx1) * 0.5 + (prop.gy0 + prop.gy1) * 0.5
+        : prop.gx + prop.gy;
       drawList.push({
-        depth: prop.gx + prop.gy,
+        depth,
         draw: () => drawScenicProp(ctx, prop, boil)
       });
     }
@@ -1231,77 +1251,74 @@
       depth: btx + bty + 0.9,
       draw: () => {
         const [bx, by, pp] = proj(btx + 0.5, bty + 0.5, 0);
-        const rx = cam.tw * 0.42 * pp, ry = cam.th * 0.38 * pp;
-        // Raised dirt/turf archway over the burrow
-        crayonEllipse(ctx, bx, by - ry * 0.35, rx * 1.05, ry * 1.25, "#7e5536", 310, { lw: 2.8, amp: 1.5, hatch: "#59371e", hatchStep: 7 });
-        crayonEllipse(ctx, bx, by - ry * 0.72, rx * 0.92, ry * 0.65, "#67bd44", 311, { lw: 2.5, amp: 1.4 });
-        crayonEllipse(ctx, bx, by + 2, rx * 0.72, ry * 0.78, "#211421", 312 + boil, { lw: 2.2, amp: 1.1, grain: 0.15 });
+        const rx = cam.tw * 0.46 * pp, ry = cam.th * 0.42 * pp;
+        crayonEllipse(ctx, bx, by - ry * 0.35, rx * 1.08, ry * 1.28, "#7e5536", 310, { lw: 3.0, amp: 1.5, hatch: "#59371e", hatchStep: 7 });
+        crayonEllipse(ctx, bx, by - ry * 0.72, rx * 0.94, ry * 0.66, "#67bd44", 311, { lw: 2.6, amp: 1.4 });
+        crayonEllipse(ctx, bx, by + 2, rx * 0.74, ry * 0.80, "#211421", 312 + boil, { lw: 2.4, amp: 1.1, grain: 0.15 });
       }
     });
 
-    // Cozy 2.5D Home Nest Sanctuary at PATH[last]
+    // Cozy 2.5D Home Nest Sanctuary at PATH[last] (~1.8x larger chick!)
     const [htx, hty] = PATH[PATH.length - 1];
     drawList.push({
       depth: htx + hty + 1.0,
       draw: () => {
         const [hx, hy, pp] = proj(htx + 0.5, hty + 0.5, 0);
-        const nw = cam.tw * 0.48 * pp, nh = cam.th * 0.38 * pp;
-        drawDirectionalShadow(ctx, hx, hy + 4, nw * 1.05, nh * 0.92, 0.28);
-        crayonEllipse(ctx, hx, hy, nw, nh, "#dfa847", 410, { lw: 2.8, amp: 1.8, hatch: "#9e6b22", hatchStep: 6, hatchAlpha: 0.38 });
-        crayonEllipse(ctx, hx, hy - 3, nw * 0.74, nh * 0.62, "#8f5f24", 411, { lw: 2.0, amp: 1.1 });
-        const bob = Math.sin(simTime * 3.5) * 2.2 * pp;
-        drawBillboardSprite(ctx, IMG.egg, hx, hy + 4 + bob, cam.tw * 0.78 * pp, 1, 0, 0);
-        // Fluttering ❤️ 1 pennant
-        const fx = hx + nw * 0.8, fy = hy - cam.tw * 0.06 * pp;
-        crayonStroke(ctx, [[fx, fy], [fx, fy - cam.tw * 0.48 * pp]], "#7c5230", 2.8, 415, 0.7);
+        const nw = cam.tw * 0.58 * pp, nh = cam.th * 0.46 * pp;
+        drawDirectionalShadow(ctx, hx, hy + 4, nw * 1.08, nh * 0.94, 0.28);
+        crayonEllipse(ctx, hx, hy, nw, nh, "#dfa847", 410, { lw: 3.0, amp: 1.8, hatch: "#9e6b22", hatchStep: 6, hatchAlpha: 0.38 });
+        crayonEllipse(ctx, hx, hy - 3, nw * 0.74, nh * 0.62, "#8f5f24", 411, { lw: 2.2, amp: 1.1 });
+        const bob = Math.sin(simTime * 3.5) * 3.0 * pp;
+        drawBillboardSprite(ctx, IMG.egg, hx, hy + 5 + bob, cam.tw * 1.24 * pp, 1, 0, 0);
+        const fx = hx + nw * 0.82, fy = hy - cam.tw * 0.08 * pp;
+        crayonStroke(ctx, [[fx, fy], [fx, fy - cam.tw * 0.64 * pp]], "#7c5230", 3.2, 415, 0.8);
         crayonPoly(ctx, [
-          [fx, fy - cam.tw * 0.48 * pp],
-          [fx + cam.tw * 0.36 * pp, fy - cam.tw * 0.40 * pp],
-          [fx, fy - cam.tw * 0.26 * pp]
-        ], "#ff5a78", 416 + boil, { amp: 1.1, lw: 2.2, subdiv: 1 });
+          [fx, fy - cam.tw * 0.64 * pp],
+          [fx + cam.tw * 0.44 * pp, fy - cam.tw * 0.52 * pp],
+          [fx, fy - cam.tw * 0.36 * pp]
+        ], "#ff5a78", 416 + boil, { amp: 1.2, lw: 2.5, subdiv: 1 });
       }
     });
 
-    // Chili Mouse + raised 2.5D stone/wood pedestal + fire bounce highlight
+    // Chili Mouse (~1.55x larger, ~2x on screen with bigger tw!)
     drawList.push({
       depth: pet.gx + pet.gy,
       draw: () => {
         const [gx0, gy0, pp0] = proj(pet.gx, pet.gy, 0);
         const [sx, sy, pp] = proj(pet.gx, pet.gy, pet.gz);
         const scaleShrink = 1 - pet.gz * 0.22;
-        drawDirectionalShadow(ctx, gx0, gy0 + 2, cam.tw * 0.38 * scaleShrink * pp0, cam.th * 0.30 * scaleShrink * pp0, 0.30);
+        drawDirectionalShadow(ctx, gx0, gy0 + 3, cam.tw * 0.52 * scaleShrink * pp0, cam.th * 0.40 * scaleShrink * pp0, 0.30);
         if (pet.fireGlow > 0.05) {
-          // Warm crayon bounce light under Chili when spitting fire
-          crayonEllipse(ctx, gx0, gy0, cam.tw * 0.38 * pp0, cam.th * 0.26 * pp0, `rgba(255, 198, 72, ${0.42 * pet.fireGlow})`, 733 + boil, { lw: 0, amp: 1.2, grain: 0.2 });
+          crayonEllipse(ctx, gx0, gy0, cam.tw * 0.52 * pp0, cam.th * 0.36 * pp0, `rgba(255, 198, 72, ${0.46 * pet.fireGlow})`, 733 + boil, { lw: 0, amp: 1.4, grain: 0.2 });
         }
-        const breathe = Math.sin(simTime * 4.5) * 0.06;
-        const sq = pet.recoil * 0.48 + breathe;
-        const hPx = cam.tw * 0.98 * pp;
-        drawBillboardSprite(ctx, IMG.chili, sx, sy + 2, hPx, pet.facing, sq, 0);
+        const breathe = Math.sin(simTime * 4.8) * 0.075;
+        const sq = pet.recoil * 0.52 + breathe;
+        const hPx = cam.tw * 1.46 * pp;
+        drawBillboardSprite(ctx, IMG.chili, sx, sy + 4, hPx, pet.facing, sq, 0);
       }
     });
 
-    // Slimes + Crayon Burn Flames
+    // Slimes (~1.55x larger) + Big Crayon Burn Flames
     for (const e of game.enemies) {
       drawList.push({
         depth: e.gx + e.gy,
         draw: () => {
           const [gx0, gy0, pp0] = proj(e.gx, e.gy, 0);
           const [sx, sy, pp] = proj(e.gx, e.gy, e.gz);
-          const hPx = cam.tw * 0.90 * e.size * pp;
-          const shScale = 1 - e.gz * 0.3;
-          drawDirectionalShadow(ctx, gx0, gy0 + 2, cam.tw * 0.34 * e.size * shScale * pp0, cam.th * 0.26 * e.size * shScale * pp0, 0.28);
+          const hPx = cam.tw * 1.38 * e.size * pp;
+          const shScale = 1 - e.gz * 0.28;
+          drawDirectionalShadow(ctx, gx0, gy0 + 3, cam.tw * 0.48 * e.size * shScale * pp0, cam.th * 0.36 * e.size * shScale * pp0, 0.28);
 
           if (e.burnT > 0) {
-            drawDoodleFlame(ctx, sx - hPx * 0.26, sy - hPx * 0.44, hPx * 0.48, e.burnSeed + 1, boil);
+            drawDoodleFlame(ctx, sx - hPx * 0.28, sy - hPx * 0.44, hPx * 0.54, e.burnSeed + 1, boil);
           }
 
-          const hopSq = (e.gz < 0.03 ? 0.15 : -0.10) + e.hitFlash * 0.25;
-          drawBillboardSprite(ctx, IMG[e.img], sx, sy + 2, hPx, 1, hopSq, e.hitFlash);
+          const hopSq = (e.gz < 0.035 ? 0.16 : -0.11) + e.hitFlash * 0.26;
+          drawBillboardSprite(ctx, IMG[e.img], sx, sy + 4, hPx, 1, hopSq, e.hitFlash);
 
           if (e.boss) {
-            const cy = sy - hPx - 3;
-            const cw = hPx * 0.24;
+            const cy = sy - hPx - 4;
+            const cw = hPx * 0.22;
             crayonPoly(ctx, [
               [sx - cw, cy],
               [sx - cw * 1.05, cy - cw * 0.85],
@@ -1310,24 +1327,23 @@
               [sx + cw * 0.4, cy - cw * 0.35],
               [sx + cw * 1.05, cy - cw * 0.85],
               [sx + cw, cy]
-            ], "#ffe047", 605 + boil, { amp: 1.0, lw: 2.3, subdiv: 1 });
+            ], "#ffe047", 605 + boil, { amp: 1.1, lw: 2.5, subdiv: 1 });
           }
 
           if (e.burnT > 0) {
-            drawDoodleFlame(ctx, sx + hPx * 0.24, sy - hPx * 0.18, hPx * 0.52, e.burnSeed + 5, boil);
-            drawDoodleFlame(ctx, sx - hPx * 0.06, sy - hPx * 0.04, hPx * 0.38, e.burnSeed + 11, boil);
+            drawDoodleFlame(ctx, sx + hPx * 0.26, sy - hPx * 0.18, hPx * 0.58, e.burnSeed + 5, boil);
+            drawDoodleFlame(ctx, sx - hPx * 0.06, sy - hPx * 0.04, hPx * 0.42, e.burnSeed + 11, boil);
           }
 
-          // Crayon HP bar
-          const bw = Math.max(32, cam.tw * 0.56 * e.size * pp);
-          const bh = Math.max(6, cam.tw * 0.09 * pp);
+          const bw = Math.max(38, cam.tw * 0.72 * e.size * pp);
+          const bh = Math.max(7, cam.tw * 0.11 * pp);
           const bx = sx - bw * 0.5;
-          const by = sy - hPx - (e.boss ? 24 : 11);
+          const by = sy - hPx - (e.boss ? 28 : 13);
           const frac = clamp(e.hp / e.maxHp, 0, 1);
           crayonPoly(ctx, [
             [bx - 2, by - 2], [bx + bw + 2, by - 2],
             [bx + bw + 2, by + bh + 2], [bx - 2, by + bh + 2]
-          ], "#fffaf0", 910, { amp: 0.7, lw: 2.2, subdiv: 1, grain: 0.2 });
+          ], "#fffaf0", 910, { amp: 0.7, lw: 2.4, subdiv: 1, grain: 0.2 });
           if (frac > 0) {
             const fw = Math.max(4, bw * frac);
             crayonPoly(ctx, [
@@ -1338,29 +1354,29 @@
       });
     }
 
-    // Doodled Fireseed Projectiles & Air-Drawn Comet Trails
+    // BIG Doodled Fireseed Projectiles & Air-Drawn Comet Trails
     for (const s of game.shots) {
       drawList.push({
         depth: s.gx + s.gy + 0.18,
         draw: () => {
           const [gx0, gy0, pp0] = proj(s.gx, s.gy, 0);
-          drawDirectionalShadow(ctx, gx0, gy0, cam.tw * 0.16 * pp0, cam.th * 0.12 * pp0, 0.22);
+          drawDirectionalShadow(ctx, gx0, gy0, cam.tw * 0.24 * pp0, cam.th * 0.18 * pp0, 0.24);
 
           for (let ti = 0; ti < s.trail.length; ti++) {
             const tr = s.trail[ti];
             const [tx, ty, tpp] = proj(tr.gx, tr.gy, tr.gz);
-            const sz = Math.max(5, cam.tw * 0.15 * tpp * (0.65 + ti * 0.06));
+            const sz = Math.max(7, cam.tw * 0.24 * tpp * (0.65 + ti * 0.06));
             if (ti % 2 === 0) {
               drawDoodleFlame(ctx, tx, ty, sz * 1.25, s.seed + ti * 3, boil);
             } else {
-              drawDoodleSpiral(ctx, tx, ty, sz * 0.9, "#ffe24a", s.seed + ti, boil);
+              drawDoodleSpiral(ctx, tx, ty, sz * 0.95, "#ffe24a", s.seed + ti, boil);
             }
           }
 
           const [sx, sy, pp] = proj(s.gx, s.gy, s.gz);
           const [nx, ny] = proj(s.tx, s.ty, s.tz);
           const ang = Math.atan2(ny - sy, nx - sx);
-          const pr = Math.max(12, cam.tw * 0.27 * pp);
+          const pr = Math.max(16, cam.tw * 0.42 * pp);
           ctx.save();
           ctx.translate(sx, sy);
           ctx.rotate(ang);
@@ -1376,7 +1392,7 @@
             [-pr * 0.42, pr * 0.50],
             [pr * 0.28, pr * 0.74]
           ], "#ff4d1c", s.seed + boil * 19, {
-            amp: pr * 0.12, lw: 3.0, subdiv: 1, grain: 0.75, hatch: "#c81e06", hatchStep: 5
+            amp: pr * 0.11, lw: 3.2, subdiv: 1, grain: 0.75, hatch: "#c81e06", hatchStep: 6
           });
           crayonPoly(ctx, [
             [pr * 0.68, 0],
@@ -1384,34 +1400,33 @@
             [-pr * 0.70, -pr * 0.12],
             [-pr * 0.60, pr * 0.16],
             [pr * 0.10, pr * 0.36]
-          ], "#ffe24a", s.seed + 5 + boil * 19, { amp: pr * 0.08, lw: 2.0, subdiv: 1 });
+          ], "#ffe24a", s.seed + 5 + boil * 19, { amp: pr * 0.07, lw: 2.0, subdiv: 1 });
           ctx.restore();
         }
       });
     }
 
-    // Air-Drawn Cartoon Crayon Doodle FX
+    // BIG Air-Drawn Cartoon Crayon Doodle FX
     for (const f of game.fx) {
       drawList.push({
         depth: f.gx + f.gy + 0.38,
         draw: () => {
           const prog = 1 - clamp(f.life / f.max, 0, 1);
-          // Stay crisp and bold for first 72% of life, then fade out cleanly
-          const alpha = prog < 0.72 ? 1 : clamp((1 - prog) / 0.28, 0, 1);
+          const alpha = prog < 0.74 ? 1 : clamp((1 - prog) / 0.26, 0, 1);
           const [sx, sy, pp] = proj(f.gx, f.gy, f.gz);
           ctx.save();
           ctx.globalAlpha = alpha;
 
           if (f.k === "cast") {
-            const r = cam.tw * (0.24 + prog * 0.26) * pp;
-            drawDoodleFlame(ctx, sx, sy, r * 1.2, f.seed, boil);
+            const r = cam.tw * (0.36 + prog * 0.34) * pp;
+            drawDoodleFlame(ctx, sx, sy, r * 1.25, f.seed, boil);
             for (let k = -1; k <= 1; k++) {
-              const wy = sy + k * 8 * pp;
-              crayonStroke(ctx, [[sx - 5 * pp, wy], [sx + (f.dx >= 0 ? 15 : -15) * (1 + prog) * pp, wy + k * 5 * pp]], "#ffe24a", 2.6, f.seed + k, 1.4);
+              const wy = sy + k * 11 * pp;
+              crayonStroke(ctx, [[sx - 6 * pp, wy], [sx + (f.dx >= 0 ? 22 : -22) * (1 + prog) * pp, wy + k * 7 * pp]], "#ffe24a", 3.0, f.seed + k, 1.6);
             }
           } else if (f.k === "hit") {
             const popScale = easeOutBack(Math.min(1, prog * 2.5));
-            const rOut = cam.tw * (f.big ? 0.66 : 0.54) * popScale * pp;
+            const rOut = cam.tw * (f.big ? 1.05 : 0.88) * popScale * pp;
             const rIn = rOut * 0.52;
             const spikes = 8;
             const outerPts = [], midPts = [];
@@ -1422,67 +1437,67 @@
               midPts.push([sx + Math.cos(a) * rr * 0.58, sy + Math.sin(a) * rr * 0.50]);
             }
             crayonPoly(ctx, outerPts, "#ffe24a", f.seed + boil * 13, {
-              amp: rOut * 0.05, lw: 2.5, subdiv: 1, grain: 0.65, hatch: "#ff9b24", hatchStep: 8
+              amp: rOut * 0.05, lw: 3.0, subdiv: 1, grain: 0.68, hatch: "#ff9b24", hatchStep: 9
             });
             crayonPoly(ctx, midPts, "#ff6824", f.seed + 3 + boil * 13, {
               amp: rOut * 0.04, lw: 0, subdiv: 1, grain: 0.45
             });
 
             ctx.save();
-            ctx.translate(sx, sy - rOut * 0.32);
+            ctx.translate(sx, sy - rOut * 0.34);
             ctx.rotate((hash(f.seed, 2) - 0.5) * 0.28);
-            const fs = Math.round(Math.max(15, cam.tw * (f.big ? 0.35 : 0.29) * popScale * pp));
+            const fs = Math.round(Math.max(20, cam.tw * (f.big ? 0.52 : 0.44) * popScale * pp));
             ctx.font = `900 ${fs}px "Fredoka", "PingFang SC", sans-serif`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.lineJoin = "round";
             ctx.strokeStyle = OL;
-            ctx.lineWidth = 4.8;
+            ctx.lineWidth = Math.max(5, fs * 0.18);
             ctx.strokeText(f.word, 0, 0);
             ctx.fillStyle = "#fffaf0";
             ctx.fillText(f.word, 0, 0);
             ctx.restore();
           } else if (f.k === "doodleBit") {
-            const sz = Math.max(5, cam.tw * 0.125 * pp);
+            const sz = Math.max(7, cam.tw * 0.20 * pp);
             if (f.shape === "star") {
               drawDoodleStar(ctx, sx, sy, sz, f.col, f.seed, boil);
             } else if (f.shape === "flame") {
               drawDoodleFlame(ctx, sx, sy, sz * 1.35, f.seed, boil);
             } else {
-              drawDoodleSpiral(ctx, sx, sy, sz * 0.9, f.col, f.seed, boil);
+              drawDoodleSpiral(ctx, sx, sy, sz * 0.95, f.col, f.seed, boil);
             }
           } else if (f.k === "puff") {
-            const spread = cam.tw * (0.24 + prog * 0.44) * pp;
-            const rBase = cam.tw * 0.28 * (1 - prog * 0.22) * pp;
+            const spread = cam.tw * (0.36 + prog * 0.62) * pp;
+            const rBase = cam.tw * 0.42 * (1 - prog * 0.22) * pp;
             const puffs = 7;
             for (let p = 0; p < puffs; p++) {
               const a = (p / puffs) * TAU + f.seed;
               const px = sx + Math.cos(a) * spread * 0.72;
-              const py = sy + Math.sin(a) * spread * 0.48 - prog * 16 * pp;
+              const py = sy + Math.sin(a) * spread * 0.48 - prog * 22 * pp;
               crayonEllipse(ctx, px, py, rBase, rBase * 0.82, p % 2 ? "#fff9eb" : f.tint, f.seed + p + boil * 11, {
-                lw: 2.8, amp: 1.6, grain: 0.65
+                lw: 3.0, amp: 1.8, grain: 0.65
               });
             }
-            crayonEllipse(ctx, sx, sy - prog * 16 * pp, rBase * 1.15, rBase * 0.9, "#fffaf0", f.seed + 9 + boil * 11, {
-              lw: 3.0, amp: 1.6, grain: 0.5
+            crayonEllipse(ctx, sx, sy - prog * 22 * pp, rBase * 1.15, rBase * 0.9, "#fffaf0", f.seed + 9 + boil * 11, {
+              lw: 3.2, amp: 1.8, grain: 0.5
             });
             for (let s = 0; s < 4; s++) {
               const sa = s * 1.57 + f.seed + prog * 1.4;
-              drawDoodleStar(ctx, sx + Math.cos(sa) * spread * 1.15, sy + Math.sin(sa) * spread * 0.82 - 12 * pp, cam.tw * 0.14 * pp, "#ffe24a", f.seed + s, boil);
+              drawDoodleStar(ctx, sx + Math.cos(sa) * spread * 1.15, sy + Math.sin(sa) * spread * 0.82 - 16 * pp, cam.tw * 0.20 * pp, "#ffe24a", f.seed + s, boil);
             }
           } else if (f.k === "dust") {
-            const sp = cam.tw * (0.14 + prog * 0.26) * pp;
+            const sp = cam.tw * (0.18 + prog * 0.34) * pp;
             for (let k = -1; k <= 1; k += 2) {
-              crayonEllipse(ctx, sx + k * sp, sy, cam.tw * 0.13 * pp, cam.tw * 0.085 * pp, "#f7ecd4", f.seed + k + boil, { lw: 2.2, amp: 1.0 });
+              crayonEllipse(ctx, sx + k * sp, sy, cam.tw * 0.18 * pp, cam.tw * 0.12 * pp, "#f7ecd4", f.seed + k + boil, { lw: 2.4, amp: 1.2 });
             }
           } else if (f.k === "pop") {
-            const fs = Math.round(Math.max(14, cam.tw * 0.24 * pp));
+            const fs = Math.round(Math.max(18, cam.tw * 0.34 * pp));
             ctx.font = `900 ${fs}px "Fredoka", "PingFang SC", sans-serif`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.lineJoin = "round";
             ctx.strokeStyle = OL;
-            ctx.lineWidth = 4.6;
+            ctx.lineWidth = Math.max(4.5, fs * 0.18);
             ctx.strokeText(f.text, sx, sy);
             ctx.fillStyle = f.col;
             ctx.fillText(f.text, sx, sy);
