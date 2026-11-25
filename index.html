@@ -8,66 +8,133 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
   html, body {
     margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-    background: #fbf4e1; color: #24183a;
+    background: #f5f2e4; color: #24183a;
     font-family: "Fredoka", "Nunito", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
   }
   canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: pointer; }
   .hud {
-    position: fixed; top: max(10px, env(safe-area-inset-top)); left: 12px; right: 12px;
+    position: fixed; top: max(8px, env(safe-area-inset-top)); left: 10px; right: 10px;
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
     pointer-events: none; z-index: 10;
   }
   .pill-group { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .pill-group.right { flex-wrap: nowrap; }
   .pill {
     pointer-events: auto;
-    background: #fffaf0; color: #24183a;
-    border: 3px solid #24183a; border-radius: 999px;
-    padding: 5px 13px; font-weight: 900; font-size: 13.5px; line-height: 1.2;
-    box-shadow: 2px 3px 0 #24183a;
+    background: #fffcf4; color: #24183a;
+    border: 2.5px solid #24183a; border-radius: 999px;
+    padding: 5px 12px; font-weight: 900; font-size: 13.5px; line-height: 1.2;
+    box-shadow: 2px 3px 0 #c9ae86, 2px 3px 0 1px #24183a;
     display: inline-flex; align-items: center; gap: 5px;
     white-space: nowrap;
   }
   .pill-title .zh-sub { opacity: 0.85; font-size: 12.5px; }
-  .pill-btn {
-    cursor: pointer; background: #ffe478; transition: transform 0.08s ease;
-  }
-  .pill-btn:active { transform: translate(1px, 2px); box-shadow: 1px 1px 0 #24183a; }
+  .pill-gold { background: #fff4bc; }
+  .pill-btn { cursor: pointer; background: #ffe478; transition: transform 0.08s ease; }
+  .pill-btn:active { transform: translate(1px, 2px); }
   .pill-btn.active { background: #ff9c54; }
-  .hint {
-    position: fixed; bottom: max(10px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
-    background: rgba(255, 250, 240, 0.95); color: #24183a;
-    border: 2.5px solid #24183a; border-radius: 999px;
-    padding: 5px 14px; font-weight: 800; font-size: 13px; white-space: nowrap;
-    box-shadow: 2px 3px 0 #24183a; pointer-events: none; z-index: 10;
+  .pill-shake { animation: shake 0.28s ease; background: #ffd0c4; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
   }
+
+  /* Bottom bar: Action mode + hint */
+  .bottom-bar {
+    position: fixed; bottom: max(10px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 8px; z-index: 12; pointer-events: none;
+  }
+  .mode-btn {
+    pointer-events: auto; cursor: pointer;
+    background: #fffcf4; color: #24183a;
+    border: 2.5px solid #24183a; border-radius: 999px;
+    padding: 6px 13px; font-weight: 900; font-size: 12.5px; white-space: nowrap;
+    box-shadow: 2px 3px 0 #c9ae86, 2px 3px 0 1px #24183a;
+  }
+  .mode-btn.plant { background: #dff5b0; }
+  .mode-btn.move { background: #ffe285; }
+  .hint {
+    background: rgba(255, 252, 244, 0.94); color: #24183a;
+    border: 2.5px solid #24183a; border-radius: 999px;
+    padding: 5px 12px; font-weight: 800; font-size: 12px; white-space: nowrap;
+    box-shadow: 2px 3px 0 #c9ae86;
+  }
+
+  /* Virtual crayon joystick (bottom-left) */
+  .joy-zone {
+    position: fixed; left: 14px; bottom: max(14px, env(safe-area-inset-bottom));
+    width: 102px; height: 102px; border-radius: 50%;
+    background: rgba(255, 252, 244, 0.68);
+    border: 3px dashed #5e4b3a;
+    box-shadow: 2px 3px 0 rgba(201, 174, 134, 0.65);
+    touch-action: none; z-index: 14;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .joy-knob {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #ffe159; border: 2.5px solid #24183a;
+    box-shadow: 2px 2px 0 #24183a;
+    pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 900;
+  }
+
+  /* Overlays (Hero Picker + Win/Lose) */
   .overlay {
     position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: rgba(36, 24, 58, 0.25); z-index: 20; padding: 20px;
+    background: rgba(245, 242, 226, 0.56); backdrop-filter: blur(2px);
+    z-index: 20; padding: 18px;
   }
   .overlay.hidden { display: none; }
   .card {
-    background: #fffaf0; color: #24183a;
-    border: 4px solid #24183a; border-radius: 26px;
-    box-shadow: 6px 7px 0 #24183a;
-    padding: 24px 28px; max-width: 370px; width: 100%; text-align: center;
+    background: #fffcf4; color: #24183a;
+    border: 4px solid #24183a; border-radius: 24px;
+    box-shadow: 5px 6px 0 #c9ae86, 5px 6px 0 2px #24183a;
+    padding: 20px 22px; max-width: 560px; width: 100%; text-align: center;
   }
-  .card h1 { margin: 0 0 8px; font-size: 27px; font-weight: 900; }
-  .card p { margin: 0 0 18px; font-size: 15px; font-weight: 700; color: #4c3b64; line-height: 1.45; }
+  .card h1 { margin: 0 0 6px; font-size: 24px; font-weight: 900; }
+  .card p { margin: 0 0 14px; font-size: 14px; font-weight: 700; color: #4c3b64; line-height: 1.4; }
+  .hero-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 6px;
+  }
+  .hero-opt {
+    cursor: pointer; background: #fffdf8; color: #24183a;
+    border: 3px solid #24183a; border-radius: 18px;
+    padding: 12px 8px; text-align: center;
+    box-shadow: 3px 4px 0 #c9ae86;
+    transition: transform 0.1s ease, background 0.1s ease;
+  }
+  .hero-opt:hover { transform: translateY(-2px); background: #fff7d4; }
+  .hero-opt:active { transform: translate(1px, 2px); }
+  .hero-opt img {
+    width: 74px; height: 74px; object-fit: contain; display: block; margin: 0 auto 6px;
+    filter: drop-shadow(0 0 2px #fff) drop-shadow(2px 2px 0 #cfb084);
+  }
+  .hero-opt .hname { font-size: 14.5px; font-weight: 900; line-height: 1.2; }
+  .hero-opt .hsub { font-size: 11.5px; font-weight: 800; color: #5b4875; margin-top: 3px; }
   .big-btn {
     display: inline-block; cursor: pointer;
     background: #ffe14a; color: #24183a;
-    border: 3.5px solid #24183a; border-radius: 16px;
-    padding: 10px 26px; font-size: 18px; font-weight: 900;
+    border: 3px solid #24183a; border-radius: 16px;
+    padding: 10px 26px; font-size: 17px; font-weight: 900;
     box-shadow: 3px 4px 0 #24183a; transition: transform 0.08s ease;
   }
   .big-btn:active { transform: translate(2px, 2px); box-shadow: 1px 2px 0 #24183a; }
-  @media (max-width: 680px) {
-    .hud { left: 8px; right: 8px; gap: 5px; align-items: flex-start; }
-    .pill-group { gap: 5px; }
-    .pill-group.right { flex-wrap: nowrap; }
-    .pill { font-size: 11px; padding: 4px 8px; border-width: 2.5px; box-shadow: 1.5px 2px 0 #24183a; }
+
+  @media (max-width: 720px) {
+    .hud { left: 8px; right: 8px; gap: 4px; align-items: flex-start; }
+    .pill-group { gap: 4px; }
+    .pill { font-size: 11px; padding: 4px 7px; border-width: 2px; }
     .pill-title .zh-sub { display: none; }
-    .hint { font-size: 11.5px; padding: 4px 11px; }
+    .joy-zone { width: 88px; height: 88px; left: 10px; bottom: max(54px, env(safe-area-inset-bottom)); }
+    .joy-knob { width: 38px; height: 38px; font-size: 15px; }
+    .bottom-bar { width: calc(100% - 16px); justify-content: center; }
+    .hint { display: none; }
+    .hero-grid { gap: 7px; }
+    .hero-opt img { width: 56px; height: 56px; }
+    .hero-opt .hname { font-size: 12.5px; }
+    .hero-opt .hsub { font-size: 10.5px; }
   }
 </style>
 </head>
@@ -77,7 +144,8 @@
 <div class="hud">
   <div class="pill-group">
     <div class="pill pill-title">🌶️ Pet Pals Defense 2: 3D War <span class="zh-sub">· 萌宠防线 2：3D战争</span></div>
-    <div class="pill" id="hud-wave">Wave 1 / 3</div>
+    <div class="pill" id="hud-wave">Wave 1 / 5</div>
+    <div class="pill pill-gold" id="hud-gold">🪙 60</div>
   </div>
   <div class="pill-group right">
     <div class="pill" id="hud-life">❤️ 1</div>
@@ -86,8 +154,41 @@
   </div>
 </div>
 
-<div class="hint" id="hint">点草地移动椒椒鼠 · Tap grass to hop Chili</div>
+<div class="joy-zone" id="joy-zone" aria-label="Move Joystick">
+  <div class="joy-knob" id="joy-knob">🐾</div>
+</div>
 
+<div class="bottom-bar">
+  <button class="mode-btn plant" id="btn-mode" type="button">🌱 点草地种椒椒鼠 (50🪙)</button>
+  <div class="hint" id="hint">WASD / 摇杆 / 右键自由移动主角 · 点草地种宠物炮台</div>
+</div>
+
+<!-- Hero Picker Overlay -->
+<div class="overlay" id="pick-overlay">
+  <div class="card">
+    <h1>选择你的主角宠物 · Pick Hero</h1>
+    <p>开局选一只宠物亲自上场移动战斗！也能花金币在草地上种小伙伴一起守窝。</p>
+    <div class="hero-grid">
+      <button class="hero-opt" data-hero="chili" type="button">
+        <img src="assets/pets/chili-1.webp" alt="Chili Mouse" />
+        <div class="hname">🌶️ 椒椒鼠</div>
+        <div class="hsub">Chili · 火焰灼烧</div>
+      </button>
+      <button class="hero-opt" data-hero="lemon" type="button">
+        <img src="assets/pets/lemon-1.webp" alt="Lemon Chick" />
+        <div class="hname">⚡ 闪电鸡</div>
+        <div class="hsub">Lemon · 极速闪电</div>
+      </button>
+      <button class="hero-opt" data-hero="blueberry" type="button">
+        <img src="assets/pets/blueberry-1.webp" alt="Blueberry Owl" />
+        <div class="hname">🫐 蓝莓枭</div>
+        <div class="hsub">Blueberry · 冰霜溅射</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Win / Lose Overlay -->
 <div class="overlay hidden" id="overlay">
   <div class="card">
     <h1 id="ov-title">You win!</h1>
@@ -96,1507 +197,6 @@
   </div>
 </div>
 
-<script>
-(() => {
-  "use strict";
-
-  const OL = "#24183a";
-  const TAU = Math.PI * 2;
-  const COLS = 6, ROWS = 5;
-  const PERSP_K = 0.048;
-
-  const PATH = [
-    [0, 1], [0, 2], [1, 2], [2, 2], [2, 1],
-    [3, 1], [4, 1], [4, 2], [4, 3], [5, 3]
-  ];
-  const PATH_SET = new Set(PATH.map(([x, y]) => x + "," + y));
-  const DEFAULT_PET_TILE = { x: 3, y: 2 };
-
-  // Rich 2.5D perimeter props (trees, bushes, rocks, wooden fences, signpost)
-  const SCENIC_PROPS = [
-    { kind: "tree",  gx: -0.22, gy: 0.18, scale: 1.05, seed: 11 },
-    { kind: "tree",  gx: 5.75,  gy: -0.22, scale: 0.96, seed: 22 },
-    { kind: "bush",  gx: 1.55,  gy: -0.26, scale: 0.92, seed: 33 },
-    { kind: "bush",  gx: 3.4,   gy: -0.26, scale: 0.85, seed: 38 },
-    { kind: "rock",  gx: -0.25, gy: 3.35, scale: 0.88, seed: 44 },
-    { kind: "tree",  gx: 6.18,  gy: 2.15, scale: 0.95, seed: 55 },
-    { kind: "bush",  gx: 2.5,   gy: 5.22, scale: 0.88, seed: 66 },
-    { kind: "rock",  gx: 5.2,   gy: 5.22, scale: 0.78, seed: 69 },
-    { kind: "sign",  gx: 0.92,  gy: 2.92, scale: 0.95, seed: 77 },
-    { kind: "fence", gx0: 0.1, gy0: 5.12, gx1: 2.0, gy1: 5.12, seed: 81 },
-    { kind: "fence", gx0: 3.2, gy0: 5.12, gx1: 4.8, gy1: 5.12, seed: 82 },
-    { kind: "fence", gx0: 6.12, gy0: 3.2, gx1: 6.12, gy1: 4.85, seed: 83 }
-  ];
-
-  const WAVES = [
-    [
-      { kind: "z1", delay: 0.28 },
-      { kind: "z1", delay: 1.4 },
-      { kind: "z1", delay: 1.3 },
-      { kind: "z1", delay: 1.25 }
-    ],
-    [
-      { kind: "z1", delay: 1.55 },
-      { kind: "z2", delay: 1.35 },
-      { kind: "z1", delay: 1.25 },
-      { kind: "z2", delay: 1.35 },
-      { kind: "z1", delay: 1.2 }
-    ],
-    [
-      { kind: "z2", delay: 1.55 },
-      { kind: "z1", delay: 1.15 },
-      { kind: "z3", delay: 1.4 },
-      { kind: "z2", delay: 1.25 },
-      { kind: "z3", delay: 1.35 },
-      { kind: "z3", delay: 1.45, boss: true }
-    ]
-  ];
-
-  const ENEMY_DEF = {
-    z1: { img: "z1", hp: 44, speed: 0.88, size: 1.0, tint: "#8ee258" },
-    z2: { img: "z2", hp: 82, speed: 0.80, size: 1.08, tint: "#76cdff" },
-    z3: { img: "z3", hp: 112, speed: 0.88, size: 1.14, tint: "#ff723b" }
-  };
-
-  /* ================= Assets ================= */
-  const IMG = {};
-  const ASSET_URLS = {
-    chili: "assets/pets/chili-1.webp",
-    z1: "assets/enemies/z-1.webp",
-    z2: "assets/enemies/z-2.webp",
-    z3: "assets/enemies/z-3.webp",
-    egg: "assets/fx/hen-egg.webp",
-    grain: "assets/ui/grain.png"
-  };
-  let grainPat = null;
-  let assetsLoaded = 0;
-  const totalAssets = Object.keys(ASSET_URLS).length;
-
-  function loadAllAssets(done) {
-    for (const [k, url] of Object.entries(ASSET_URLS)) {
-      const im = new Image();
-      im.onload = () => {
-        IMG[k] = im;
-        if (k === "grain") grainPat = null;
-        assetsLoaded++;
-        if (assetsLoaded >= totalAssets) done();
-      };
-      im.onerror = () => {
-        assetsLoaded++;
-        if (assetsLoaded >= totalAssets) done();
-      };
-      im.src = url;
-    }
-  }
-
-  /* ================= Math & Crayon Drawing Primitives ================= */
-  function hash(a, b) {
-    let n = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b ^ 0xc2b2ae35, 0x27d4eb2f);
-    n ^= n >>> 15;
-    n = Math.imul(n, 0x2c1b3c6d);
-    n ^= n >>> 12;
-    return (n >>> 0) / 4294967296;
-  }
-  function jit(i, s) { return hash(i * 7 + 3, s * 13 + 1) - 0.5; }
-  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
-  function lerp(a, b, t) { return a + (b - a) * t; }
-  function easeOutBack(t) {
-    const c1 = 1.70158, c3 = c1 + 1;
-    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-  }
-
-  function ensureGrain(c) {
-    if (!grainPat && IMG.grain && IMG.grain.naturalWidth) {
-      grainPat = c.createPattern(IMG.grain, "repeat");
-    }
-    return grainPat;
-  }
-
-  function applyGrain(c, alpha) {
-    const pat = ensureGrain(c);
-    if (!pat) return;
-    c.save();
-    c.globalAlpha = alpha == null ? 0.68 : alpha;
-    c.fillStyle = pat;
-    c.fill();
-    c.restore();
-  }
-
-  function buildJitterPath(c, pts, seed, amp, subdiv = 2, closed = true) {
-    const out = [];
-    const n = pts.length;
-    const segs = closed ? n : n - 1;
-    let idx = 0;
-    for (let i = 0; i < segs; i++) {
-      const p0 = pts[i], p1 = pts[(i + 1) % n];
-      for (let s = 0; s < subdiv; s++) {
-        const t = s / subdiv;
-        out.push([
-          lerp(p0[0], p1[0], t) + jit(idx * 3 + 1, seed) * amp,
-          lerp(p0[1], p1[1], t) + jit(idx * 3 + 2, seed + 19) * amp
-        ]);
-        idx++;
-      }
-    }
-    if (!closed && n > 0) {
-      const last = pts[n - 1];
-      out.push([last[0] + jit(idx * 3 + 1, seed) * amp, last[1] + jit(idx * 3 + 2, seed + 19) * amp]);
-    }
-    c.beginPath();
-    for (let i = 0; i < out.length; i++) {
-      if (i === 0) c.moveTo(out[i][0], out[i][1]);
-      else c.lineTo(out[i][0], out[i][1]);
-    }
-    if (closed) c.closePath();
-    return out;
-  }
-
-  function crayonPoly(c, pts, fill, seed, o = {}) {
-    const amp = o.amp ?? 1.7;
-    const lw = o.lw ?? 2.8;
-    const subdiv = o.subdiv ?? 2;
-    const ol = o.ol ?? OL;
-    const ptsOut = buildJitterPath(c, pts, seed, amp, subdiv, true);
-    if (fill) {
-      c.fillStyle = fill;
-      c.fill();
-      applyGrain(c, o.grain ?? 0.72);
-      if (o.hatch) {
-        c.save();
-        c.clip();
-        let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
-        for (const p of ptsOut) {
-          if (p[0] < minX) minX = p[0];
-          if (p[1] < minY) minY = p[1];
-          if (p[0] > maxX) maxX = p[0];
-          if (p[1] > maxY) maxY = p[1];
-        }
-        c.strokeStyle = o.hatch;
-        c.lineWidth = o.hatchLw || 2.1;
-        c.lineCap = "round";
-        c.globalAlpha = o.hatchAlpha ?? 0.34;
-        const step = o.hatchStep || 8;
-        for (let d = minX - (maxY - minY); d < maxX + (maxY - minY); d += step) {
-          c.beginPath();
-          c.moveTo(d, minY - 4);
-          c.lineTo(d + (maxY - minY) * 0.65, maxY + 4);
-          c.stroke();
-        }
-        c.restore();
-      }
-      if (o.hi) {
-        c.save();
-        c.clip();
-        c.strokeStyle = o.hi;
-        c.lineWidth = o.hiW || 4;
-        c.lineCap = "round";
-        c.globalAlpha = o.hiAlpha ?? 0.48;
-        c.beginPath();
-        c.moveTo(ptsOut[0][0], ptsOut[0][1]);
-        for (let i = 1; i < Math.min(ptsOut.length, 4); i++) c.lineTo(ptsOut[i][0], ptsOut[i][1]);
-        c.stroke();
-        c.restore();
-      }
-    }
-    if (lw > 0) {
-      c.save();
-      c.lineJoin = "round";
-      c.lineCap = "round";
-      c.strokeStyle = ol;
-      c.lineWidth = lw;
-      buildJitterPath(c, pts, seed, amp, subdiv, true);
-      c.stroke();
-      c.globalAlpha *= 0.58;
-      c.lineWidth = lw * 0.52;
-      buildJitterPath(c, pts, seed + 37, amp * 1.15, subdiv, true);
-      c.stroke();
-      c.restore();
-    }
-  }
-
-  function crayonStroke(c, pts, col, lw, seed, amp = 1.8) {
-    if (pts.length < 2) return;
-    c.save();
-    c.lineCap = "round";
-    c.lineJoin = "round";
-    buildJitterPath(c, pts, seed, amp, 2, false);
-    c.strokeStyle = OL;
-    c.lineWidth = lw + 3.4;
-    c.stroke();
-    buildJitterPath(c, pts, seed + 11, amp * 0.9, 2, false);
-    c.strokeStyle = col;
-    c.lineWidth = lw;
-    c.stroke();
-    c.restore();
-  }
-
-  function crayonEllipse(c, cx, cy, rx, ry, fill, seed, o = {}) {
-    const n = o.n || 16;
-    const pts = [];
-    for (let i = 0; i < n; i++) {
-      const a = (i / n) * TAU;
-      pts.push([cx + Math.cos(a) * rx, cy + Math.sin(a) * ry]);
-    }
-    crayonPoly(c, pts, fill, seed, { ...o, subdiv: 1 });
-  }
-
-  /* ================= 2.5D Perspective Camera (Fills Frame!) ================= */
-  const canvas = document.getElementById("c");
-  const ctx = canvas.getContext("2d");
-  let W = 1280, H = 720, DPR = 1;
-  let cam = { ox: 640, oy: 360, tw: 90, th: 36, zs: 84, slab: 40, margin: 0.45, portrait: false };
-  let bgCache = null;
-
-  function updateLayout() {
-    DPR = Math.min(2, window.devicePixelRatio || 1);
-    W = Math.max(320, window.innerWidth);
-    H = Math.max(320, window.innerHeight);
-    canvas.width = Math.round(W * DPR);
-    canvas.height = Math.round(H * DPR);
-
-    const portrait = W < H;
-    const margin = portrait ? 0.36 : 0.42;
-    const tilt = portrait ? 0.62 : 0.38;
-    // Total horizontal span across island corners is ~ (COLS + ROWS + 2 * margin) * tw * ~1.03
-    const spanU = COLS + ROWS + margin * 2;
-    const maxTwByW = (W * (portrait ? 0.96 : 0.85)) / (spanU * 1.02);
-    const maxTwByH = (H * (portrait ? 0.68 : 0.72)) / (spanU * tilt * 1.12 + 1.9);
-    const tw = Math.max(24, Math.min(maxTwByW, maxTwByH));
-    const th = tw * tilt;
-
-    cam = {
-      ox: W * 0.5,
-      oy: H * (portrait ? 0.52 : 0.47),
-      tw,
-      th,
-      zs: tw * (portrait ? 1.18 : 0.98),
-      slab: Math.max(22, tw * 0.52),
-      margin,
-      portrait
-    };
-    bgCache = null;
-  }
-
-  function proj(gx, gy, gz = 0) {
-    const cx = gx - COLS * 0.5;
-    const cy = gy - ROWS * 0.5;
-    const u = cx - cy;
-    const v = cx + cy;
-    const p = 1 / (1 - v * PERSP_K);
-    return [
-      cam.ox + u * cam.tw * p,
-      cam.oy + (v * cam.th - gz * cam.zs) * p,
-      p
-    ];
-  }
-
-  function screenToGrid(sx, sy) {
-    const dy = (sy - cam.oy) / cam.th;
-    const v = dy / (1 + dy * PERSP_K);
-    const p = 1 / (1 - v * PERSP_K);
-    const u = (sx - cam.ox) / (cam.tw * p);
-    const cx = (u + v) * 0.5;
-    const cy = (v - u) * 0.5;
-    return [cx + COLS * 0.5, cy + ROWS * 0.5];
-  }
-
-  function tileCorners(tx, ty, pad = 0, gz = 0) {
-    const x0 = tx + pad, x1 = tx + 1 - pad;
-    const y0 = ty + pad, y1 = ty + 1 - pad;
-    return [
-      proj(x0, y0, gz),
-      proj(x1, y0, gz),
-      proj(x1, y1, gz),
-      proj(x0, y1, gz)
-    ];
-  }
-
-  /* ================= Sunlit Storybook World & Rich 2.5D Diorama ================= */
-  function drawBackdropAndDiorama(c) {
-    // 1. Warm sunlit sky -> soft meadow cream
-    const grad = c.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, "#fdf6dc");
-    grad.addColorStop(0.42, "#f7eccb");
-    grad.addColorStop(1, "#e8f0cf");
-    c.fillStyle = grad;
-    c.fillRect(0, 0, W, H);
-    applyGrain(c, 0.28);
-
-    // Warm diagonal sunbeams
-    c.save();
-    c.fillStyle = "rgba(255, 253, 242, 0.45)";
-    for (let i = 0; i < 3; i++) {
-      const bx = W * (0.02 + i * 0.24);
-      c.beginPath();
-      c.moveTo(bx, 0);
-      c.lineTo(bx + W * 0.13, 0);
-      c.lineTo(bx + W * 0.38, H);
-      c.lineTo(bx + W * 0.18, H);
-      c.closePath();
-      c.fill();
-    }
-    c.restore();
-
-    // Distant rolling crayon hills behind the diorama
-    const hillY = cam.oy - cam.th * (cam.portrait ? 2.4 : 2.6);
-    c.save();
-    const hillPts1 = [[0, H], [0, hillY + 26]];
-    for (let x = 0; x <= W + 60; x += 60) {
-      hillPts1.push([x, hillY + Math.sin(x * 0.0055 + 0.7) * 24 + 18]);
-    }
-    hillPts1.push([W + 60, H]);
-    c.beginPath();
-    hillPts1.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y));
-    c.closePath();
-    c.fillStyle = "rgba(182, 220, 134, 0.45)";
-    c.fill();
-    applyGrain(c, 0.25);
-
-    const hillPts2 = [[0, H], [0, hillY + 58]];
-    for (let x = 0; x <= W + 50; x += 50) {
-      hillPts2.push([x, hillY + 48 + Math.cos(x * 0.007 - 0.5) * 18]);
-    }
-    hillPts2.push([W + 50, H]);
-    c.beginPath();
-    hillPts2.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y));
-    c.closePath();
-    c.fillStyle = "rgba(154, 202, 106, 0.34)";
-    c.fill();
-    c.restore();
-
-    // Hand-drawn crayon sun
-    const sunX = W * (cam.portrait ? 0.15 : 0.09);
-    const sunY = H * (cam.portrait ? 0.14 : 0.19);
-    const sunR = Math.min(W, H) * 0.045;
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * TAU;
-      crayonStroke(c, [
-        [sunX + Math.cos(a) * sunR * 1.25, sunY + Math.sin(a) * sunR * 1.25],
-        [sunX + Math.cos(a) * sunR * 1.66, sunY + Math.sin(a) * sunR * 1.66]
-      ], "#ffd24a", 3, 21 + i, 1.0);
-    }
-    crayonEllipse(c, sunX, sunY, sunR, sunR, "#ffe564", 20, { lw: 2.8, amp: 1.4, grain: 0.5 });
-
-
-
-    // 2. Floating 2.5D Island Base
-    const M = cam.margin;
-    const iT = proj(-M, -M, 0);
-    const iR = proj(COLS + M, -M, 0);
-    const iB = proj(COLS + M, ROWS + M, 0);
-    const iL = proj(-M, ROWS + M, 0);
-    const sL = cam.slab * iL[2];
-    const sB = cam.slab * iB[2];
-    const sR = cam.slab * iR[2];
-
-    // Ground drop shadow under floating island
-    c.save();
-    c.fillStyle = "rgba(62, 42, 34, 0.20)";
-    buildJitterPath(c, [
-      [iT[0] + 14, iT[1] + sB + 22],
-      [iR[0] + 22, iR[1] + sR + 24],
-      [iB[0] + 16, iB[1] + sB + 30],
-      [iL[0] + 4, iL[1] + sL + 22]
-    ], 510, 2.5, 3, true);
-    c.fill();
-    c.restore();
-
-    // Two-tone extruded earth & bedrock cliffs
-    const cliffL = [iL, iB, [iB[0] - 8 * iB[2], iB[1] + sB * 1.38], [iL[0] + 8 * iL[2], iL[1] + sL * 1.38]];
-    crayonPoly(c, cliffL, "#a67449", 111, {
-      amp: 2.0, lw: 3.2, grain: 0.8, hatch: "#6b4324", hatchStep: 11, hatchAlpha: 0.28
-    });
-    const cliffR = [iB, iR, [iR[0] - 8 * iR[2], iR[1] + sR * 1.38], [iB[0] - 8 * iB[2], iB[1] + sB * 1.38]];
-    crayonPoly(c, cliffR, "#805330", 112, {
-      amp: 2.0, lw: 3.2, grain: 0.8, hatch: "#4c2d16", hatchStep: 11, hatchAlpha: 0.32
-    });
-
-    // Cliff rocks, strata cracks & hanging crayon grass roots
-    for (let i = 0; i < 8; i++) {
-      const t = (i + 0.45) / 8;
-      const px = lerp(iL[0], iB[0], t);
-      const py = lerp(iL[1], iB[1], t) + lerp(sL, sB, t) * (0.48 + hash(i, 71) * 0.44);
-      crayonEllipse(c, px, py, cam.tw * 0.11, cam.tw * 0.065, i % 2 ? "#c89b6e" : "#8b5d38", 210 + i, { lw: 2.0, amp: 0.9 });
-    }
-    for (let i = 0; i < 7; i++) {
-      const t = (i + 0.45) / 7;
-      const px = lerp(iB[0], iR[0], t);
-      const py = lerp(iB[1], iR[1], t) + lerp(sB, sR, t) * (0.48 + hash(i, 83) * 0.44);
-      crayonEllipse(c, px, py, cam.tw * 0.095, cam.tw * 0.055, i % 2 ? "#9c6d44" : "#6b4324", 230 + i, { lw: 2.0, amp: 0.9 });
-    }
-
-    // Overhanging bright turf lip
-    const lipScale = 0.35;
-    crayonPoly(c, [iL, iB, [iB[0], iB[1] + sB * lipScale], [iL[0], iL[1] + sL * lipScale]], "#74c94c", 113, {
-      amp: 2.2, lw: 2.8, grain: 0.65
-    });
-    crayonPoly(c, [iB, iR, [iR[0], iR[1] + sR * lipScale], [iB[0], iB[1] + sB * lipScale]], "#58aa38", 114, {
-      amp: 2.2, lw: 2.8, grain: 0.65
-    });
-
-    // Outer island grassy deck
-    crayonPoly(c, [iT, iR, iB, iL], "#7fcf55", 115, {
-      amp: 1.8, lw: 3.2, grain: 0.72, hi: "#c4f58f", hiW: 5, hiAlpha: 0.4
-    });
-
-    // 3. Playable 6x5 Tiles (richer grass + sunken flagstone dirt path)
-    for (let d = 0; d <= COLS + ROWS - 2; d++) {
-      for (let tx = 0; tx < COLS; tx++) {
-        const ty = d - tx;
-        if (ty < 0 || ty >= ROWS) continue;
-        const isPath = PATH_SET.has(tx + "," + ty);
-        const corners = tileCorners(tx, ty, 0, 0);
-        if (isPath) {
-          crayonPoly(c, corners, "#edd49f", 300 + tx * 11 + ty, {
-            amp: 1.2, lw: 2.0, ol: "rgba(116, 78, 42, 0.65)", grain: 0.78
-          });
-          // Carved sunken path bevel shadow
-          c.save();
-          c.strokeStyle = "rgba(128, 86, 42, 0.44)";
-          c.lineWidth = Math.max(3, cam.tw * 0.08 * corners[0][2]);
-          c.lineCap = "round";
-          c.beginPath();
-          c.moveTo(corners[3][0], corners[3][1]);
-          c.lineTo(corners[0][0], corners[0][1]);
-          c.lineTo(corners[1][0], corners[1][1]);
-          c.stroke();
-          c.restore();
-
-          // Warm crayon flagstones / pebbles
-          for (let k = 0; k < 3; k++) {
-            const gx = tx + 0.20 + hash(tx * 7 + k, ty * 13) * 0.60;
-            const gy = ty + 0.20 + hash(tx * 17, ty * 5 + k) * 0.60;
-            const [px, py, pp] = proj(gx, gy, 0);
-            crayonEllipse(c, px, py, cam.tw * (0.07 + k * 0.018) * pp, cam.th * (0.07 + k * 0.015) * pp,
-              k === 0 ? "#d7b67f" : (k === 1 ? "#f7e5be" : "#e3c48e"),
-              400 + tx * 9 + ty + k, { lw: 1.6, amp: 0.7 });
-          }
-        } else {
-          const even = (tx + ty) % 2 === 0;
-          crayonPoly(c, corners, even ? "#a1e269" : "#90d658", 500 + tx * 13 + ty, {
-            amp: 1.1, lw: 1.7, ol: "rgba(52, 98, 34, 0.48)", grain: 0.74,
-            hi: even ? "#d0f898" : "#bcefa6", hiW: 2.6, hiAlpha: 0.4
-          });
-          const inner = tileCorners(tx, ty, 0.14, 0);
-          c.save();
-          c.setLineDash([5, 5]);
-          c.strokeStyle = "rgba(255, 255, 240, 0.65)";
-          c.lineWidth = 1.6;
-          c.beginPath();
-          c.moveTo(inner[0][0], inner[0][1]);
-          c.lineTo(inner[1][0], inner[1][1]);
-          c.lineTo(inner[2][0], inner[2][1]);
-          c.lineTo(inner[3][0], inner[3][1]);
-          c.closePath();
-          c.stroke();
-          c.restore();
-
-          const rnd = hash(tx + 5, ty + 11);
-          if (rnd > 0.45) {
-            const [gx, gy, pp] = proj(tx + 0.20 + rnd * 0.12, ty + 0.78, 0);
-            c.save();
-            c.strokeStyle = "#458d2a";
-            c.lineWidth = 2.2;
-            c.lineCap = "round";
-            c.beginPath();
-            c.moveTo(gx, gy); c.lineTo(gx - 3.5 * pp, gy - 7.5 * pp);
-            c.moveTo(gx + 2 * pp, gy); c.lineTo(gx + 4.5 * pp, gy - 8.5 * pp);
-            c.stroke();
-            if (rnd > 0.72) {
-              crayonEllipse(c, gx + 4.5 * pp, gy - 8.5 * pp, 3.6 * pp, 3.6 * pp, rnd > 0.86 ? "#ffe054" : "#ff94b8", 77 + tx, { lw: 1.4, amp: 0.4 });
-            }
-            c.restore();
-          }
-        }
-      }
-    }
-
-    const gT = proj(0, 0, 0), gR = proj(COLS, 0, 0), gB = proj(COLS, ROWS, 0), gL = proj(0, ROWS, 0);
-    crayonPoly(c, [gT, gR, gB, gL], null, 901, { amp: 1.4, lw: 2.8, ol: "rgba(36, 24, 58, 0.68)" });
-  }
-
-  function ensureBgCache() {
-    if (bgCache) return bgCache;
-    bgCache = document.createElement("canvas");
-    bgCache.width = canvas.width;
-    bgCache.height = canvas.height;
-    const bc = bgCache.getContext("2d");
-    bc.scale(DPR, DPR);
-    drawBackdropAndDiorama(bc);
-    return bgCache;
-  }
-
-  /* ================= Game State ================= */
-  let simTime = 0;
-  let speedMul = 1;
-  let hoverTile = null;
-  let game = null;
-
-  function resetGame() {
-    game = {
-      waveIdx: 0,
-      spawnIdx: 0,
-      spawnTimer: 0.25,
-      wavePause: 0,
-      lives: 1,
-      over: false,
-      won: false,
-      pet: {
-        tx: DEFAULT_PET_TILE.x,
-        ty: DEFAULT_PET_TILE.y,
-        gx: DEFAULT_PET_TILE.x + 0.5,
-        gy: DEFAULT_PET_TILE.y + 0.5,
-        gz: 0,
-        fromX: DEFAULT_PET_TILE.x + 0.5,
-        fromY: DEFAULT_PET_TILE.y + 0.5,
-        toX: DEFAULT_PET_TILE.x + 0.5,
-        toY: DEFAULT_PET_TILE.y + 0.5,
-        hopT: 1,
-        hopDur: 0.25,
-        range: 2.18,
-        atkCd: 0.12,
-        atkRate: 0.54,
-        dmg: 28,
-        burnDmg: 8,
-        burnDur: 2.7,
-        facing: -1,
-        recoil: 0,
-        fireGlow: 0,
-        rangeGlow: 0.45
-      },
-      enemies: [],
-      shots: [],
-      fx: [],
-      scorch: []
-    };
-    document.getElementById("overlay").classList.add("hidden");
-    syncHud();
-  }
-
-  function syncHud() {
-    if (!game) return;
-    const wNum = Math.min(WAVES.length, game.waveIdx + 1);
-    document.getElementById("hud-wave").textContent = "Wave " + wNum + " / " + WAVES.length;
-    document.getElementById("hud-life").textContent = "❤️ " + game.lives;
-  }
-
-  function showOverlay(won) {
-    const ov = document.getElementById("overlay");
-    const t = document.getElementById("ov-title");
-    const s = document.getElementById("ov-sub");
-    const b = document.getElementById("ov-btn");
-    if (won) {
-      t.textContent = "You win! 🎉";
-      s.textContent = "椒椒鼠守住了小窝！(3/3 波全灭)";
-      b.textContent = "Replay / 再玩一次";
-    } else {
-      t.textContent = "Try again! 💥";
-      s.textContent = "史莱姆闯进小窝了！(小窝只有 1 点生命)";
-      b.textContent = "Try again / 再试一次";
-    }
-    ov.classList.remove("hidden");
-  }
-
-  function pathPos(dist) {
-    const maxD = PATH.length - 1;
-    const clamped = clamp(dist, 0, maxD);
-    const i = Math.min(maxD - 1, Math.floor(clamped));
-    const f = clamped - i;
-    const a = PATH[i], b = PATH[i + 1];
-    return [lerp(a[0] + 0.5, b[0] + 0.5, f), lerp(a[1] + 0.5, b[1] + 0.5, f)];
-  }
-
-  /* ================= Spawn BIG Juicy Doodle FX ================= */
-  const HIT_WORDS = ["POW!", "BOOM!", "ZAP!", "啪!", "轰!"];
-  function addFx(obj) { game.fx.push(obj); }
-
-  function spawnCastDoodle(gx, gy, gz, dx, dy) {
-    addFx({
-      k: "cast", gx, gy, gz, dx, dy,
-      life: 0.30, max: 0.30, seed: Math.floor(Math.random() * 9999)
-    });
-  }
-
-  function spawnImpactDoodle(gx, gy, gz, isKill) {
-    const word = HIT_WORDS[Math.floor(Math.random() * HIT_WORDS.length)];
-    addFx({
-      k: "hit", gx, gy, gz, word, big: !!isKill,
-      life: 0.44, max: 0.44, seed: Math.floor(Math.random() * 9999)
-    });
-    const count = isKill ? 7 : 5;
-    for (let i = 0; i < count; i++) {
-      const a = (i / count) * TAU + Math.random() * 0.35;
-      const spd = 1.25 + Math.random() * 1.0;
-      addFx({
-        k: "doodleBit",
-        shape: i % 3 === 0 ? "star" : (i % 3 === 1 ? "flame" : "spiral"),
-        gx: gx + Math.cos(a) * 0.28,
-        gy: gy + Math.sin(a) * 0.28,
-        gz: gz + 0.10,
-        vx: Math.cos(a) * spd,
-        vy: Math.sin(a) * spd,
-        vz: 1.65 + Math.random() * 1.0,
-        life: 0.44 + Math.random() * 0.12,
-        max: 0.56,
-        col: i % 2 ? "#ffe24a" : "#ff5321",
-        seed: Math.floor(Math.random() * 9999)
-      });
-    }
-  }
-
-  function spawnDeathPuff(gx, gy, tint) {
-    addFx({
-      k: "puff", gx, gy, gz: 0.36,
-      tint: tint || "#a8e878",
-      life: 0.60, max: 0.60, seed: Math.floor(Math.random() * 9999)
-    });
-    game.scorch.push({ gx, gy, life: 1.9, max: 1.9, seed: Math.floor(Math.random() * 999) });
-  }
-
-  function spawnDustPuff(gx, gy) {
-    addFx({
-      k: "dust", gx, gy, gz: 0.06,
-      life: 0.34, max: 0.34, seed: Math.floor(Math.random() * 9999)
-    });
-  }
-
-  function spawnDmgPop(gx, gy, gz, text, col) {
-    addFx({
-      k: "pop", gx, gy, gz, text, col: col || "#ffe45c",
-      life: 0.65, max: 0.65, seed: Math.floor(Math.random() * 9999)
-    });
-  }
-
-  /* ================= Simulation Step ================= */
-  function step(dt) {
-    if (!game || game.over) return;
-
-    const wave = WAVES[game.waveIdx];
-    if (wave && game.spawnIdx < wave.length) {
-      game.spawnTimer -= dt;
-      if (game.spawnTimer <= 0) {
-        const entry = wave[game.spawnIdx++];
-        const def = ENEMY_DEF[entry.kind];
-        const [sx, sy] = pathPos(0);
-        game.enemies.push({
-          kind: entry.kind,
-          img: def.img,
-          tint: def.tint,
-          boss: !!entry.boss,
-          hp: entry.boss ? def.hp + 30 : def.hp,
-          maxHp: entry.boss ? def.hp + 30 : def.hp,
-          speed: def.speed,
-          size: entry.boss ? def.size * 1.18 : def.size,
-          dist: 0,
-          gx: sx, gy: sy, gz: 0,
-          hopPhase: Math.random() * TAU,
-          hitFlash: 0,
-          burnT: 0,
-          burnTick: 0.38,
-          burnSeed: Math.floor(Math.random() * 9999)
-        });
-        if (game.spawnIdx < wave.length) game.spawnTimer = wave[game.spawnIdx].delay;
-      }
-    } else if (game.enemies.length === 0) {
-      if (game.waveIdx + 1 < WAVES.length) {
-        game.wavePause += dt;
-        if (game.wavePause >= 0.95) {
-          game.waveIdx++;
-          game.spawnIdx = 0;
-          game.spawnTimer = 0.35;
-          game.wavePause = 0;
-          syncHud();
-        }
-      } else {
-        game.over = true;
-        game.won = true;
-        showOverlay(true);
-        return;
-      }
-    }
-
-    const pet = game.pet;
-    pet.recoil = Math.max(0, pet.recoil - dt * 4.5);
-    pet.fireGlow = Math.max(0, pet.fireGlow - dt * 3.0);
-    pet.rangeGlow = Math.max(0.28, pet.rangeGlow - dt * 0.7);
-    if (pet.hopT < 1) {
-      pet.hopT = Math.min(1, pet.hopT + dt / pet.hopDur);
-      const t = pet.hopT;
-      pet.gx = lerp(pet.fromX, pet.toX, t);
-      pet.gy = lerp(pet.fromY, pet.toY, t);
-      pet.gz = Math.sin(t * Math.PI) * 0.65;
-      if (pet.hopT >= 1) {
-        pet.gz = 0;
-        spawnDustPuff(pet.gx, pet.gy);
-      }
-    } else {
-      pet.atkCd -= dt;
-      if (pet.atkCd <= 0) {
-        let target = null, bestDist = -1;
-        for (const e of game.enemies) {
-          const d = Math.hypot(e.gx - pet.gx, e.gy - pet.gy);
-          if (d <= pet.range && e.dist > bestDist) {
-            bestDist = e.dist;
-            target = e;
-          }
-        }
-        if (target) {
-          pet.atkCd = pet.atkRate;
-          pet.recoil = 1;
-          pet.fireGlow = 1;
-          const [psx] = proj(pet.gx, pet.gy, 0);
-          const [tsx] = proj(target.gx, target.gy, 0);
-          pet.facing = tsx >= psx ? 1 : -1;
-
-          const startZ = 0.55;
-          const dx = target.gx - pet.gx, dy = target.gy - pet.gy;
-          const dist = Math.max(0.1, Math.hypot(dx, dy));
-          const ux = dx / dist, uy = dy / dist;
-          const mx = pet.gx + ux * 0.48, my = pet.gy + uy * 0.48;
-          spawnCastDoodle(mx, my, startZ, dx, dy);
-          game.shots.push({
-            sx: mx, sy: my, sz: startZ,
-            gx: mx, gy: my, gz: startZ,
-            target,
-            tx: target.gx, ty: target.gy, tz: 0.42,
-            t: 0, dur: clamp(dist * 0.15, 0.22, 0.36),
-            dmg: pet.dmg,
-            burnDmg: pet.burnDmg,
-            burnDur: pet.burnDur,
-            trail: [],
-            seed: Math.floor(Math.random() * 9999)
-          });
-        }
-      }
-    }
-
-    for (let i = game.shots.length - 1; i >= 0; i--) {
-      const s = game.shots[i];
-      if (s.target && s.target.hp > 0) {
-        s.tx = s.target.gx;
-        s.ty = s.target.gy;
-        s.tz = s.target.gz + 0.40;
-      }
-      s.t += dt / s.dur;
-      const p = clamp(s.t, 0, 1);
-      s.gx = lerp(s.sx, s.tx, p);
-      s.gy = lerp(s.sy, s.ty, p);
-      s.gz = lerp(s.sz, s.tz, p) + Math.sin(p * Math.PI) * 0.78;
-
-      if (!s.lastTrail || Math.hypot(s.gx - s.lastTrail[0], s.gy - s.lastTrail[1]) > 0.16) {
-        s.trail.push({ gx: s.gx, gy: s.gy, gz: s.gz });
-        s.lastTrail = [s.gx, s.gy];
-        if (s.trail.length > 7) s.trail.shift();
-      }
-
-      if (s.t >= 1) {
-        if (s.target && s.target.hp > 0) {
-          damageEnemy(s.target, s.dmg, false);
-          s.target.burnT = s.burnDur;
-          s.target.burnTick = Math.min(s.target.burnTick, 0.34);
-          spawnImpactDoodle(s.gx, s.gy, s.gz + 0.12, s.target.hp <= 0);
-        } else {
-          spawnImpactDoodle(s.gx, s.gy, s.gz, false);
-        }
-        game.shots.splice(i, 1);
-      }
-    }
-
-    const maxDist = PATH.length - 1;
-    for (let i = game.enemies.length - 1; i >= 0; i--) {
-      const e = game.enemies[i];
-      e.hitFlash = Math.max(0, e.hitFlash - dt * 5);
-
-      if (e.burnT > 0) {
-        e.burnT -= dt;
-        e.burnTick -= dt;
-        if (e.burnTick <= 0) {
-          e.burnTick = 0.44;
-          damageEnemy(e, game.pet.burnDmg, true);
-        }
-      }
-
-      if (e.hp <= 0) {
-        spawnDeathPuff(e.gx, e.gy, e.tint);
-        game.enemies.splice(i, 1);
-        continue;
-      }
-
-      e.dist += e.speed * dt;
-      e.hopPhase += dt * 9.2;
-      const [nx, ny] = pathPos(e.dist);
-      e.gx = nx;
-      e.gy = ny;
-      e.gz = Math.abs(Math.sin(e.hopPhase)) * 0.20;
-
-      if (e.dist >= maxDist) {
-        game.lives = 0;
-        syncHud();
-        spawnImpactDoodle(e.gx, e.gy, 0.45, true);
-        game.enemies.splice(i, 1);
-        game.over = true;
-        game.won = false;
-        showOverlay(false);
-        return;
-      }
-    }
-
-    for (let i = game.fx.length - 1; i >= 0; i--) {
-      const f = game.fx[i];
-      f.life -= dt;
-      if (f.k === "doodleBit") {
-        f.gx += f.vx * dt;
-        f.gy += f.vy * dt;
-        f.gz = Math.max(0, f.gz + f.vz * dt);
-        f.vz -= 4.2 * dt;
-      } else if (f.k === "pop") {
-        f.gz += 0.7 * dt;
-      }
-      if (f.life <= 0) game.fx.splice(i, 1);
-    }
-    for (let i = game.scorch.length - 1; i >= 0; i--) {
-      game.scorch[i].life -= dt;
-      if (game.scorch[i].life <= 0) game.scorch.splice(i, 1);
-    }
-  }
-
-  function damageEnemy(e, dmg, isBurn) {
-    e.hp -= dmg;
-    e.hitFlash = isBurn ? 0.45 : 1.0;
-    spawnDmgPop(
-      e.gx + (Math.random() - 0.5) * 0.18,
-      e.gy + (Math.random() - 0.5) * 0.18,
-      e.gz + 1.05,
-      (isBurn ? "🔥-" : "-") + dmg,
-      isBurn ? "#ff6828" : "#ffe24a"
-    );
-  }
-
-  /* ================= BIG Hand-Drawn Crayon Doodle FX ================= */
-  function getBoil() { return Math.floor(simTime * 11); }
-
-  function drawDoodleFlame(c, sx, sy, scale, seed, boil) {
-    const s = scale;
-    const bSeed = seed + boil * 17;
-    const sway = Math.sin(simTime * 13 + seed) * s * 0.13;
-    const stretch = 1 + Math.sin(simTime * 16 + seed * 2) * 0.11;
-
-    const outerPts = [
-      [sx, sy + s * 0.22],
-      [sx - s * 0.48, sy + s * 0.08],
-      [sx - s * 0.64, sy - s * 0.28],
-      [sx - s * 0.34, sy - s * 0.23],
-      [sx - s * 0.44, sy - s * 0.72 * stretch],
-      [sx - s * 0.14, sy - s * 0.48],
-      [sx + sway, sy - s * 1.15 * stretch],
-      [sx + s * 0.24, sy - s * 0.52],
-      [sx + s * 0.50, sy - s * 0.74 * stretch],
-      [sx + s * 0.38, sy - s * 0.25],
-      [sx + s * 0.62, sy - s * 0.20],
-      [sx + s * 0.46, sy + s * 0.10]
-    ];
-    crayonPoly(c, outerPts, "#ff4d1c", bSeed, {
-      amp: s * 0.075, lw: Math.max(2.6, s * 0.085), subdiv: 1,
-      grain: 0.78, hatch: "#d62208", hatchStep: Math.max(5, s * 0.20), hatchAlpha: 0.32
-    });
-
-    const innerPts = [
-      [sx, sy + s * 0.14],
-      [sx - s * 0.26, sy + s * 0.02],
-      [sx - s * 0.25, sy - s * 0.36],
-      [sx - s * 0.07, sy - s * 0.26],
-      [sx + sway * 0.75, sy - s * 0.72 * stretch],
-      [sx + s * 0.13, sy - s * 0.28],
-      [sx + s * 0.28, sy - s * 0.38],
-      [sx + s * 0.24, sy + s * 0.03]
-    ];
-    crayonPoly(c, innerPts, "#ffe24a", bSeed + 9, {
-      amp: s * 0.05, lw: Math.max(1.8, s * 0.055), subdiv: 1, grain: 0.55
-    });
-
-    const emY = sy - s * (1.28 + ((simTime * 2.1 + seed) % 0.48));
-    const emX = sx + sway * 1.5 + Math.sin(simTime * 9 + seed) * s * 0.18;
-    const er = Math.max(3.2, s * 0.13);
-    crayonPoly(c, [
-      [emX, emY - er * 1.5],
-      [emX + er, emY],
-      [emX, emY + er],
-      [emX - er, emY]
-    ], "#ffe047", bSeed + 23, { amp: 0.8, lw: 2.0, subdiv: 1 });
-  }
-
-  function drawDoodleStar(c, x, y, r, fill, seed, boil) {
-    const pts = [];
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * TAU - Math.PI / 2;
-      const rr = i % 2 === 0 ? r : r * 0.38;
-      pts.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]);
-    }
-    crayonPoly(c, pts, fill, seed + boil * 13, { amp: r * 0.09, lw: 2.2, subdiv: 1, grain: 0.45 });
-  }
-
-  function drawDoodleSpiral(c, x, y, r, col, seed, boil) {
-    const pts = [];
-    for (let i = 0; i <= 12; i++) {
-      const t = i / 12;
-      const a = t * TAU * 1.3 + seed;
-      pts.push([x + Math.cos(a) * r * t, y + Math.sin(a) * r * t]);
-    }
-    crayonStroke(c, pts, col, 2.8, seed + boil, 0.9);
-  }
-
-  function drawDirectionalShadow(c, sx, sy, rx, ry, alpha = 0.28) {
-    c.save();
-    c.translate(sx + rx * 0.18, sy + ry * 0.16);
-    c.rotate(0.18);
-    c.fillStyle = `rgba(42, 26, 48, ${alpha})`;
-    c.beginPath();
-    c.ellipse(0, 0, rx, ry, 0, 0, TAU);
-    c.fill();
-    c.restore();
-  }
-
-  function drawBillboardSprite(c, im, sx, sy, hPx, facing = 1, squash = 0, flash = 0) {
-    if (!im || !im.naturalWidth) return;
-    const aspect = im.naturalWidth / im.naturalHeight;
-    const wPx = hPx * aspect;
-    c.save();
-    c.imageSmoothingEnabled = true;
-    c.imageSmoothingQuality = "high";
-    c.translate(sx, sy);
-    c.scale(facing * (1 + squash * 0.16), 1 - squash * 0.14);
-    c.drawImage(im, -wPx * 0.5, -hPx, wPx, hPx);
-    if (flash > 0.05) {
-      c.globalCompositeOperation = "lighter";
-      c.globalAlpha = Math.min(0.68, flash * 0.68);
-      c.drawImage(im, -wPx * 0.5, -hPx, wPx, hPx);
-    }
-    c.restore();
-  }
-
-  /* ================= 2.5D Scenic Props ================= */
-  function drawScenicProp(c, prop, boil) {
-    if (prop.kind === "fence") {
-      const steps = 4;
-      const posts = [];
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const [px, py, pp] = proj(lerp(prop.gx0, prop.gx1, t), lerp(prop.gy0, prop.gy1, t), 0);
-        posts.push([px, py, pp]);
-      }
-      // Horizontal rails
-      const h1 = cam.tw * 0.16, h2 = cam.tw * 0.30;
-      crayonStroke(c, posts.map(([x, y, p]) => [x, y - h1 * p]), "#c99254", 3.4, prop.seed, 0.8);
-      crayonStroke(c, posts.map(([x, y, p]) => [x, y - h2 * p]), "#d9a362", 3.4, prop.seed + 1, 0.8);
-      // Vertical posts
-      for (let i = 0; i < posts.length; i++) {
-        const [x, y, p] = posts[i];
-        const ph = cam.tw * 0.40 * p;
-        const pw = cam.tw * 0.055 * p;
-        crayonPoly(c, [
-          [x - pw, y], [x - pw, y - ph], [x, y - ph * 1.15], [x + pw, y - ph], [x + pw, y]
-        ], "#e2b270", prop.seed + 10 + i, { lw: 2.2, amp: 0.7, subdiv: 1 });
-      }
-      return;
-    }
-
-    const [sx, sy, pp] = proj(prop.gx, prop.gy, 0);
-    const s = cam.tw * prop.scale * pp;
-    if (prop.kind === "tree") {
-      drawDirectionalShadow(c, sx, sy + 2, s * 0.58, s * 0.25, 0.26);
-      crayonPoly(c, [
-        [sx - s * 0.13, sy],
-        [sx - s * 0.10, sy - s * 0.62],
-        [sx + s * 0.10, sy - s * 0.62],
-        [sx + s * 0.14, sy]
-      ], "#9a663b", prop.seed, { lw: 2.8, amp: 1.3, hatch: "#6b4222", hatchStep: 6 });
-      crayonEllipse(c, sx + s * 0.18, sy - s * 0.74, s * 0.38, s * 0.30, "#4ba236", prop.seed + 1, { lw: 2.8, amp: 1.8 });
-      crayonEllipse(c, sx - s * 0.18, sy - s * 0.80, s * 0.40, s * 0.32, "#62bd44", prop.seed + 2, { lw: 2.8, amp: 1.8 });
-      crayonEllipse(c, sx, sy - s * 1.02, s * 0.45, s * 0.35, "#86dc59", prop.seed + 3, { lw: 2.8, amp: 1.8, hi: "#c7f794", hiW: 3.5 });
-      crayonEllipse(c, sx - s * 0.20, sy - s * 0.84, s * 0.085, s * 0.09, "#ee3e32", prop.seed + 5, { lw: 2.0, amp: 0.6 });
-      crayonEllipse(c, sx + s * 0.18, sy - s * 0.94, s * 0.08, s * 0.085, "#ee3e32", prop.seed + 6, { lw: 2.0, amp: 0.6 });
-    } else if (prop.kind === "bush") {
-      drawDirectionalShadow(c, sx, sy + 2, s * 0.46, s * 0.19, 0.25);
-      crayonEllipse(c, sx - s * 0.20, sy - s * 0.18, s * 0.26, s * 0.20, "#5cb43e", prop.seed, { lw: 2.5, amp: 1.4 });
-      crayonEllipse(c, sx + s * 0.18, sy - s * 0.17, s * 0.24, s * 0.19, "#4c9e32", prop.seed + 1, { lw: 2.5, amp: 1.4 });
-      crayonEllipse(c, sx, sy - s * 0.28, s * 0.28, s * 0.22, "#84d65a", prop.seed + 2, { lw: 2.5, amp: 1.4 });
-      crayonEllipse(c, sx - s * 0.09, sy - s * 0.30, s * 0.06, s * 0.06, "#ff8eb8", prop.seed + 4, { lw: 1.5, amp: 0.4 });
-      crayonEllipse(c, sx + s * 0.12, sy - s * 0.20, s * 0.055, s * 0.055, "#ffe464", prop.seed + 5, { lw: 1.5, amp: 0.4 });
-    } else if (prop.kind === "rock") {
-      drawDirectionalShadow(c, sx, sy + 2, s * 0.38, s * 0.16, 0.24);
-      crayonPoly(c, [
-        [sx - s * 0.34, sy],
-        [sx - s * 0.25, sy - s * 0.30],
-        [sx + s * 0.06, sy - s * 0.36],
-        [sx + s * 0.34, sy - s * 0.15],
-        [sx + s * 0.30, sy + s * 0.04]
-      ], "#b8b0a2", prop.seed, { lw: 2.6, amp: 1.4, hatch: "#867e72", hatchStep: 7, hi: "#ece6da", hiW: 3 });
-    } else if (prop.kind === "sign") {
-      drawDirectionalShadow(c, sx, sy + 1, s * 0.24, s * 0.11, 0.24);
-      crayonStroke(c, [[sx, sy], [sx, sy - s * 0.50]], "#8a5a34", 3.8, prop.seed, 0.8);
-      crayonPoly(c, [
-        [sx - s * 0.28, sy - s * 0.62],
-        [sx + s * 0.20, sy - s * 0.64],
-        [sx + s * 0.35, sy - s * 0.48],
-        [sx + s * 0.18, sy - s * 0.34],
-        [sx - s * 0.28, sy - s * 0.36]
-      ], "#e7ba6a", prop.seed + 2, { lw: 2.6, amp: 1.0 });
-    }
-  }
-
-  /* ================= Render Scene (Depth-Sorted 2.5D) ================= */
-  function render() {
-    const boil = getBoil();
-    const bg = ensureBgCache();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg, 0, 0);
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
-    // Animated drifting crayon clouds (clear of the sun)
-    ctx.save();
-    for (let i = 0; i < 3; i++) {
-      const minX = W * 0.28;
-      const span = W * 0.78;
-      const cx = minX + ((i * span * 0.36 + simTime * (6 + i * 2)) % span);
-      const cy = H * (0.11 + (i % 2) * 0.055);
-      const cw = (cam.portrait ? 30 : 42) + i * 8;
-      crayonEllipse(ctx, cx, cy, cw, cw * 0.46, "#fffdf6", 30 + i, { lw: 2.2, ol: "rgba(36,24,58,0.26)", amp: 1.2, grain: 0.2 });
-    }
-    ctx.restore();
-
-    // Directional chalk chevrons along path
-    ctx.save();
-    ctx.strokeStyle = "rgba(130, 86, 42, 0.48)";
-    ctx.lineWidth = 2.8;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    for (let i = 0; i < PATH.length - 1; i += 2) {
-      const a = proj(PATH[i][0] + 0.5, PATH[i][1] + 0.5, 0);
-      const b = proj(PATH[i + 1][0] + 0.5, PATH[i + 1][1] + 0.5, 0);
-      const mx = lerp(a[0], b[0], 0.5), my = lerp(a[1], b[1], 0.5);
-      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
-      const sz = Math.max(6, cam.tw * 0.13 * a[2]);
-      ctx.beginPath();
-      ctx.moveTo(mx - Math.cos(ang - 0.65) * sz, my - Math.sin(ang - 0.65) * sz);
-      ctx.lineTo(mx, my);
-      ctx.lineTo(mx - Math.cos(ang + 0.65) * sz, my - Math.sin(ang + 0.65) * sz);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // Hovered grass tile highlight
-    if (hoverTile && !PATH_SET.has(hoverTile.x + "," + hoverTile.y)) {
-      const hc = tileCorners(hoverTile.x, hoverTile.y, 0.06, 0);
-      crayonPoly(ctx, hc, "rgba(255, 246, 158, 0.48)", 701 + boil, {
-        amp: 1.3, lw: 3.0, ol: "#ff8c24", subdiv: 1, grain: 0.3
-      });
-    }
-
-    // Chili Mouse pedestal highlight & 2.5D perspective range ellipse
-    const pet = game.pet;
-    const petTileCorners = tileCorners(pet.tx, pet.ty, 0.07, 0);
-    crayonPoly(ctx, petTileCorners, "rgba(255, 224, 92, 0.38)", 720, {
-      amp: 1.2, lw: 3.0, ol: "#e65b25", subdiv: 1, grain: 0.3
-    });
-
-    ctx.save();
-    ctx.globalAlpha = pet.rangeGlow;
-    ctx.setLineDash([9, 7]);
-    ctx.strokeStyle = "#ff5a22";
-    ctx.lineWidth = 2.8;
-    ctx.beginPath();
-    const rn = 28;
-    for (let i = 0; i <= rn; i++) {
-      const a = (i / rn) * TAU;
-      const [rx, ry] = proj(pet.gx + Math.cos(a) * pet.range, pet.gy + Math.sin(a) * pet.range, 0);
-      const j = jit(i % rn, 801 + boil) * 1.8;
-      if (i === 0) ctx.moveTo(rx + j, ry + j);
-      else ctx.lineTo(rx + j, ry + j);
-    }
-    ctx.stroke();
-    ctx.restore();
-
-    // Ground chalk X marks from defeated slimes
-    for (const sc of game.scorch) {
-      const a = Math.min(1, sc.life / sc.max);
-      const [sx, sy, pp] = proj(sc.gx, sc.gy, 0);
-      const sz = cam.tw * 0.16 * pp;
-      ctx.save();
-      ctx.globalAlpha = a * 0.6;
-      ctx.strokeStyle = "#4d3528";
-      ctx.lineWidth = 2.8;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(sx - sz, sy - sz * 0.5); ctx.lineTo(sx + sz, sy + sz * 0.5);
-      ctx.moveTo(sx + sz, sy - sz * 0.5); ctx.lineTo(sx - sz, sy + sz * 0.5);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    const drawList = [];
-
-    for (const prop of SCENIC_PROPS) {
-      const depth = prop.kind === "fence"
-        ? (prop.gx0 + prop.gx1) * 0.5 + (prop.gy0 + prop.gy1) * 0.5
-        : prop.gx + prop.gy;
-      drawList.push({
-        depth,
-        draw: () => drawScenicProp(ctx, prop, boil)
-      });
-    }
-
-    // 2.5D Arched Spawn Cave Burrow at PATH[0]
-    const [btx, bty] = PATH[0];
-    drawList.push({
-      depth: btx + bty + 0.9,
-      draw: () => {
-        const [bx, by, pp] = proj(btx + 0.5, bty + 0.5, 0);
-        const rx = cam.tw * 0.46 * pp, ry = cam.th * 0.42 * pp;
-        crayonEllipse(ctx, bx, by - ry * 0.35, rx * 1.08, ry * 1.28, "#7e5536", 310, { lw: 3.0, amp: 1.5, hatch: "#59371e", hatchStep: 7 });
-        crayonEllipse(ctx, bx, by - ry * 0.72, rx * 0.94, ry * 0.66, "#67bd44", 311, { lw: 2.6, amp: 1.4 });
-        crayonEllipse(ctx, bx, by + 2, rx * 0.74, ry * 0.80, "#211421", 312 + boil, { lw: 2.4, amp: 1.1, grain: 0.15 });
-      }
-    });
-
-    // Cozy 2.5D Home Nest Sanctuary at PATH[last] (~1.8x larger chick!)
-    const [htx, hty] = PATH[PATH.length - 1];
-    drawList.push({
-      depth: htx + hty + 1.0,
-      draw: () => {
-        const [hx, hy, pp] = proj(htx + 0.5, hty + 0.5, 0);
-        const nw = cam.tw * 0.58 * pp, nh = cam.th * 0.46 * pp;
-        drawDirectionalShadow(ctx, hx, hy + 4, nw * 1.08, nh * 0.94, 0.28);
-        crayonEllipse(ctx, hx, hy, nw, nh, "#dfa847", 410, { lw: 3.0, amp: 1.8, hatch: "#9e6b22", hatchStep: 6, hatchAlpha: 0.38 });
-        crayonEllipse(ctx, hx, hy - 3, nw * 0.74, nh * 0.62, "#8f5f24", 411, { lw: 2.2, amp: 1.1 });
-        const bob = Math.sin(simTime * 3.5) * 3.0 * pp;
-        drawBillboardSprite(ctx, IMG.egg, hx, hy + 5 + bob, cam.tw * 1.24 * pp, 1, 0, 0);
-        const fx = hx + nw * 0.82, fy = hy - cam.tw * 0.08 * pp;
-        crayonStroke(ctx, [[fx, fy], [fx, fy - cam.tw * 0.64 * pp]], "#7c5230", 3.2, 415, 0.8);
-        crayonPoly(ctx, [
-          [fx, fy - cam.tw * 0.64 * pp],
-          [fx + cam.tw * 0.44 * pp, fy - cam.tw * 0.52 * pp],
-          [fx, fy - cam.tw * 0.36 * pp]
-        ], "#ff5a78", 416 + boil, { amp: 1.2, lw: 2.5, subdiv: 1 });
-      }
-    });
-
-    // Chili Mouse (~1.55x larger, ~2x on screen with bigger tw!)
-    drawList.push({
-      depth: pet.gx + pet.gy,
-      draw: () => {
-        const [gx0, gy0, pp0] = proj(pet.gx, pet.gy, 0);
-        const [sx, sy, pp] = proj(pet.gx, pet.gy, pet.gz);
-        const scaleShrink = 1 - pet.gz * 0.22;
-        drawDirectionalShadow(ctx, gx0, gy0 + 3, cam.tw * 0.52 * scaleShrink * pp0, cam.th * 0.40 * scaleShrink * pp0, 0.30);
-        if (pet.fireGlow > 0.05) {
-          crayonEllipse(ctx, gx0, gy0, cam.tw * 0.52 * pp0, cam.th * 0.36 * pp0, `rgba(255, 198, 72, ${0.46 * pet.fireGlow})`, 733 + boil, { lw: 0, amp: 1.4, grain: 0.2 });
-        }
-        const breathe = Math.sin(simTime * 4.8) * 0.075;
-        const sq = pet.recoil * 0.52 + breathe;
-        const hPx = cam.tw * 1.46 * pp;
-        drawBillboardSprite(ctx, IMG.chili, sx, sy + 4, hPx, pet.facing, sq, 0);
-      }
-    });
-
-    // Slimes (~1.55x larger) + Big Crayon Burn Flames
-    for (const e of game.enemies) {
-      drawList.push({
-        depth: e.gx + e.gy,
-        draw: () => {
-          const [gx0, gy0, pp0] = proj(e.gx, e.gy, 0);
-          const [sx, sy, pp] = proj(e.gx, e.gy, e.gz);
-          const hPx = cam.tw * 1.38 * e.size * pp;
-          const shScale = 1 - e.gz * 0.28;
-          drawDirectionalShadow(ctx, gx0, gy0 + 3, cam.tw * 0.48 * e.size * shScale * pp0, cam.th * 0.36 * e.size * shScale * pp0, 0.28);
-
-          if (e.burnT > 0) {
-            drawDoodleFlame(ctx, sx - hPx * 0.28, sy - hPx * 0.44, hPx * 0.54, e.burnSeed + 1, boil);
-          }
-
-          const hopSq = (e.gz < 0.035 ? 0.16 : -0.11) + e.hitFlash * 0.26;
-          drawBillboardSprite(ctx, IMG[e.img], sx, sy + 4, hPx, 1, hopSq, e.hitFlash);
-
-          if (e.boss) {
-            const cy = sy - hPx - 4;
-            const cw = hPx * 0.22;
-            crayonPoly(ctx, [
-              [sx - cw, cy],
-              [sx - cw * 1.05, cy - cw * 0.85],
-              [sx - cw * 0.4, cy - cw * 0.35],
-              [sx, cy - cw * 1.1],
-              [sx + cw * 0.4, cy - cw * 0.35],
-              [sx + cw * 1.05, cy - cw * 0.85],
-              [sx + cw, cy]
-            ], "#ffe047", 605 + boil, { amp: 1.1, lw: 2.5, subdiv: 1 });
-          }
-
-          if (e.burnT > 0) {
-            drawDoodleFlame(ctx, sx + hPx * 0.26, sy - hPx * 0.18, hPx * 0.58, e.burnSeed + 5, boil);
-            drawDoodleFlame(ctx, sx - hPx * 0.06, sy - hPx * 0.04, hPx * 0.42, e.burnSeed + 11, boil);
-          }
-
-          const bw = Math.max(38, cam.tw * 0.72 * e.size * pp);
-          const bh = Math.max(7, cam.tw * 0.11 * pp);
-          const bx = sx - bw * 0.5;
-          const by = sy - hPx - (e.boss ? 28 : 13);
-          const frac = clamp(e.hp / e.maxHp, 0, 1);
-          crayonPoly(ctx, [
-            [bx - 2, by - 2], [bx + bw + 2, by - 2],
-            [bx + bw + 2, by + bh + 2], [bx - 2, by + bh + 2]
-          ], "#fffaf0", 910, { amp: 0.7, lw: 2.4, subdiv: 1, grain: 0.2 });
-          if (frac > 0) {
-            const fw = Math.max(4, bw * frac);
-            crayonPoly(ctx, [
-              [bx, by], [bx + fw, by], [bx + fw, by + bh], [bx, by + bh]
-            ], e.burnT > 0 ? "#ff6828" : "#67cf48", 912, { amp: 0.5, lw: 0, subdiv: 1, grain: 0.45 });
-          }
-        }
-      });
-    }
-
-    // BIG Doodled Fireseed Projectiles & Air-Drawn Comet Trails
-    for (const s of game.shots) {
-      drawList.push({
-        depth: s.gx + s.gy + 0.18,
-        draw: () => {
-          const [gx0, gy0, pp0] = proj(s.gx, s.gy, 0);
-          drawDirectionalShadow(ctx, gx0, gy0, cam.tw * 0.24 * pp0, cam.th * 0.18 * pp0, 0.24);
-
-          for (let ti = 0; ti < s.trail.length; ti++) {
-            const tr = s.trail[ti];
-            const [tx, ty, tpp] = proj(tr.gx, tr.gy, tr.gz);
-            const sz = Math.max(7, cam.tw * 0.24 * tpp * (0.65 + ti * 0.06));
-            if (ti % 2 === 0) {
-              drawDoodleFlame(ctx, tx, ty, sz * 1.25, s.seed + ti * 3, boil);
-            } else {
-              drawDoodleSpiral(ctx, tx, ty, sz * 0.95, "#ffe24a", s.seed + ti, boil);
-            }
-          }
-
-          const [sx, sy, pp] = proj(s.gx, s.gy, s.gz);
-          const [nx, ny] = proj(s.tx, s.ty, s.tz);
-          const ang = Math.atan2(ny - sy, nx - sx);
-          const pr = Math.max(16, cam.tw * 0.42 * pp);
-          ctx.save();
-          ctx.translate(sx, sy);
-          ctx.rotate(ang);
-          crayonPoly(ctx, [
-            [pr * 1.15, 0],
-            [pr * 0.28, -pr * 0.74],
-            [-pr * 0.45, -pr * 0.50],
-            [-pr * 1.45, -pr * 0.72],
-            [-pr * 0.90, -pr * 0.18],
-            [-pr * 1.68, 0.05],
-            [-pr * 0.90, pr * 0.28],
-            [-pr * 1.35, pr * 0.68],
-            [-pr * 0.42, pr * 0.50],
-            [pr * 0.28, pr * 0.74]
-          ], "#ff4d1c", s.seed + boil * 19, {
-            amp: pr * 0.11, lw: 3.2, subdiv: 1, grain: 0.75, hatch: "#c81e06", hatchStep: 6
-          });
-          crayonPoly(ctx, [
-            [pr * 0.68, 0],
-            [pr * 0.10, -pr * 0.36],
-            [-pr * 0.70, -pr * 0.12],
-            [-pr * 0.60, pr * 0.16],
-            [pr * 0.10, pr * 0.36]
-          ], "#ffe24a", s.seed + 5 + boil * 19, { amp: pr * 0.07, lw: 2.0, subdiv: 1 });
-          ctx.restore();
-        }
-      });
-    }
-
-    // BIG Air-Drawn Cartoon Crayon Doodle FX
-    for (const f of game.fx) {
-      drawList.push({
-        depth: f.gx + f.gy + 0.38,
-        draw: () => {
-          const prog = 1 - clamp(f.life / f.max, 0, 1);
-          const alpha = prog < 0.74 ? 1 : clamp((1 - prog) / 0.26, 0, 1);
-          const [sx, sy, pp] = proj(f.gx, f.gy, f.gz);
-          ctx.save();
-          ctx.globalAlpha = alpha;
-
-          if (f.k === "cast") {
-            const r = cam.tw * (0.36 + prog * 0.34) * pp;
-            drawDoodleFlame(ctx, sx, sy, r * 1.25, f.seed, boil);
-            for (let k = -1; k <= 1; k++) {
-              const wy = sy + k * 11 * pp;
-              crayonStroke(ctx, [[sx - 6 * pp, wy], [sx + (f.dx >= 0 ? 22 : -22) * (1 + prog) * pp, wy + k * 7 * pp]], "#ffe24a", 3.0, f.seed + k, 1.6);
-            }
-          } else if (f.k === "hit") {
-            const popScale = easeOutBack(Math.min(1, prog * 2.5));
-            const rOut = cam.tw * (f.big ? 1.05 : 0.88) * popScale * pp;
-            const rIn = rOut * 0.52;
-            const spikes = 8;
-            const outerPts = [], midPts = [];
-            for (let i = 0; i < spikes * 2; i++) {
-              const a = (i / (spikes * 2)) * TAU + f.seed;
-              const rr = (i % 2 === 0 ? rOut : rIn) * (0.90 + hash(i, f.seed) * 0.18);
-              outerPts.push([sx + Math.cos(a) * rr, sy + Math.sin(a) * rr * 0.85]);
-              midPts.push([sx + Math.cos(a) * rr * 0.58, sy + Math.sin(a) * rr * 0.50]);
-            }
-            crayonPoly(ctx, outerPts, "#ffe24a", f.seed + boil * 13, {
-              amp: rOut * 0.05, lw: 3.0, subdiv: 1, grain: 0.68, hatch: "#ff9b24", hatchStep: 9
-            });
-            crayonPoly(ctx, midPts, "#ff6824", f.seed + 3 + boil * 13, {
-              amp: rOut * 0.04, lw: 0, subdiv: 1, grain: 0.45
-            });
-
-            ctx.save();
-            ctx.translate(sx, sy - rOut * 0.34);
-            ctx.rotate((hash(f.seed, 2) - 0.5) * 0.28);
-            const fs = Math.round(Math.max(20, cam.tw * (f.big ? 0.52 : 0.44) * popScale * pp));
-            ctx.font = `900 ${fs}px "Fredoka", "PingFang SC", sans-serif`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.lineJoin = "round";
-            ctx.strokeStyle = OL;
-            ctx.lineWidth = Math.max(5, fs * 0.18);
-            ctx.strokeText(f.word, 0, 0);
-            ctx.fillStyle = "#fffaf0";
-            ctx.fillText(f.word, 0, 0);
-            ctx.restore();
-          } else if (f.k === "doodleBit") {
-            const sz = Math.max(7, cam.tw * 0.20 * pp);
-            if (f.shape === "star") {
-              drawDoodleStar(ctx, sx, sy, sz, f.col, f.seed, boil);
-            } else if (f.shape === "flame") {
-              drawDoodleFlame(ctx, sx, sy, sz * 1.35, f.seed, boil);
-            } else {
-              drawDoodleSpiral(ctx, sx, sy, sz * 0.95, f.col, f.seed, boil);
-            }
-          } else if (f.k === "puff") {
-            const spread = cam.tw * (0.36 + prog * 0.62) * pp;
-            const rBase = cam.tw * 0.42 * (1 - prog * 0.22) * pp;
-            const puffs = 7;
-            for (let p = 0; p < puffs; p++) {
-              const a = (p / puffs) * TAU + f.seed;
-              const px = sx + Math.cos(a) * spread * 0.72;
-              const py = sy + Math.sin(a) * spread * 0.48 - prog * 22 * pp;
-              crayonEllipse(ctx, px, py, rBase, rBase * 0.82, p % 2 ? "#fff9eb" : f.tint, f.seed + p + boil * 11, {
-                lw: 3.0, amp: 1.8, grain: 0.65
-              });
-            }
-            crayonEllipse(ctx, sx, sy - prog * 22 * pp, rBase * 1.15, rBase * 0.9, "#fffaf0", f.seed + 9 + boil * 11, {
-              lw: 3.2, amp: 1.8, grain: 0.5
-            });
-            for (let s = 0; s < 4; s++) {
-              const sa = s * 1.57 + f.seed + prog * 1.4;
-              drawDoodleStar(ctx, sx + Math.cos(sa) * spread * 1.15, sy + Math.sin(sa) * spread * 0.82 - 16 * pp, cam.tw * 0.20 * pp, "#ffe24a", f.seed + s, boil);
-            }
-          } else if (f.k === "dust") {
-            const sp = cam.tw * (0.18 + prog * 0.34) * pp;
-            for (let k = -1; k <= 1; k += 2) {
-              crayonEllipse(ctx, sx + k * sp, sy, cam.tw * 0.18 * pp, cam.tw * 0.12 * pp, "#f7ecd4", f.seed + k + boil, { lw: 2.4, amp: 1.2 });
-            }
-          } else if (f.k === "pop") {
-            const fs = Math.round(Math.max(18, cam.tw * 0.34 * pp));
-            ctx.font = `900 ${fs}px "Fredoka", "PingFang SC", sans-serif`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.lineJoin = "round";
-            ctx.strokeStyle = OL;
-            ctx.lineWidth = Math.max(4.5, fs * 0.18);
-            ctx.strokeText(f.text, sx, sy);
-            ctx.fillStyle = f.col;
-            ctx.fillText(f.text, sx, sy);
-          }
-
-          ctx.restore();
-        }
-      });
-    }
-
-    drawList.sort((a, b) => a.depth - b.depth);
-    for (const item of drawList) item.draw();
-  }
-
-  /* ================= Input ================= */
-  function pointerPos(ev) {
-    const rect = canvas.getBoundingClientRect();
-    return [ev.clientX - rect.left, ev.clientY - rect.top];
-  }
-
-  function handleTap(sx, sy) {
-    if (!game || game.over) return;
-    const [gx, gy] = screenToGrid(sx, sy);
-    const tx = Math.floor(gx), ty = Math.floor(gy);
-    if (tx < 0 || tx >= COLS || ty < 0 || ty >= ROWS) return;
-    if (PATH_SET.has(tx + "," + ty)) return;
-    const pet = game.pet;
-    pet.rangeGlow = 0.9;
-    if (tx === pet.tx && ty === pet.ty) return;
-    spawnDustPuff(pet.gx, pet.gy);
-    pet.tx = tx;
-    pet.ty = ty;
-    pet.fromX = pet.gx;
-    pet.fromY = pet.gy;
-    pet.toX = tx + 0.5;
-    pet.toY = ty + 0.5;
-    pet.hopT = 0;
-    const [psx] = proj(pet.fromX, pet.fromY, 0);
-    const [nsx] = proj(pet.toX, pet.toY, 0);
-    if (Math.abs(nsx - psx) > 2) pet.facing = nsx > psx ? 1 : -1;
-  }
-
-  canvas.addEventListener("pointermove", (ev) => {
-    const [sx, sy] = pointerPos(ev);
-    const [gx, gy] = screenToGrid(sx, sy);
-    const tx = Math.floor(gx), ty = Math.floor(gy);
-    hoverTile = (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS) ? { x: tx, y: ty } : null;
-  });
-  canvas.addEventListener("pointerleave", () => { hoverTile = null; });
-  canvas.addEventListener("pointerdown", (ev) => {
-    const [sx, sy] = pointerPos(ev);
-    handleTap(sx, sy);
-  });
-
-  document.getElementById("btn-speed").addEventListener("click", () => {
-    speedMul = speedMul === 1 ? 2 : 1;
-    const b = document.getElementById("btn-speed");
-    b.textContent = speedMul + "×";
-    b.classList.toggle("active", speedMul === 2);
-  });
-  document.getElementById("btn-reset").addEventListener("click", () => resetGame());
-  document.getElementById("ov-btn").addEventListener("click", () => resetGame());
-  window.addEventListener("resize", () => updateLayout());
-
-  /* ================= Main Loop ================= */
-  let lastTs = 0;
-  function loop(ts) {
-    if (!lastTs) lastTs = ts;
-    const rawDt = Math.min(0.05, Math.max(0, (ts - lastTs) / 1000));
-    lastTs = ts;
-    const dt = rawDt * speedMul;
-    simTime += dt;
-    step(dt);
-    render();
-    requestAnimationFrame(loop);
-  }
-
-  window.__proto25d = {
-    movePet(tx, ty) {
-      if (!game || PATH_SET.has(tx + "," + ty)) return false;
-      game.pet.tx = tx; game.pet.ty = ty;
-      game.pet.gx = tx + 0.5; game.pet.gy = ty + 0.5;
-      game.pet.toX = tx + 0.5; game.pet.toY = ty + 0.5;
-      game.pet.hopT = 1;
-      return true;
-    },
-    getState() {
-      return game && {
-        wave: game.waveIdx + 1, lives: game.lives, over: game.over, won: game.won,
-        enemies: game.enemies.length, shots: game.shots.length, fx: game.fx.length
-      };
-    }
-  };
-
-  updateLayout();
-  resetGame();
-  loadAllAssets(() => { bgCache = null; });
-  requestAnimationFrame(loop);
-})();
-</script>
+<script src="game.js"></script>
 </body>
 </html>
