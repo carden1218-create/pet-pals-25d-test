@@ -8,10 +8,10 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
   html, body {
     margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-    background: #f5f2e4; color: #24183a;
+    background: #f7f3e3; color: #24183a;
     font-family: "Fredoka", "Nunito", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
   }
-  canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: pointer; }
+  canvas#c { display: block; width: 100%; height: 100%; touch-action: none; cursor: pointer; }
   .hud {
     position: fixed; top: max(8px, env(safe-area-inset-top)); left: 10px; right: 10px;
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -21,7 +21,7 @@
   .pill-group.right { flex-wrap: nowrap; }
   .pill {
     pointer-events: auto;
-    background: #fffcf4; color: #24183a;
+    background: #fffdf6; color: #24183a;
     border: 2.5px solid #24183a; border-radius: 999px;
     padding: 5px 12px; font-weight: 900; font-size: 13.5px; line-height: 1.2;
     box-shadow: 2px 3px 0 #c9ae86, 2px 3px 0 1px #24183a;
@@ -40,14 +40,13 @@
     75% { transform: translateX(4px); }
   }
 
-  /* Bottom bar: Action mode + hint */
   .bottom-bar {
     position: fixed; bottom: max(10px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
     display: flex; align-items: center; gap: 8px; z-index: 12; pointer-events: none;
   }
   .mode-btn {
     pointer-events: auto; cursor: pointer;
-    background: #fffcf4; color: #24183a;
+    background: #fffdf6; color: #24183a;
     border: 2.5px solid #24183a; border-radius: 999px;
     padding: 6px 13px; font-weight: 900; font-size: 12.5px; white-space: nowrap;
     box-shadow: 2px 3px 0 #c9ae86, 2px 3px 0 1px #24183a;
@@ -55,17 +54,16 @@
   .mode-btn.plant { background: #dff5b0; }
   .mode-btn.move { background: #ffe285; }
   .hint {
-    background: rgba(255, 252, 244, 0.94); color: #24183a;
+    background: rgba(255, 253, 246, 0.94); color: #24183a;
     border: 2.5px solid #24183a; border-radius: 999px;
     padding: 5px 12px; font-weight: 800; font-size: 12px; white-space: nowrap;
     box-shadow: 2px 3px 0 #c9ae86;
   }
 
-  /* Virtual crayon joystick (bottom-left) */
   .joy-zone {
     position: fixed; left: 14px; bottom: max(14px, env(safe-area-inset-bottom));
     width: 102px; height: 102px; border-radius: 50%;
-    background: rgba(255, 252, 244, 0.68);
+    background: rgba(255, 252, 244, 0.72);
     border: 3px dashed #5e4b3a;
     box-shadow: 2px 3px 0 rgba(201, 174, 134, 0.65);
     touch-action: none; z-index: 14;
@@ -80,37 +78,31 @@
     font-size: 18px; font-weight: 900;
   }
 
-  /* Overlays (Hero Picker + Win/Lose) */
   .overlay {
     position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: rgba(245, 242, 226, 0.56); backdrop-filter: blur(2px);
+    background: rgba(247, 243, 227, 0.56); backdrop-filter: blur(2px);
     z-index: 20; padding: 18px;
   }
   .overlay.hidden { display: none; }
   .card {
-    background: #fffcf4; color: #24183a;
+    background: #fffdf6; color: #24183a;
     border: 4px solid #24183a; border-radius: 24px;
     box-shadow: 5px 6px 0 #c9ae86, 5px 6px 0 2px #24183a;
-    padding: 20px 22px; max-width: 560px; width: 100%; text-align: center;
+    padding: 20px 22px; max-width: 580px; width: 100%; text-align: center;
   }
   .card h1 { margin: 0 0 6px; font-size: 24px; font-weight: 900; }
   .card p { margin: 0 0 14px; font-size: 14px; font-weight: 700; color: #4c3b64; line-height: 1.4; }
-  .hero-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 6px;
-  }
+  .hero-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 6px; }
   .hero-opt {
     cursor: pointer; background: #fffdf8; color: #24183a;
     border: 3px solid #24183a; border-radius: 18px;
-    padding: 12px 8px; text-align: center;
+    padding: 10px 8px; text-align: center;
     box-shadow: 3px 4px 0 #c9ae86;
     transition: transform 0.1s ease, background 0.1s ease;
   }
   .hero-opt:hover { transform: translateY(-2px); background: #fff7d4; }
   .hero-opt:active { transform: translate(1px, 2px); }
-  .hero-opt img {
-    width: 74px; height: 74px; object-fit: contain; display: block; margin: 0 auto 6px;
-    filter: drop-shadow(0 0 2px #fff) drop-shadow(2px 2px 0 #cfb084);
-  }
+  .hero-thumb { width: 84px; height: 84px; display: block; margin: 0 auto 4px; }
   .hero-opt .hname { font-size: 14.5px; font-weight: 900; line-height: 1.2; }
   .hero-opt .hsub { font-size: 11.5px; font-weight: 800; color: #5b4875; margin-top: 3px; }
   .big-btn {
@@ -132,7 +124,7 @@
     .bottom-bar { width: calc(100% - 16px); justify-content: center; }
     .hint { display: none; }
     .hero-grid { gap: 7px; }
-    .hero-opt img { width: 56px; height: 56px; }
+    .hero-thumb { width: 62px; height: 62px; }
     .hero-opt .hname { font-size: 12.5px; }
     .hero-opt .hsub { font-size: 10.5px; }
   }
@@ -163,24 +155,23 @@
   <div class="hint" id="hint">WASD / 摇杆 / 右键自由移动主角 · 点草地种宠物炮台</div>
 </div>
 
-<!-- Hero Picker Overlay -->
 <div class="overlay" id="pick-overlay">
   <div class="card">
     <h1>选择你的主角宠物 · Pick Hero</h1>
-    <p>开局选一只宠物亲自上场移动战斗！也能花金币在草地上种小伙伴一起守窝。</p>
+    <p>全新立体撕纸蜡笔风！选一只主角亲自跑动战斗，也能在草地上种小伙伴。</p>
     <div class="hero-grid">
       <button class="hero-opt" data-hero="chili" type="button">
-        <img src="assets/pets/chili-1.webp" alt="Chili Mouse" />
+        <canvas class="hero-thumb" width="130" height="130" data-thumb="chili"></canvas>
         <div class="hname">🌶️ 椒椒鼠</div>
-        <div class="hsub">Chili · 火焰灼烧</div>
+        <div class="hsub">Chili · 火焰撕纸</div>
       </button>
       <button class="hero-opt" data-hero="lemon" type="button">
-        <img src="assets/pets/lemon-1.webp" alt="Lemon Chick" />
+        <canvas class="hero-thumb" width="130" height="130" data-thumb="lemon"></canvas>
         <div class="hname">⚡ 闪电鸡</div>
         <div class="hsub">Lemon · 极速闪电</div>
       </button>
       <button class="hero-opt" data-hero="blueberry" type="button">
-        <img src="assets/pets/blueberry-1.webp" alt="Blueberry Owl" />
+        <canvas class="hero-thumb" width="130" height="130" data-thumb="blueberry"></canvas>
         <div class="hname">🫐 蓝莓枭</div>
         <div class="hsub">Blueberry · 冰霜溅射</div>
       </button>
@@ -188,7 +179,6 @@
   </div>
 </div>
 
-<!-- Win / Lose Overlay -->
 <div class="overlay hidden" id="overlay">
   <div class="card">
     <h1 id="ov-title">You win!</h1>
@@ -197,6 +187,7 @@
   </div>
 </div>
 
+<script src="paper-craft.js"></script>
 <script src="game.js"></script>
 </body>
 </html>
