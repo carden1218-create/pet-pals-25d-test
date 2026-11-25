@@ -1,13 +1,13 @@
 (() => {
   "use strict";
 
-  const OL = "#2b2038";
+  const OL = "#2a1f36";
   const TAU = Math.PI * 2;
   const COLS = 7, ROWS = 5;
   const PET_COST = 50;
 
   const {
-    hash, jit, makeIrregularBlobPts, fillCoarseCrayon, drawTornPaperPiece, buildLayeredStandees
+    hash, jit, sampleSmoothLoop, makeEllipsePts, tracePoly, fillWaxCrayon, buildCardboardStandees
   } = window.PaperCraft;
 
   const PATH = [
@@ -60,9 +60,9 @@
   ];
 
   const ENEMY_DEF = {
-    z1: { img: "z1", hp: 46, speed: 1.02, size: 1.0, tint: "#8ae048", reward: 12 },
-    z2: { img: "z2", hp: 88, speed: 0.92, size: 1.08, tint: "#68c4ff", reward: 16 },
-    z3: { img: "z3", hp: 132, speed: 1.02, size: 1.14, tint: "#ff7538", reward: 22 }
+    z1: { img: "z1", hp: 46, speed: 1.02, size: 1.0, tint: "#86de44", reward: 12 },
+    z2: { img: "z2", hp: 88, speed: 0.92, size: 1.08, tint: "#62c0ff", reward: 16 },
+    z3: { img: "z3", hp: 132, speed: 1.02, size: 1.14, tint: "#ff7236", reward: 22 }
   };
 
   function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
@@ -72,10 +72,8 @@
     return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
   }
 
-  // Build all brand-new multi-layered torn-paper craft characters & props!
-  const LAYERS = buildLayeredStandees();
+  const LAYERS = buildCardboardStandees();
 
-  // Render hero thumbnails on the Hero Picker using the NEW multi-layer torn-paper art!
   function renderHeroThumbs() {
     document.querySelectorAll("canvas.hero-thumb").forEach((cv) => {
       const k = cv.dataset.thumb;
@@ -86,7 +84,7 @@
       arr.forEach((L, idx) => {
         c.save();
         if (idx > 0) {
-          c.shadowColor = "rgba(42, 26, 20, 0.28)";
+          c.shadowColor = "rgba(38, 22, 12, 0.32)";
           c.shadowOffsetX = 2.5;
           c.shadowOffsetY = 3.5;
           c.shadowBlur = 3;
@@ -97,7 +95,7 @@
     });
   }
 
-  /* ================= Flat Full-Screen Coarse Crayon Paper Floor ================= */
+  /* ================= Flat Full-Screen Continuous Wax Crayon Floor ================= */
   const canvas = document.getElementById("c");
   const ctx = canvas.getContext("2d");
   let W = 1280, H = 720, DPR = 1;
@@ -158,42 +156,58 @@
   }
 
   function drawFlatFloor(c) {
-    // Sketchbook paper background with heavy coarse crayon streaks & generous white breathing room (留白)
-    c.fillStyle = "#fbf7e8";
-    c.fillRect(0, 0, W, H);
-
-    fillCoarseCrayon(c, [[0, 0], [W, 0], [W, H], [0, H]], "#cbe896", 12, {
-      paperCol: "#fbf7e8", strokeW: 16, step: 15, density: 0.58, crease: false
+    // One continuous soft waxy crayon meadow across the whole flat screen (NO parallel marker stripes!)
+    fillWaxCrayon(c, [[0, 0], [W, 0], [W, H], [0, H]], "#d8ebb4", 12, {
+      toothCol: "#faf5e4", coverage: 0.78, toothAlpha: 0.62, clumpAlpha: 0.16, lw: 0, softEdge: false
     });
 
     for (let ty = 0; ty < ROWS; ty++) {
       for (let tx = 0; tx < COLS; tx++) {
         const isPath = PATH_SET.has(tx + "," + ty);
-        const corners = tileCorners(tx, ty, 0.015, 0);
+        const corners = tileCorners(tx, ty, 0, 0);
         if (isPath) {
-          // Torn-paper sandy road tiles pasted onto the flat floor
-          drawTornPaperPiece(c, corners, {
-            col: "#ebd49e", shadeCol: "#d4b679", paperCol: "#fffdf6",
-            seed: 300 + tx * 11 + ty, macroAmp: 3.0, microAmp: 1.8, subdiv: 3,
-            rim: 3.2, strokeW: 9, step: 7, density: 0.72, lw: 1.8, ol: "rgba(128, 92, 52, 0.55)"
+          fillWaxCrayon(c, corners, "#ecd5a1", 300 + tx * 11 + ty, {
+            toothCol: "#faf4e2", coverage: 0.86, toothAlpha: 0.58, clumpAlpha: 0.22,
+            lw: 2.0, ol: "rgba(110, 74, 38, 0.58)"
           });
+          // Soft crayon pebbles on path
+          for (let k = 0; k < 2; k++) {
+            const gx = tx + 0.24 + hash(tx * 7 + k, ty * 13) * 0.52;
+            const gy = ty + 0.24 + hash(tx * 17, ty * 5 + k) * 0.52;
+            const [px, py, pp] = proj(gx, gy, 0);
+            const r = cam.unit * (0.055 + k * 0.015) * pp;
+            fillWaxCrayon(c, makeEllipsePts(px, py, r, r * 0.65, 12, 400 + tx + k), k ? "#f5ebd4" : "#c79e65", 400 + tx + k, {
+              lw: 1.4, ol: "rgba(92, 62, 34, 0.55)", softEdge: false
+            });
+          }
         } else {
           const even = (tx + ty) % 2 === 0;
-          fillCoarseCrayon(c, corners, even ? "#b8e37a" : "#a3d662", 500 + tx * 13 + ty, {
-            paperCol: "#f9f6e8", strokeW: 9, step: 8, density: 0.68, crease: false
+          fillWaxCrayon(c, corners, even ? "#bfe386" : "#b0d972", 500 + tx * 13 + ty, {
+            toothCol: "#f9f5e4", coverage: 0.82, toothAlpha: 0.60, clumpAlpha: 0.20,
+            lw: 1.5, ol: "rgba(76, 118, 46, 0.36)"
           });
+          const inner = tileCorners(tx, ty, 0.13, 0);
           c.save();
-          c.strokeStyle = "rgba(92, 134, 52, 0.34)";
-          c.lineWidth = 1.6;
-          c.setLineDash([6, 5]);
-          c.beginPath();
-          c.moveTo(corners[0][0], corners[0][1]);
-          c.lineTo(corners[1][0], corners[1][1]);
-          c.lineTo(corners[2][0], corners[2][1]);
-          c.lineTo(corners[3][0], corners[3][1]);
-          c.closePath();
+          c.strokeStyle = "rgba(255, 252, 240, 0.65)";
+          c.lineWidth = 1.5;
+          c.setLineDash([5, 5]);
+          tracePoly(c, inner);
           c.stroke();
           c.restore();
+
+          const rnd = hash(tx + 5, ty + 11);
+          if (rnd > 0.52) {
+            const [gx, gy, pp] = proj(tx + 0.22 + rnd * 0.15, ty + 0.80, 0);
+            c.save();
+            c.strokeStyle = "rgba(62, 120, 38, 0.72)";
+            c.lineWidth = 2.0;
+            c.lineCap = "round";
+            c.beginPath();
+            c.moveTo(gx, gy); c.lineTo(gx - 3 * pp, gy - 6 * pp);
+            c.moveTo(gx + 2 * pp, gy); c.lineTo(gx + 4 * pp, gy - 7 * pp);
+            c.stroke();
+            c.restore();
+          }
         }
       }
     }
@@ -223,12 +237,9 @@
   function makeHero(heroKey) {
     const def = HERO_DEFS[heroKey] || HERO_DEFS.chili;
     return {
-      key: heroKey, def,
-      gx: 2.5, gy: 2.5, gz: 0,
-      vx: 0, vy: 0, target: null,
-      walkPhase: 0, dustTimer: 0,
-      facing: 1, waddle: 0,
-      atkCd: 0.15, recoil: 0
+      key: heroKey, def, gx: 2.5, gy: 2.5, gz: 0,
+      vx: 0, vy: 0, target: null, walkPhase: 0, dustTimer: 0,
+      facing: 1, waddle: 0, atkCd: 0.15, recoil: 0
     };
   }
 
@@ -297,7 +308,7 @@
     const a = PATH[i], b = PATH[i + 1];
     return [lerp(a[0] + 0.5, b[0] + 0.5, f), lerp(a[1] + 0.5, b[1] + 0.5, f)];
   }
-  /* ================= Paper-Craft FX ================= */
+  /* ================= Cardboard Cutout FX ================= */
   function addFx(obj) { game.fx.push(obj); }
 
   function spawnCastDoodle(gx, gy, gz, dx, dy, col) {
@@ -311,24 +322,24 @@
       k: "hit", gx, gy, gz, word, big: !!isKill, burstCol: burstCol || "#ffe24a",
       life: 0.46, max: 0.46, seed: Math.floor(Math.random() * 9999)
     });
-    const count = isKill ? 6 : 4;
+    const count = isKill ? 7 : 4;
     for (let i = 0; i < count; i++) {
       const a = (i / count) * TAU + Math.random() * 0.35;
       const spd = 1.15 + Math.random() * 0.95;
       addFx({
-        k: "paperScrap",
+        k: "cardChip",
         gx: gx + Math.cos(a) * 0.22, gy: gy + Math.sin(a) * 0.22, gz: gz + 0.12,
         vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, vz: 1.65 + Math.random() * 1.0,
         rot: Math.random() * TAU, vrot: (Math.random() - 0.5) * 9,
         life: 0.44 + Math.random() * 0.14, max: 0.58,
-        col: i % 2 ? (burstCol || "#ffe24a") : "#ff5a26",
+        col: i % 3 === 0 ? "#c48d56" : (i % 2 ? (burstCol || "#ffe24a") : "#ff5a26"),
         seed: Math.floor(Math.random() * 9999)
       });
     }
   }
 
   function spawnDeathPuff(gx, gy, tint, reward) {
-    addFx({ k: "puff", gx, gy, gz: 0.36, tint: tint || "#8ae048", life: 0.56, max: 0.56, seed: Math.floor(Math.random() * 9999) });
+    addFx({ k: "puff", gx, gy, gz: 0.36, tint: tint || "#86de44", life: 0.56, max: 0.56, seed: Math.floor(Math.random() * 9999) });
     if (reward) {
       addFx({ k: "pop", gx: gx + 0.24, gy, gz: 1.25, text: "+" + reward + "🪙", col: "#ffd83a", life: 0.72, max: 0.72, seed: Math.floor(Math.random() * 9999) });
     }
@@ -366,10 +377,7 @@
       const dx = hero.target.gx - hero.gx, dy = hero.target.gy - hero.gy;
       const d = Math.hypot(dx, dy);
       if (d < 0.09) hero.target = null;
-      else {
-        desVx = (dx / d) * hero.def.moveSpd;
-        desVy = (dy / d) * hero.def.moveSpd;
-      }
+      else { desVx = (dx / d) * hero.def.moveSpd; desVy = (dy / d) * hero.def.moveSpd; }
     }
 
     const accel = 1 - Math.exp(-14 * dt);
@@ -564,7 +572,7 @@
     for (let i = game.fx.length - 1; i >= 0; i--) {
       const f = game.fx[i];
       f.life -= dt;
-      if (f.k === "paperScrap") {
+      if (f.k === "cardChip") {
         f.gx += f.vx * dt; f.gy += f.vy * dt;
         f.gz = Math.max(0, f.gz + f.vz * dt);
         f.vz -= 4.2 * dt; f.rot += f.vrot * dt;
@@ -588,18 +596,19 @@
     );
   }
 
-  /* ================= Multi-Layer Pop-Up Paper Craft Renderer ================= */
+  /* ================= Cardboard Standee & Chip FX Renderers ================= */
   function getBoil() { return Math.floor(simTime * 11); }
 
-  // Corrugated fluted paper base slot (瓦楞纸一格一格, NO flat solid brown block!) + soft cast shadow
-  function drawCorrugatedBaseAndShadow(c, sx, sy, wPx, gz, seed, withTab = true, isHero = false) {
+  // Thick brown corrugated shipping-box base tab (with wavy/ribbed flute cells 一格一格) + floor shadow
+  function drawCardboardBaseAndShadow(c, sx, sy, wPx, gz, seed, withTab = true, isHero = false) {
     const rx = wPx * 0.44, ry = wPx * 0.16;
     const lift = clamp(1 - gz * 0.55, 0.25, 1);
 
+    // Cast shadow on the flat floor
     c.save();
-    c.translate(sx + rx * (0.28 + gz * 0.35), sy + ry * (0.35 + gz * 0.25));
+    c.translate(sx + rx * (0.30 + gz * 0.35), sy + ry * (0.38 + gz * 0.25));
     c.rotate(0.14);
-    c.fillStyle = `rgba(54, 42, 32, ${0.22 * lift})`;
+    c.fillStyle = `rgba(48, 32, 18, ${0.24 * lift})`;
     c.beginPath();
     c.ellipse(0, 0, rx * (1 + gz * 0.15), ry * (1 + gz * 0.12), 0, 0, TAU);
     c.fill();
@@ -611,52 +620,59 @@
       c.strokeStyle = "#ff7b1c";
       c.lineWidth = 2.8;
       c.beginPath();
-      c.ellipse(sx, sy, wPx * 0.52, wPx * 0.20, 0, 0, TAU);
+      c.ellipse(sx, sy, wPx * 0.54, wPx * 0.21, 0, 0, TAU);
       c.stroke();
       c.restore();
     }
 
     if (withTab) {
-      const tw = wPx * 0.36, th = Math.max(5.5, wPx * 0.08);
-      const pts = [
-        [sx - tw, sy - th * 0.2], [sx + tw, sy - th * 0.2],
-        [sx + tw * 1.12, sy + th], [sx - tw * 1.12, sy + th]
-      ];
+      const tw = wPx * 0.38, th = Math.max(6, wPx * 0.08);
+      const lipH = Math.max(5.5, wPx * 0.068);
+      // Top kraft-brown flat base tab
       c.save();
       c.beginPath();
-      c.moveTo(pts[0][0], pts[0][1]);
-      c.lineTo(pts[1][0], pts[1][1]);
-      c.lineTo(pts[2][0], pts[2][1]);
-      c.lineTo(pts[3][0], pts[3][1]);
+      c.moveTo(sx - tw, sy - th * 0.4);
+      c.lineTo(sx + tw, sy - th * 0.4);
+      c.lineTo(sx + tw * 1.12, sy + th * 0.6);
+      c.lineTo(sx - tw * 1.12, sy + th * 0.6);
       c.closePath();
-      c.fillStyle = "#efe3c6";
+      c.fillStyle = "#c48d56";
       c.fill();
+      c.strokeStyle = "#4d2f16";
+      c.lineWidth = 1.8;
+      c.stroke();
+
+      // Thick front corrugated cross-section edge (一格一格 brown wavy flutes!)
+      c.beginPath();
+      c.moveTo(sx - tw * 1.12, sy + th * 0.6);
+      c.lineTo(sx + tw * 1.12, sy + th * 0.6);
+      c.lineTo(sx + tw * 1.12, sy + th * 0.6 + lipH);
+      c.lineTo(sx - tw * 1.12, sy + th * 0.6 + lipH);
+      c.closePath();
+      c.fillStyle = "#7d4f27";
+      c.fill();
+      c.save();
       c.clip();
-      // Ribbed corrugated flutes (一格一格瓦楞纸槽!)
-      c.strokeStyle = "#917b5e";
-      c.lineWidth = 1.6;
-      for (let fx = sx - tw * 1.15; fx <= sx + tw * 1.15; fx += 5.5) {
+      // Alternating dark flute pockets + tan arch ribs
+      const yMid = sy + th * 0.6 + lipH * 0.5;
+      for (let fx = sx - tw * 1.1; fx <= sx + tw * 1.1; fx += 6.5) {
+        c.fillStyle = "#3a200c";
         c.beginPath();
-        c.moveTo(fx, sy - th);
-        c.lineTo(fx, sy + th * 1.2);
-        c.stroke();
+        c.ellipse(fx, yMid, 2.2, lipH * 0.36, 0, 0, TAU);
+        c.fill();
+        c.fillStyle = "#c9925a";
+        c.beginPath();
+        c.ellipse(fx + 3.2, yMid - 0.5, 1.4, lipH * 0.25, 0, 0, TAU);
+        c.fill();
       }
       c.restore();
-      c.save();
-      c.beginPath();
-      c.moveTo(pts[0][0], pts[0][1]);
-      c.lineTo(pts[1][0], pts[1][1]);
-      c.lineTo(pts[2][0], pts[2][1]);
-      c.lineTo(pts[3][0], pts[3][1]);
-      c.closePath();
-      c.strokeStyle = "#5c4a38";
-      c.lineWidth = 1.8;
+      c.strokeStyle = "#3d220e";
+      c.lineWidth = 1.6;
       c.stroke();
       c.restore();
     }
   }
 
-  // Draw multi-plane torn-paper object back-to-front with real 2.5D parallax & layer drop shadows!
   function drawLayeredStandee(c, key, sx, sy, hPx, facing = 1, squash = 0, flash = 0, tilt = 0, swaySeed = 0) {
     const arr = LAYERS[key];
     if (!arr) return;
@@ -667,48 +683,62 @@
 
     for (let i = 0; i < arr.length; i++) {
       const L = arr[i];
-      // Visible 2.5D separation + subtle tree canopy sway between paper planes!
-      const sway = swaySeed && i > 0 ? Math.sin(simTime * 2.2 + swaySeed + i * 0.9) * (i * 1.6) : 0;
-      const dx = camOffX * L.zOff * hPx * 1.15 + sway;
-      const dy = -L.zOff * hPx * 0.42;
+      const sway = swaySeed && i > 0 ? Math.sin(simTime * 2.2 + swaySeed + i * 0.9) * (i * 1.4) : 0;
+      const dx = camOffX * L.zOff * hPx * 1.0 + sway;
+      const dy = -L.zOff * hPx * 0.36;
 
       c.save();
       c.translate(sx + dx, sy + dy);
       if (tilt) c.rotate(tilt);
       c.scale(facing * sxScale, syScale);
       if (i > 0) {
-        // Strong drop shadow between stacked paper layers so each piece visibly pops out!
-        c.shadowColor = "rgba(36, 22, 16, 0.42)";
-        c.shadowOffsetX = 4.5;
-        c.shadowOffsetY = 6.0;
-        c.shadowBlur = 4.5;
+        c.shadowColor = "rgba(44, 24, 10, 0.44)";
+        c.shadowOffsetX = 4.0;
+        c.shadowOffsetY = 5.5;
+        c.shadowBlur = 4.0;
       }
-      if (flash > 0.15) {
-        c.filter = `brightness(${1 + flash * 0.65})`;
-      }
+      if (flash > 0.15) c.filter = `brightness(${1 + flash * 0.65})`;
       c.drawImage(L.cv, -drawSz * 0.5, -drawSz + (24 / 260) * drawSz, drawSz, drawSz);
       c.restore();
     }
   }
 
-  // Torn-paper cutout flame / star / explosion helper (ALL FX made of torn paper!)
-  function drawPaperFlame(c, sx, sy, s, seed, boil, col = "#ff5524", innerCol = "#ffe658") {
-    const bSeed = seed + boil * 17;
+  // Die-cut kraft-brown-edged cardboard cutout chip (used for projectiles, flame cutouts, bursts)
+  function drawCardboardCutoutChip(c, pts, col, seed, opts = {}) {
+    const thickX = opts.thickX ?? 4.5, thickY = opts.thickY ?? 3.5;
+    c.save();
+    c.translate(thickX, thickY);
+    tracePoly(c, pts);
+    c.fillStyle = "#6e4420";
+    c.fill();
+    c.strokeStyle = "#3d220e";
+    c.lineWidth = 1.6;
+    c.stroke();
+    c.restore();
+
+    // Kraft brown rim around crayon front
+    c.save();
+    tracePoly(c, pts);
+    c.strokeStyle = "#b8824d";
+    c.lineWidth = 4.0;
+    c.stroke();
+    c.restore();
+
+    fillWaxCrayon(c, pts, col, seed, { lw: opts.lw ?? 2.2, softEdge: false });
+  }
+
+  function drawCardboardFlame(c, sx, sy, s, seed, boil, col = "#ff5524", innerCol = "#ffe658") {
     const sway = Math.sin(simTime * 13 + seed) * s * 0.14;
-    drawTornPaperPiece(c, [
-      [sx, sy + s * 0.22], [sx - s * 0.52, sy + s * 0.04], [sx - s * 0.44, sy - s * 0.64],
-      [sx + sway, sy - s * 1.15], [sx + s * 0.46, sy - s * 0.62], [sx + s * 0.50, sy + s * 0.06]
-    ], {
-      col, paperCol: "#fffdf6", seed: bSeed, macroAmp: s * 0.10, microAmp: s * 0.05, subdiv: 2,
-      rim: Math.max(2.5, s * 0.11), strokeW: Math.max(4, s * 0.18), step: Math.max(4, s * 0.16), lw: 2.0, crease: false
-    });
-    drawTornPaperPiece(c, [
-      [sx, sy + s * 0.12], [sx - s * 0.26, sy - s * 0.12],
-      [sx + sway * 0.65, sy - s * 0.72], [sx + s * 0.26, sy - s * 0.10]
-    ], {
-      col: innerCol, paperCol: "#fffdf6", seed: bSeed + 9, macroAmp: s * 0.06, microAmp: 1.5, subdiv: 1,
-      rim: 1.5, strokeW: Math.max(3, s * 0.12), step: 5, lw: 1.4, crease: false
-    });
+    const outerPts = sampleSmoothLoop([
+      [sx, sy + s * 0.22], [sx - s * 0.48, sy + s * 0.04], [sx - s * 0.42, sy - s * 0.62],
+      [sx + sway, sy - s * 1.12], [sx + s * 0.44, sy - s * 0.60], [sx + s * 0.48, sy + s * 0.06]
+    ], 3);
+    drawCardboardCutoutChip(c, outerPts, col, seed + boil * 17, { thickX: 4, thickY: 3, lw: 2.0 });
+    const innerPts = sampleSmoothLoop([
+      [sx, sy + s * 0.12], [sx - s * 0.24, sy - s * 0.12],
+      [sx + sway * 0.65, sy - s * 0.70], [sx + s * 0.24, sy - s * 0.10]
+    ], 2);
+    fillWaxCrayon(c, innerPts, innerCol, seed + 9 + boil * 17, { lw: 1.4 });
   }
 
   /* ================= Render Scene ================= */
@@ -742,10 +772,7 @@
     if (hoverTile && tapMode === "plant" && !PATH_SET.has(hoverTile.x + "," + hoverTile.y)) {
       const hc = tileCorners(hoverTile.x, hoverTile.y, 0.06, 0);
       ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(hc[0][0], hc[0][1]); ctx.lineTo(hc[1][0], hc[1][1]);
-      ctx.lineTo(hc[2][0], hc[2][1]); ctx.lineTo(hc[3][0], hc[3][1]);
-      ctx.closePath();
+      tracePoly(ctx, hc);
       ctx.fillStyle = game.gold >= PET_COST ? "rgba(255, 224, 92, 0.42)" : "rgba(255, 160, 140, 0.32)";
       ctx.fill();
       ctx.strokeStyle = game.gold >= PET_COST ? "#ff8c24" : "#d94b38";
@@ -791,7 +818,7 @@
         draw: () => {
           const [sx, sy, pp] = proj(prop.gx, prop.gy, 0);
           const hPx = cam.unit * (prop.kind === "tree" ? 1.25 : prop.kind === "fence" ? 0.85 : 0.92) * prop.scale * pp;
-          drawCorrugatedBaseAndShadow(ctx, sx, sy, hPx * 0.78, 0, prop.seed, true, false);
+          drawCardboardBaseAndShadow(ctx, sx, sy, hPx * 0.78, 0, prop.seed, true, false);
           drawLayeredStandee(ctx, prop.kind, sx, sy, hPx, 1, 0, 0, 0, prop.kind === "tree" ? prop.seed : 0);
         }
       });
@@ -804,36 +831,30 @@
       draw: () => {
         const [bx, by, pp] = proj(btx + 0.5, bty + 0.5, 0);
         const rx = cam.unit * 0.36 * pp, ry = cam.unit * 0.18 * pp;
-        drawTornPaperPiece(ctx, makeIrregularBlobPts(bx, by, rx, ry, 310, 10, 0.16), {
-          col: "#7e5536", seed: 310, macroAmp: 2.5, microAmp: 1.5, subdiv: 2, rim: 3, strokeW: 6, step: 6, lw: 2.2, crease: false
-        });
-        drawTornPaperPiece(ctx, makeIrregularBlobPts(bx, by + 2, rx * 0.65, ry * 0.6, 312, 8, 0.14), {
-          col: "#241624", seed: 312 + boil, macroAmp: 1.8, microAmp: 1, subdiv: 1, rim: 0, strokeW: 5, step: 5, lw: 1.6, crease: false
-        });
+        fillWaxCrayon(ctx, makeEllipsePts(bx, by, rx, ry, 20, 310), "#7e5536", 310, { lw: 2.4 });
+        fillWaxCrayon(ctx, makeEllipsePts(bx, by + 2, rx * 0.65, ry * 0.6, 16, 312), "#241624", 312, { lw: 1.8 });
       }
     });
 
-    // Nest Standee (multi-layer torn-paper straw + cracked egg chick + torn flag!)
+    // Nest Standee
     const [htx, hty] = PATH[PATH.length - 1];
     drawList.push({
       depth: hty + 0.58,
       draw: () => {
         const [hx, hy, pp] = proj(htx + 0.5, hty + 0.5, 0);
         const nw = cam.unit * 0.44 * pp, nh = cam.unit * 0.19 * pp;
-        drawCorrugatedBaseAndShadow(ctx, hx, hy, nw * 1.9, 0, 410, false, false);
-        drawTornPaperPiece(ctx, makeIrregularBlobPts(hx, hy, nw, nh, 410, 11, 0.18), {
-          col: "#e8be62", shadeCol: "#c28e32", seed: 410, macroAmp: 3, microAmp: 2, subdiv: 2, rim: 3.5, strokeW: 7, step: 6, lw: 2.2, crease: false
-        });
+        drawCardboardBaseAndShadow(ctx, hx, hy, nw * 1.9, 0, 410, false, false);
+        fillWaxCrayon(ctx, makeEllipsePts(hx, hy, nw, nh, 22, 410), "#e4b656", 410, { lw: 2.6 });
         const bob = Math.sin(simTime * 3.5) * 2.5 * pp;
         const hPx = cam.unit * (cam.portrait ? 1.05 : 0.90) * pp;
         drawLayeredStandee(ctx, "egg", hx, hy + bob, hPx, 1, Math.sin(simTime * 3.5) * 0.05, 0, 0, 0);
 
         const fx = hx + nw * 0.85, fy = hy - cam.unit * 0.02 * pp;
-        drawTornPaperPiece(ctx, [
+        drawCardboardCutoutChip(ctx, [
           [fx, fy - cam.unit * 0.56 * pp],
           [fx + cam.unit * 0.40 * pp, fy - cam.unit * 0.45 * pp],
           [fx, fy - cam.unit * 0.30 * pp]
-        ], { col: "#ff5c7a", seed: 416 + boil, macroAmp: 2.2, microAmp: 1.2, subdiv: 2, rim: 2.5, strokeW: 5, step: 5, lw: 2, crease: false });
+        ], "#ff5c7a", 416, { thickX: 3.5, thickY: 2.5, lw: 2.0 });
       }
     });
 
@@ -846,7 +867,7 @@
           const [gx0, gy0, pp0] = proj(hero.gx, hero.gy, 0);
           const [sx, sy, pp] = proj(hero.gx, hero.gy, hero.gz);
           const hPx = cam.unit * (cam.portrait ? 1.20 : 1.00) * pp;
-          drawCorrugatedBaseAndShadow(ctx, gx0, gy0, hPx * 0.94 * pp0 / pp, hero.gz, 735, true, true);
+          drawCardboardBaseAndShadow(ctx, gx0, gy0, hPx * 0.94 * pp0 / pp, hero.gz, 735, true, true);
           const idleBreathe = Math.sin(simTime * 5) * 0.04;
           const sq = hero.recoil * 0.42 + (hero.gz > 0.05 ? -0.10 : idleBreathe);
           drawLayeredStandee(ctx, hero.def.img, sx, sy, hPx, hero.facing, sq, 0, hero.waddle, 0);
@@ -862,7 +883,7 @@
           const [gx0, gy0, pp0] = proj(tw.gx, tw.gy, 0);
           const [sx, sy, pp] = proj(tw.gx, tw.gy, tw.gz);
           const hPx = cam.unit * (cam.portrait ? 1.10 : 0.90) * pp;
-          drawCorrugatedBaseAndShadow(ctx, gx0, gy0, hPx * 0.90 * pp0 / pp, tw.gz, 740, true, false);
+          drawCardboardBaseAndShadow(ctx, gx0, gy0, hPx * 0.90 * pp0 / pp, tw.gz, 740, true, false);
           const breathe = Math.sin(simTime * 4.8 + tw.phase) * 0.05;
           drawLayeredStandee(ctx, "chili", sx, sy, hPx, tw.facing, tw.recoil * 0.42 + breathe, 0, 0, 0);
         }
@@ -877,21 +898,21 @@
           const [gx0, gy0, pp0] = proj(e.gx, e.gy, 0);
           const [sx, sy, pp] = proj(e.gx, e.gy, e.gz);
           const hPx = cam.unit * (cam.portrait ? 1.08 : 0.88) * e.size * pp;
-          drawCorrugatedBaseAndShadow(ctx, gx0, gy0, hPx * 0.85 * pp0 / pp, e.gz, 760, true, false);
+          drawCardboardBaseAndShadow(ctx, gx0, gy0, hPx * 0.85 * pp0 / pp, e.gz, 760, true, false);
 
-          if (e.burnT > 0) drawPaperFlame(ctx, sx - hPx * 0.28, sy - hPx * 0.44, hPx * 0.46, e.burnSeed + 1, boil);
+          if (e.burnT > 0) drawCardboardFlame(ctx, sx - hPx * 0.28, sy - hPx * 0.44, hPx * 0.44, e.burnSeed + 1, boil);
           const hopSq = (e.gz < 0.04 ? 0.16 : -0.11) + e.hitFlash * 0.22;
           drawLayeredStandee(ctx, e.img, sx, sy, hPx, e.facing, hopSq, e.hitFlash, 0, 0);
 
           if (e.boss) {
             const cy = sy - hPx - 8 * pp, cw = hPx * 0.22;
-            drawTornPaperPiece(ctx, [
+            drawCardboardCutoutChip(ctx, [
               [sx - cw, cy], [sx - cw * 1.05, cy - cw * 0.85], [sx - cw * 0.4, cy - cw * 0.35],
               [sx, cy - cw * 1.1], [sx + cw * 0.4, cy - cw * 0.35], [sx + cw * 1.05, cy - cw * 0.85], [sx + cw, cy]
-            ], { col: "#ffe047", seed: 605 + boil, macroAmp: 1.5, microAmp: 0.8, subdiv: 1, rim: 2.5, strokeW: 5, step: 5, lw: 2.2, crease: false });
+            ], "#ffe047", 605, { thickX: 4, thickY: 3, lw: 2.2 });
           }
 
-          if (e.burnT > 0) drawPaperFlame(ctx, sx + hPx * 0.26, sy - hPx * 0.18, hPx * 0.50, e.burnSeed + 5, boil);
+          if (e.burnT > 0) drawCardboardFlame(ctx, sx + hPx * 0.26, sy - hPx * 0.18, hPx * 0.48, e.burnSeed + 5, boil);
 
           const bw = Math.max(36, cam.unit * 0.56 * e.size * pp);
           const bh = Math.max(6.5, cam.unit * 0.08 * pp);
@@ -910,22 +931,22 @@
       });
     }
 
-    // Torn-Paper Cutout Projectiles
+    // Cardboard Cutout Projectiles
     for (const s of game.shots) {
       drawList.push({
         depth: s.gy + 0.2,
         draw: () => {
           const [gx0, gy0, pp0] = proj(s.gx, s.gy, 0);
-          drawCorrugatedBaseAndShadow(ctx, gx0, gy0, cam.unit * 0.32 * pp0, s.gz, 780, false, false);
+          drawCardboardBaseAndShadow(ctx, gx0, gy0, cam.unit * 0.32 * pp0, s.gz, 780, false, false);
 
           for (let ti = 0; ti < s.trail.length; ti++) {
             const tr = s.trail[ti];
             const [tx, ty, tpp] = proj(tr.gx, tr.gy, tr.gz);
-            const sz = Math.max(6, cam.unit * 0.14 * tpp * (0.65 + ti * 0.07));
-            drawTornPaperPiece(ctx, makeIrregularBlobPts(tx, ty, sz, sz * 0.78, s.seed + ti, 7, 0.32), {
-              col: ti % 2 ? s.projCol : s.coreCol, seed: s.seed + ti + boil, macroAmp: 2, microAmp: 1, subdiv: 1,
-              rim: 2, strokeW: 4, step: 4, lw: 1.6, crease: false
-            });
+            const sz = Math.max(5.5, cam.unit * 0.12 * tpp * (0.65 + ti * 0.07));
+            drawCardboardCutoutChip(ctx, [
+              [tx - sz, ty - sz * 0.5], [tx + sz * 0.8, ty - sz * 0.7],
+              [tx + sz, ty + sz * 0.6], [tx - sz * 0.7, ty + sz * 0.8]
+            ], ti % 2 ? s.projCol : "#c48d56", s.seed + ti, { thickX: 2.5, thickY: 2.0, lw: 1.6 });
           }
 
           const [sx, sy, pp] = proj(s.gx, s.gy, s.gz);
@@ -935,27 +956,19 @@
           ctx.save();
           ctx.translate(sx, sy);
           ctx.rotate(ang);
-          ctx.shadowColor = "rgba(42, 26, 20, 0.30)";
-          ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 4; ctx.shadowBlur = 3;
-          drawTornPaperPiece(ctx, [
+          drawCardboardCutoutChip(ctx, [
             [pr * 1.15, 0], [pr * 0.28, -pr * 0.74], [-pr * 0.55, -pr * 0.55],
             [-pr * 1.45, -pr * 0.10], [-pr * 0.55, pr * 0.55], [pr * 0.28, pr * 0.74]
-          ], {
-            col: s.projCol, seed: s.seed + boil * 13, macroAmp: pr * 0.12, microAmp: pr * 0.06, subdiv: 2,
-            rim: Math.max(3, pr * 0.18), strokeW: 6, step: 5, lw: 2.2, crease: false
-          });
-          drawTornPaperPiece(ctx, [
+          ], s.projCol, s.seed, { thickX: 4.5, thickY: 3.5, lw: 2.2 });
+          fillWaxCrayon(ctx, [
             [pr * 0.65, 0], [pr * 0.10, -pr * 0.35], [-pr * 0.68, 0], [pr * 0.10, pr * 0.35]
-          ], {
-            col: s.coreCol, seed: s.seed + 5 + boil * 13, macroAmp: 1.8, microAmp: 1, subdiv: 1,
-            rim: 1.5, strokeW: 4, step: 4, lw: 1.5, crease: false
-          });
+          ], s.coreCol, s.seed + 5, { lw: 1.5 });
           ctx.restore();
         }
       });
     }
 
-    // Multi-Layer Torn-Paper Hit & Death FX
+    // Die-Cut Cardboard Explosion & Chip FX
     for (const f of game.fx) {
       drawList.push({
         depth: f.gy + (f.k === "pop" ? 0.6 : 0.38),
@@ -967,7 +980,7 @@
           ctx.globalAlpha = alpha;
 
           if (f.k === "cast") {
-            drawPaperFlame(ctx, sx, sy, cam.unit * (0.24 + prog * 0.22) * pp, f.seed, boil, f.col, "#fffdf6");
+            drawCardboardFlame(ctx, sx, sy, cam.unit * (0.24 + prog * 0.22) * pp, f.seed, boil, f.col, "#fffdf6");
           } else if (f.k === "hit") {
             const popScale = easeOutBack(Math.min(1, prog * 2.5));
             const rOut = cam.unit * (f.big ? 0.80 : 0.66) * popScale * pp;
@@ -976,24 +989,16 @@
             const outerPts = [], midPts = [];
             for (let i = 0; i < spikes * 2; i++) {
               const a = (i / (spikes * 2)) * TAU + f.seed;
-              const rr = (i % 2 === 0 ? rOut : rIn) * (0.86 + hash(i, f.seed) * 0.26);
+              const rr = (i % 2 === 0 ? rOut : rIn) * (0.90 + hash(i, f.seed) * 0.16);
               outerPts.push([sx + Math.cos(a) * rr, sy + Math.sin(a) * rr * 0.85]);
               midPts.push([sx + Math.cos(a + 0.18) * rr * 0.56, sy + Math.sin(a + 0.18) * rr * 0.48]);
             }
-            // Back torn-paper starburst layer + drop shadow -> Front orange/red torn-paper starburst!
-            drawTornPaperPiece(ctx, outerPts, {
-              col: f.burstCol || "#ffe24a", seed: f.seed + boil * 13,
-              macroAmp: rOut * 0.08, microAmp: rOut * 0.04, subdiv: 2,
-              rim: Math.max(4, rOut * 0.10), strokeW: 8, step: 7, density: 0.80, lw: 2.4, crease: true
-            });
+            // Back thick brown-edged cardboard starburst -> Front orange/red cardboard starburst!
+            drawCardboardCutoutChip(ctx, outerPts, f.burstCol || "#ffe24a", f.seed, { thickX: 6, thickY: 5, lw: 2.4 });
             ctx.save();
-            ctx.shadowColor = "rgba(42, 26, 20, 0.35)";
-            ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 4; ctx.shadowBlur = 3;
-            drawTornPaperPiece(ctx, midPts, {
-              col: "#ff6424", seed: f.seed + 3 + boil * 13,
-              macroAmp: rOut * 0.05, microAmp: rOut * 0.03, subdiv: 1,
-              rim: 2.5, strokeW: 6, step: 5, lw: 1.8, crease: false
-            });
+            ctx.shadowColor = "rgba(44, 24, 10, 0.40)";
+            ctx.shadowOffsetX = 3.5; ctx.shadowOffsetY = 4.5; ctx.shadowBlur = 3;
+            drawCardboardCutoutChip(ctx, midPts, "#ff6424", f.seed + 3, { thickX: 4, thickY: 3, lw: 1.8 });
             ctx.restore();
 
             ctx.save();
@@ -1010,34 +1015,27 @@
             ctx.fillStyle = "#fffcf4";
             ctx.fillText(f.word, 0, 0);
             ctx.restore();
-          } else if (f.k === "paperScrap") {
-            const sz = Math.max(7, cam.unit * 0.14 * pp);
+          } else if (f.k === "cardChip") {
+            const sz = Math.max(7, cam.unit * 0.13 * pp);
             ctx.save();
             ctx.translate(sx, sy);
             ctx.rotate(f.rot);
-            drawTornPaperPiece(ctx, [[-sz, -sz * 0.6], [sz, -sz * 0.3], [sz * 0.7, sz * 0.8], [-sz * 0.8, sz * 0.5]], {
-              col: f.col, seed: f.seed, macroAmp: 2, microAmp: 1, subdiv: 1, rim: 2, strokeW: 4, step: 4, lw: 1.6, crease: false
-            });
+            drawCardboardCutoutChip(ctx, [[-sz, -sz * 0.55], [sz, -sz * 0.3], [sz * 0.7, sz * 0.75], [-sz * 0.8, sz * 0.5]], f.col, f.seed, { thickX: 3.5, thickY: 2.5, lw: 1.6 });
             ctx.restore();
           } else if (f.k === "puff") {
             const spread = cam.unit * (0.28 + prog * 0.46) * pp;
-            const rBase = cam.unit * 0.28 * (1 - prog * 0.22) * pp;
+            const rBase = cam.unit * 0.24 * (1 - prog * 0.22) * pp;
             for (let p = 0; p < 6; p++) {
               const a = (p / 6) * TAU + f.seed;
               const px = sx + Math.cos(a) * spread * 0.72;
               const py = sy + Math.sin(a) * spread * 0.48 - prog * 18 * pp;
-              drawTornPaperPiece(ctx, makeIrregularBlobPts(px, py, rBase, rBase * 0.82, f.seed + p, 8, 0.28), {
-                col: p % 2 ? "#fffdf6" : f.tint, seed: f.seed + p + boil * 11,
-                macroAmp: 2.8, microAmp: 1.4, subdiv: 1, rim: 2.5, strokeW: 6, step: 5, lw: 2.0, crease: true
-              });
+              drawCardboardCutoutChip(ctx, makeEllipsePts(px, py, rBase, rBase * 0.80, 12, f.seed + p), p % 2 ? "#c48d56" : f.tint, f.seed + p, { thickX: 4, thickY: 3, lw: 2.0 });
             }
           } else if (f.k === "dust") {
             const sc = f.small ? 0.65 : 1.0;
             const sp = cam.unit * (0.12 + prog * 0.22) * sc * pp;
             for (let k = -1; k <= 1; k += 2) {
-              drawTornPaperPiece(ctx, makeIrregularBlobPts(sx + k * sp, sy, cam.unit * 0.11 * sc * pp, cam.unit * 0.08 * sc * pp, f.seed + k, 7, 0.28), {
-                col: "#fffdf6", seed: f.seed + k + boil, macroAmp: 1.8, microAmp: 1, subdiv: 1, rim: 0, strokeW: 4, step: 4, lw: 1.6, crease: false
-              });
+              fillWaxCrayon(ctx, makeEllipsePts(sx + k * sp, sy, cam.unit * 0.11 * sc * pp, cam.unit * 0.08 * sc * pp, 10, f.seed + k), "#d6b082", f.seed + k, { lw: 1.6 });
             }
           } else if (f.k === "pop") {
             const fs = Math.round(Math.max(15, cam.unit * 0.23 * pp));
@@ -1073,8 +1071,7 @@
     if (tx < 0 || tx >= COLS || ty < 0 || ty >= ROWS || PATH_SET.has(tx + "," + ty)) return false;
     if (towerAtTile(tx, ty)) return false;
     if (game.gold < PET_COST) { flashNoGold(); return false; }
-    game.gold -= PET_COST;
-    syncHud();
+    game.gold -= PET_COST; syncHud();
     game.towers.push(makeTower(tx, ty));
     spawnDustPuff(tx + 0.5, ty + 0.5);
     return true;
