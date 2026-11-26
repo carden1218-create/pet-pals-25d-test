@@ -5,11 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
 <title>Pet Pals Defense 2: 3D War · 萌宠防线 2：3D战争</title>
 <style>
+  :root {
+    --ol: #2b1b22; --ink: #3a2630; --dim: #7a5c64;
+    --cream: #fff8e6; --cream2: #ffefc8;
+    --pink: #ff6f9a; --gold: #ffc83a; --mint: #5fcf86; --sky: #6cb8ff; --lav: #a98aff; --red: #ff6a5a;
+  }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
   html, body {
     margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-    background: #f7f3e3; color: #24183a;
-    font-family: "Fredoka", "Nunito", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    background: #9ad77a; color: var(--ink);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Fredoka", "Nunito", sans-serif;
   }
   canvas#c { display: block; width: 100%; height: 100%; touch-action: none; cursor: pointer; }
   .hud {
@@ -21,62 +26,63 @@
   .pill-group.right { flex-wrap: nowrap; }
   .pill {
     pointer-events: auto;
-    background: #fffdf6; color: #24183a;
-    border: 2.5px solid #24183a; border-radius: 999px;
-    padding: 5px 11px; font-weight: 900; font-size: 13px; line-height: 1.2;
-    box-shadow: 2px 3px 0 #c9ae86, 2px 3px 0 1px #24183a;
+    background: var(--cream); color: var(--ink);
+    border: 3px solid var(--ol); border-radius: 999px;
+    padding: 4px 11px; font-weight: 900; font-size: 13px; line-height: 1.2;
+    box-shadow: 0 3px 0 var(--ol);
     display: inline-flex; align-items: center; gap: 5px;
     white-space: nowrap;
   }
-  .pill-title .zh-sub { opacity: 0.85; font-size: 12px; }
-  .pill-gold { background: #fff4bc; }
-  .pill-hp { background: #ffe4e4; gap: 6px; }
-  .hp-mini-bar { width: 52px; height: 9px; border: 2px solid #24183a; border-radius: 999px; background: #fff; overflow: hidden; }
-  .hp-mini-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff5454, #ff9642); transition: width 0.14s ease; }
-  .pill-xp { background: #eef8ff; gap: 6px; }
-  .xp-bar { width: 52px; height: 9px; border: 2px solid #24183a; border-radius: 999px; background: #fff; overflow: hidden; }
-  .xp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #4ec6ff, #ffe04a); transition: width 0.16s ease; }
+  .pill-title { background: var(--gold); }
+  .pill-title .zh-sub { opacity: 0.9; font-size: 12px; }
+  .pill-gold { background: #ffe57a; }
+  .pill-hp { background: #ffd8de; gap: 6px; }
+  .hp-mini-bar { width: 52px; height: 9px; border: 2px solid var(--ol); border-radius: 999px; background: #fff; overflow: hidden; }
+  .hp-mini-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff5468, #ff9a44); transition: width 0.14s ease; }
+  .pill-xp { background: #dff2ff; gap: 6px; }
+  .xp-bar { width: 52px; height: 9px; border: 2px solid var(--ol); border-radius: 999px; background: #fff; overflow: hidden; }
+  .xp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #56c2ff, #ffd644); transition: width 0.16s ease; }
 
   .boss-bar-wrap {
     position: fixed; top: max(50px, calc(env(safe-area-inset-top) + 42px)); left: 50%; transform: translateX(-50%);
     width: min(440px, calc(100% - 24px)); z-index: 11; pointer-events: none;
-    background: #fffdf6; border: 3px solid #24183a; border-radius: 14px;
-    padding: 6px 10px 7px; box-shadow: 3px 4px 0 #c9ae86, 3px 4px 0 1px #24183a;
+    background: var(--cream); border: 3.5px solid var(--ol); border-radius: 16px;
+    padding: 6px 10px 7px; box-shadow: 0 4px 0 var(--ol);
   }
   .boss-bar-wrap.hidden { display: none; }
   .boss-bar-head {
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 12.5px; font-weight: 900; margin-bottom: 4px; color: #24183a;
+    font-size: 13px; font-weight: 900; margin-bottom: 4px; color: var(--ink);
   }
   .boss-skill-tag {
-    background: #ffe066; border: 1.5px solid #24183a; border-radius: 999px;
-    padding: 1px 7px; font-size: 11px; font-weight: 900;
+    background: var(--gold); border: 2px solid var(--ol); border-radius: 999px;
+    padding: 1px 8px; font-size: 11px; font-weight: 900;
   }
   .boss-bar-track {
-    width: 100%; height: 12px; border: 2px solid #24183a; border-radius: 999px;
+    width: 100%; height: 13px; border: 2.5px solid var(--ol); border-radius: 999px;
     background: #3a2334; overflow: hidden;
   }
   .boss-bar-fill {
-    height: 100%; width: 100%; background: linear-gradient(90deg, #ff3e55, #ff8f3a);
+    height: 100%; width: 100%; background: linear-gradient(90deg, #ff4468, #ff963a);
     transition: width 0.1s ease;
   }
 
-  .upg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+  .upg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
   .upg-card {
-    cursor: pointer; background: #fffdf6; color: #24183a;
-    border: 3px solid #24183a; border-radius: 16px;
+    cursor: pointer; background: #fff; color: var(--ink);
+    border: 3px solid var(--ol); border-radius: 18px;
     padding: 12px 10px; text-align: center;
-    box-shadow: 3px 4px 0 #c9ae86;
-    transition: transform 0.1s ease, background 0.1s ease;
+    box-shadow: 0 4px 0 var(--ol);
+    transition: transform 0.08s ease, background 0.1s ease;
   }
-  .upg-card:hover { transform: translateY(-2px); background: #fff7d4; }
-  .upg-card:active { transform: translate(1px, 2px); }
+  .upg-card:hover { transform: translateY(-2px); background: var(--cream2); }
+  .upg-card:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ol); }
   .upg-ico { font-size: 28px; line-height: 1.1; margin-bottom: 5px; }
-  .upg-title { font-size: 14px; font-weight: 900; color: #24183a; margin-bottom: 4px; }
-  .upg-desc { font-size: 11.5px; font-weight: 700; color: #4c3b64; line-height: 1.35; }
-  .pill-btn { cursor: pointer; background: #ffe478; transition: transform 0.08s ease; }
-  .pill-btn:active { transform: translate(1px, 2px); }
-  .pill-btn.active { background: #ff9c54; }
+  .upg-title { font-size: 14px; font-weight: 900; color: var(--ink); margin-bottom: 4px; }
+  .upg-desc { font-size: 11.5px; font-weight: 700; color: var(--dim); line-height: 1.35; }
+  .pill-btn { cursor: pointer; background: var(--gold); transition: transform 0.08s ease; }
+  .pill-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ol); }
+  .pill-btn.active { background: var(--pink); color: #fff; }
   .pill-shake { animation: shake 0.28s ease; background: #ffd0c4; }
   @keyframes shake {
     0%,100% { transform: translateX(0); }
@@ -89,25 +95,25 @@
     display: flex; align-items: center; gap: 8px; z-index: 12; pointer-events: none;
   }
   .hint {
-    background: rgba(255, 253, 246, 0.94); color: #24183a;
-    border: 2.5px solid #24183a; border-radius: 999px;
-    padding: 5px 13px; font-weight: 800; font-size: 12px; white-space: nowrap;
-    box-shadow: 2px 3px 0 #c9ae86;
+    background: var(--cream); color: var(--ink);
+    border: 3px solid var(--ol); border-radius: 999px;
+    padding: 5px 14px; font-weight: 900; font-size: 12px; white-space: nowrap;
+    box-shadow: 0 3px 0 var(--ol);
   }
 
   .joy-zone {
     position: fixed; left: 14px; bottom: max(14px, env(safe-area-inset-bottom));
     width: 102px; height: 102px; border-radius: 50%;
-    background: rgba(255, 252, 244, 0.72);
-    border: 3px dashed #5e4b3a;
-    box-shadow: 2px 3px 0 rgba(201, 174, 134, 0.65);
+    background: rgba(255, 248, 230, 0.80);
+    border: 3px dashed var(--ol);
+    box-shadow: 0 4px 0 rgba(43, 27, 34, 0.35);
     touch-action: none; z-index: 14;
     display: flex; align-items: center; justify-content: center;
   }
   .joy-knob {
     width: 44px; height: 44px; border-radius: 50%;
-    background: #ffe159; border: 2.5px solid #24183a;
-    box-shadow: 2px 2px 0 #24183a;
+    background: var(--gold); border: 3px solid var(--ol);
+    box-shadow: 0 3px 0 var(--ol);
     pointer-events: none;
     display: flex; align-items: center; justify-content: center;
     font-size: 18px; font-weight: 900;
@@ -120,79 +126,87 @@
   .skill-btn {
     position: relative;
     width: 76px; height: 76px; border-radius: 50%;
-    background: #fffdf6; color: #24183a;
-    border: 3px solid #24183a;
-    box-shadow: 3px 4px 0 #c9ae86, 3px 4px 0 1px #24183a;
+    background: var(--cream); color: var(--ink);
+    border: 3.5px solid var(--ol);
+    box-shadow: 0 4px 0 var(--ol);
     cursor: pointer; padding: 3px;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     overflow: hidden; transition: transform 0.08s ease;
   }
   .skill-btn.hidden { display: none; }
-  .skill-btn.ready { background: #fff4b2; animation: skillPulse 1.3s ease-in-out infinite; }
-  .skill-btn:active { transform: translate(1px, 2px); }
+  .skill-btn.ready { background: #ffe98a; animation: skillPulse 1.3s ease-in-out infinite; }
+  .skill-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ol); }
   @keyframes skillPulse {
-    0%,100% { box-shadow: 3px 4px 0 #c9ae86, 0 0 0 0 rgba(255, 196, 54, 0.55); }
-    50% { box-shadow: 3px 4px 0 #c9ae86, 0 0 0 8px rgba(255, 196, 54, 0); }
+    0%,100% { box-shadow: 0 4px 0 var(--ol), 0 0 0 0 rgba(255, 200, 58, 0.55); }
+    50% { box-shadow: 0 4px 0 var(--ol), 0 0 0 8px rgba(255, 200, 58, 0); }
   }
   .skill-lvl-badge {
     position: absolute; top: 3px; right: 7px; z-index: 2;
     font-size: 9.5px; font-weight: 900; color: #fff;
-    background: #d94c2c; border: 1.5px solid #24183a; border-radius: 999px;
+    background: var(--pink); border: 2px solid var(--ol); border-radius: 999px;
     padding: 0 4px; line-height: 1.2;
   }
   .skill-cd-mask {
     position: absolute; inset: 0; border-radius: 50%;
     pointer-events: none; display: none;
     align-items: center; justify-content: center;
-    font-size: 16px; font-weight: 900; color: #24183a;
-    text-shadow: 0 0 4px #fffdf6, 0 0 4px #fffdf6;
+    font-size: 16px; font-weight: 900; color: var(--ol);
+    text-shadow: 0 0 4px #fff8e6, 0 0 4px #fff8e6;
     z-index: 3;
   }
   .skill-btn.on-cd .skill-cd-mask { display: flex; }
   .skill-ico { font-size: 23px; line-height: 1.05; position: relative; z-index: 1; }
-  .skill-lbl { font-size: 10.5px; font-weight: 900; line-height: 1.1; color: #24183a; position: relative; z-index: 1; margin-top: 1px; }
-  .skill-key { font-size: 9px; font-weight: 800; color: #5b4875; position: relative; z-index: 1; }
+  .skill-lbl { font-size: 10.5px; font-weight: 900; line-height: 1.1; color: var(--ink); position: relative; z-index: 1; margin-top: 1px; }
+  .skill-key { font-size: 9px; font-weight: 800; color: var(--dim); position: relative; z-index: 1; }
 
   .overlay {
     position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: rgba(247, 243, 227, 0.56); backdrop-filter: blur(2px);
+    background: rgba(30, 18, 36, 0.50); backdrop-filter: blur(2px);
     z-index: 20; padding: 18px;
   }
   .overlay.hidden { display: none; }
   .card {
-    background: #fffdf6; color: #24183a;
-    border: 4px solid #24183a; border-radius: 24px;
-    box-shadow: 5px 6px 0 #c9ae86, 5px 6px 0 2px #24183a;
+    background: var(--cream); color: var(--ink);
+    border: 4px solid var(--ol); border-radius: 26px;
+    box-shadow: 0 7px 0 var(--ol), 0 18px 40px rgba(0,0,0,0.3);
     padding: 18px 20px; max-width: 720px; width: 100%; text-align: center;
   }
-  .card h1 { margin: 0 0 6px; font-size: 23px; font-weight: 900; }
-  .card p { margin: 0 0 12px; font-size: 13.5px; font-weight: 700; color: #4c3b64; line-height: 1.4; }
+  .ribbon {
+    display: inline-block;
+    background: var(--gold); border: 3.5px solid var(--ol); border-radius: 16px;
+    box-shadow: 0 4px 0 var(--ol);
+    padding: 4px 20px; font-weight: 900; font-size: 20px; color: var(--ol);
+    margin-bottom: 8px;
+  }
+  .ribbon.pink { background: var(--pink); color: var(--ol); }
+  .card h1 { margin: 0 0 6px; font-size: 22px; font-weight: 900; color: var(--ol); }
+  .card p { margin: 0 0 12px; font-size: 13.5px; font-weight: 700; color: var(--dim); line-height: 1.4; }
   .hero-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 4px; }
   .hero-opt {
-    cursor: pointer; background: #fffdf8; color: #24183a;
-    border: 3px solid #24183a; border-radius: 18px;
+    cursor: pointer; background: #fff; color: var(--ink);
+    border: 3px solid var(--ol); border-radius: 18px;
     padding: 8px 8px; text-align: center;
-    box-shadow: 3px 4px 0 #c9ae86;
-    transition: transform 0.1s ease, background 0.1s ease;
+    box-shadow: 0 4px 0 var(--ol);
+    transition: transform 0.08s ease, background 0.1s ease;
   }
-  .hero-opt:hover { transform: translateY(-2px); background: #fff7d4; }
-  .hero-opt:active { transform: translate(1px, 2px); }
+  .hero-opt:hover { transform: translateY(-2px); background: var(--cream2); }
+  .hero-opt:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ol); }
   .hero-thumb { width: 74px; height: 74px; display: block; margin: 0 auto 3px; }
-  .hero-opt .hname { font-size: 14px; font-weight: 900; line-height: 1.2; }
-  .hero-opt .hsub { font-size: 11px; font-weight: 800; color: #5b4875; margin-top: 2px; }
+  .hero-opt .hname { font-size: 14px; font-weight: 900; line-height: 1.2; color: var(--ol); }
+  .hero-opt .hsub { font-size: 11px; font-weight: 800; color: var(--dim); margin-top: 2px; }
   .big-btn {
     display: inline-block; cursor: pointer;
-    background: #ffe14a; color: #24183a;
-    border: 3px solid #24183a; border-radius: 16px;
-    padding: 10px 26px; font-size: 17px; font-weight: 900;
-    box-shadow: 3px 4px 0 #24183a; transition: transform 0.08s ease;
+    background: var(--pink); color: #fff;
+    border: 3.5px solid var(--ol); border-radius: 18px;
+    padding: 10px 28px; font-size: 18px; font-weight: 900;
+    box-shadow: 0 4px 0 var(--ol); transition: transform 0.08s ease;
   }
-  .big-btn:active { transform: translate(2px, 2px); box-shadow: 1px 2px 0 #24183a; }
+  .big-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ol); }
 
   @media (max-width: 720px) {
     .hud { left: 8px; right: 8px; gap: 4px; align-items: flex-start; }
     .pill-group { gap: 4px; }
-    .pill { font-size: 10.5px; padding: 3.5px 6.5px; border-width: 2px; }
+    .pill { font-size: 10.5px; padding: 3.5px 7px; border-width: 2.5px; }
     .pill-title .zh-sub, .pill-title { display: none; }
     .joy-zone { width: 84px; height: 84px; left: 10px; bottom: max(22px, env(safe-area-inset-bottom)); }
     .joy-knob { width: 36px; height: 36px; font-size: 14px; }
@@ -275,7 +289,7 @@
 
 <div class="overlay" id="pick-overlay">
   <div class="card">
-    <h1>选择你的主角宠物 · Pick Hero</h1>
+    <div class="ribbon pink">萌宠防线 2 · 3D战争</div><h1>选择你的主角宠物 · Pick Hero</h1>
     <p>原版一代萌宠贴在立体瓦楞纸板上！选一只主角亲自跑位、挥剑或释放大招迎战无尽史莱姆大军！</p>
     <div class="hero-grid">
       <button class="hero-opt" data-hero="chili" type="button">
@@ -314,7 +328,7 @@
 
 <div class="overlay hidden" id="levelup-overlay">
   <div class="card">
-    <h1 id="lvl-title">⭐ 主角升级！选一个强化</h1>
+    <div class="ribbon">⭐ 主角升级</div><h1 id="lvl-title">选一个强化</h1>
     <p id="lvl-sub">点击卡片或按 1 / 2 / 3 选择，打怪更快更爽！</p>
     <div class="upg-grid" id="upg-grid"></div>
   </div>
@@ -328,8 +342,8 @@
   </div>
 </div>
 
-<script src="audio.js?v=17"></script>
-<script src="paper-craft.js?v=17"></script>
-<script src="game.js?v=17"></script>
+<script src="audio.js?v=18"></script>
+<script src="paper-craft.js?v=18"></script>
+<script src="game.js?v=18"></script>
 </body>
 </html>

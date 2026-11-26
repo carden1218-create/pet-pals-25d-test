@@ -730,8 +730,8 @@
           }
         } else {
           // Very light pastel pigment mottling preserving exact original sprite hue & brightness!
-          const macro = (Math.sin(x * 0.14 + y * 0.11 + seedBase) + Math.cos(x * 0.09 - y * 0.13)) * 3.5;
-          const micro = (hash(x * 5 + y * 9, seedBase + 71) - 0.5) * 9;
+          const macro = (Math.sin(x * 0.14 + y * 0.11 + seedBase) + Math.cos(x * 0.09 - y * 0.13)) * 6.5;
+          const micro = (hash(x * 5 + y * 9, seedBase + 71) - 0.5) * 15;
           const delta = macro + micro;
           px[idx]     = Math.max(0, Math.min(255, Math.round(r + delta)));
           px[idx + 1] = Math.max(0, Math.min(255, Math.round(g + delta)));
@@ -761,19 +761,19 @@
       const lum = pr * 0.299 + pg * 0.587 + pb * 0.114;
       const sat = Math.max(pr, pg, pb) - Math.min(pr, pg, pb);
       if (lum < 56 && sat < 38) continue; // keep eyes/outlines crisp and readable!
-      const shift = (si % 2 === 0 ? 14 : -10);
+      const shift = (si % 2 === 0 ? 18 : -14);
       const cStr = `rgb(${Math.max(0, Math.min(255, pr + shift))},${Math.max(0, Math.min(255, pg + shift))},${Math.max(0, Math.min(255, pb + shift))})`;
       const formAng = Math.atan2(ry - cyBody, rx - cxBody) + Math.PI * 0.5 + (hash(si, seedBase + 113) - 0.5) * 0.45;
-      dabStroke(oc, rx, ry, 10 + hash(si, seedBase + 127) * 9, 4.0 + hash(si, seedBase + 131) * 2.4, formAng, cStr, 0.22, seedBase + si);
+      dabStroke(oc, rx, ry, 10 + hash(si, seedBase + 127) * 9, 4.2 + hash(si, seedBase + 131) * 2.6, formAng, cStr, 0.30, seedBase + si);
     }
 
     // Visible paper-grain tooth (warm cream paper specks showing through — minimal darkening!)
     oc.save();
     oc.translate((seedBase * 23) % 192, (seedBase * 41) % 192);
-    oc.globalAlpha = 0.40;
+    oc.globalAlpha = 0.48;
     oc.fillStyle = oc.createPattern(toothPatCanvas, "repeat");
     oc.fillRect(-200, -200, S + 400, S + 400);
-    oc.globalAlpha = 0.08;
+    oc.globalAlpha = 0.14;
     oc.fillStyle = oc.createPattern(darkGrainCanvas, "repeat");
     oc.fillRect(-200, -200, S + 400, S + 400);
     oc.restore();
@@ -806,6 +806,11 @@
     mc.fillStyle = "#000";
     mc.fillRect(0, 0, S, S);
 
+    if (opts.noCardboard) {
+      // Pure 2.5D Gen-1 slime cutout (crayon-textured, NO boxy cardboard backing!)
+      return strokeOverlay;
+    }
+
     // 4. Glue oil-pastel-textured Gen-1 sprite onto corrugated cardboard standee (softer warm rim)!
     return makeCardboardStandeeFromMask(S, S, innerMask, {
       thickX: opts.thickX ?? 14,
@@ -832,145 +837,114 @@
     const cx = S * 0.5, by = S - 24;
     const layers = {};
 
-    // 1. World props: v10 Colours & Subjects painted with Thick Oil-Pastel Brushstrokes (dabbed foliage, zero black outlines!)
-    const treeOuter = sampleSmoothLoop([
-      [cx - 17, by], [cx - 14, by - 66],
-      [cx - 42, by - 68], [cx - 66, by - 92], [cx - 72, by - 122], [cx - 58, by - 154],
-      [cx - 28, by - 174], [cx, by - 180], [cx + 28, by - 174],
-      [cx + 58, by - 154], [cx + 72, by - 122], [cx + 66, by - 92], [cx + 42, by - 68],
-      [cx + 15, by - 66], [cx + 18, by]
+    // 1. World props: 2.5D GEN-1 Orchard Crayon Style (#2b1b22 crayon outline + cel shading + grain texture!)
+    const gen1Stroke = (c, pts, fillCol, lw = 4.2, seed = 600, hiCol = null) => {
+      c.save();
+      tracePoly(c, pts);
+      c.fillStyle = fillCol;
+      c.fill();
+      if (hiCol) {
+        c.save();
+        c.clip();
+        c.fillStyle = hiCol;
+        c.beginPath();
+        c.ellipse(cx - 18, by - 134, 48, 34, -0.3, 0, TAU);
+        c.fill();
+        c.restore();
+      }
+      // Subtle paper tooth inside
+      c.save();
+      c.clip();
+      ensureToothTextures();
+      c.globalAlpha = 0.36;
+      c.fillStyle = c.createPattern(toothPatCanvas, "repeat");
+      c.fillRect(0, 0, S, S);
+      c.restore();
+      tracePoly(c, pts);
+      c.lineWidth = lw;
+      c.strokeStyle = "#2b1b22";
+      c.lineJoin = "round";
+      c.stroke();
+      c.restore();
+    };
+
+    const treeCanopy = sampleSmoothLoop([
+      [cx - 46, by - 66], [cx - 72, by - 92], [cx - 76, by - 122], [cx - 60, by - 154],
+      [cx - 28, by - 176], [cx, by - 182], [cx + 28, by - 176], [cx + 60, by - 154],
+      [cx + 76, by - 122], [cx + 72, by - 92], [cx + 46, by - 66], [cx, by - 60]
     ], 4);
-
-    layers.tree = [{
-      zOff: 0,
-      cv: makeCardboardSlab(S, S, treeOuter, {
-        thickX: 10, thickY: 7, lip: 0.5, seed: 601, outerOl: false, unclippedDabs: true, pastelProp: true
-      }, (c) => {
-        // Warm brown trunk & forked branches (NO black outline!)
-        const trunkPts = sampleSmoothLoop([
-          [cx - 18, by + 2], [cx - 14, by - 78], [cx - 30, by - 108], [cx - 20, by - 112],
-          [cx - 4, by - 84], [cx + 6, by - 84], [cx + 24, by - 110], [cx + 32, by - 104],
-          [cx + 14, by - 76], [cx + 19, by + 2]
-        ], 3);
-        fillOilPastel(c, trunkPts, "#925a32", 601, {
-          cols: ["#6e4020", "#925a32", "#b27648"], dabSize: 10, dabAlpha: 0.35, toothAlpha: 0.32, calm: true
-        });
-
-        // Bright Green Tree Canopy built from clusters of dabbed oil-pastel strokes (v10 greens, NO black outline!)
-        const crownPts = sampleSmoothLoop([
-          [cx - 44, by - 68], [cx - 68, by - 94], [cx - 74, by - 124], [cx - 58, by - 156],
-          [cx - 28, by - 176], [cx, by - 182], [cx + 28, by - 176],
-          [cx + 58, by - 156], [cx + 74, by - 124], [cx + 68, by - 94], [cx + 44, by - 68], [cx, by - 62]
-        ], 4);
-        fillOilPastel(c, crownPts, "#5cb43e", 604, {
-          cols: ["#3d8c28", "#5cb43e", "#7dd24f"], dabSize: 18, dabAlpha: 0.25, toothAlpha: 0.26, edgeBleed: true, calm: true
-        });
-        const greenPal = { shadow: "#367f22", mid: "#5cb43e", light: "#8ae05a", accent: "#a4ee72" };
-        dabPastelCluster(c, cx - 22, by - 114, 44, 34, greenPal, 610, { count: 42, dabSize: 15 });
-        dabPastelCluster(c, cx + 22, by - 116, 44, 34, greenPal, 625, { count: 42, dabSize: 15 });
-        dabPastelCluster(c, cx, by - 142, 48, 36, greenPal, 640, { count: 48, dabSize: 15 });
-        dabPastelCluster(c, cx - 22, by - 148, 28, 18, { shadow: "#5cb43e", mid: "#8ae05a", light: "#a8f078" }, 655, { count: 20, dabSize: 12 });
-        dabPastelCluster(c, cx + 16, by - 88, 34, 14, { shadow: "#2d6a1a", mid: "#3d8c28", light: "#52a336" }, 668, { count: 18, dabSize: 12 });
-
-        // Bright red oil-pastel apple + green leaf (NO black outline!)
-        fillOilPastel(c, makeEllipsePts(cx - 2, by - 122, 16, 15, 16, 607), "#e83424", 607, {
-          cols: ["#b82014", "#e83424", "#ff684a"], dabSize: 9, dabAlpha: 0.30, toothAlpha: 0.25, edgeBleed: true
-        });
-        dabStroke(c, cx - 6, by - 128, 7, 4.5, -0.5, "#ff9e82", 0.85, 608);
-        dabStroke(c, cx - 1, by - 140, 10, 3.5, 1.45, "#5c341a", 0.90, 609);
-        dabStroke(c, cx + 8, by - 143, 13, 6.5, -0.35, "#66c844", 0.92, 611);
-      })
-    }];
-
-    const bushOuter = sampleSmoothLoop([
-      [cx - 60, by - 12], [cx - 66, by - 36], [cx - 44, by - 66], [cx - 12, by - 74],
-      [cx + 16, by - 74], [cx + 48, by - 64], [cx + 66, by - 34], [cx + 58, by - 12], [cx, by - 6]
-    ], 4);
-    layers.bush = [{
-      zOff: 0,
-      cv: makeCardboardSlab(S, S, bushOuter, {
-        thickX: 9, thickY: 6, lip: 0.5, seed: 701, outerOl: false, unclippedDabs: true, pastelProp: true
-      }, (c) => {
-        // Bright green oil-pastel bush built from dab clusters + pink & yellow flowers (NO black outline!)
-        fillOilPastel(c, bushOuter, "#54ad38", 700, {
-          cols: ["#3a8824", "#54ad38", "#85de56"], dabSize: 16, dabAlpha: 0.25, toothAlpha: 0.26, edgeBleed: true, calm: true
-        });
-        const bushPal = { shadow: "#347b20", mid: "#54ad38", light: "#85de56", accent: "#a2eb70" };
-        dabPastelCluster(c, cx - 20, by - 36, 38, 26, bushPal, 701, { count: 38, dabSize: 13 });
-        dabPastelCluster(c, cx + 18, by - 34, 38, 25, bushPal, 715, { count: 38, dabSize: 13 });
-        dabPastelCluster(c, cx, by - 50, 34, 22, bushPal, 728, { count: 32, dabSize: 12 });
-        dabPastelCluster(c, cx - 20, by - 42, 10, 8, { shadow: "#df5c96", mid: "#ff84ba", light: "#ffb2d4" }, 740, { count: 7, dabSize: 6.5 });
-        dabPastelCluster(c, cx + 18, by - 32, 10, 8, { shadow: "#deb628", mid: "#ffe24e", light: "#fff08e" }, 745, { count: 7, dabSize: 6.5 });
-      })
-    }];
-
-    const rockOuter = sampleSmoothLoop([[cx - 56, by], [cx - 42, by - 56], [cx + 10, by - 66], [cx + 54, by - 26], [cx + 46, by + 2]], 4);
-    layers.rock = [{
-      zOff: 0,
-      cv: makeCardboardSlab(S, S, rockOuter, {
-        thickX: 9, thickY: 6, lip: 0.5, seed: 720, outerOl: false, unclippedDabs: true, pastelProp: true
-      }, (c) => {
-        // Gray oil-pastel stone with warm highlight & moss touch (v10 palette, NO black outline!)
-        fillOilPastel(c, rockOuter, "#9a9184", 720, {
-          cols: ["#756d62", "#9a9184", "#beb5a8"], dabSize: 18, dabAlpha: 0.24, toothAlpha: 0.34, edgeBleed: true, calm: true
-        });
-        fillOilPastel(c, sampleSmoothLoop([[cx - 34, by - 16], [cx - 24, by - 50], [cx + 16, by - 54], [cx + 28, by - 24]], 3), "#d4cabd", 721, {
-          cols: ["#beb5a8", "#d4cabd", "#e4dcd0"], dabSize: 12, dabAlpha: 0.22, toothAlpha: 0.28, edgeBleed: true, calm: true
-        });
-        dabPastelCluster(c, cx + 22, by - 12, 18, 9, { shadow: "#5c7040", mid: "#7a8c58", light: "#98ab72" }, 722, { count: 10, dabSize: 8 });
-      })
-    }];
-
-    const signOuter = sampleSmoothLoop([
-      [cx - 8, by], [cx - 8, by - 54], [cx - 42, by - 54], [cx - 42, by - 94],
-      [cx + 28, by - 96], [cx + 54, by - 74], [cx + 28, by - 52],
-      [cx + 8, by - 52], [cx + 8, by]
+    const treeCv = document.createElement("canvas");
+    treeCv.width = S; treeCv.height = S;
+    const tc = treeCv.getContext("2d");
+    // Trunk
+    const trunkPts = sampleSmoothLoop([
+      [cx - 18, by + 2], [cx - 14, by - 76], [cx - 28, by - 102], [cx - 18, by - 106],
+      [cx - 3, by - 82], [cx + 5, by - 82], [cx + 22, by - 104], [cx + 30, by - 98],
+      [cx + 14, by - 74], [cx + 18, by + 2]
     ], 3);
-    layers.sign = [{
-      zOff: 0,
-      cv: makeCardboardSlab(S, S, signOuter, {
-        thickX: 8, thickY: 6, lip: 0.5, seed: 740, outerOl: false, unclippedDabs: true, pastelProp: true
-      }, (c) => {
-        const signPost = sampleSmoothLoop([[cx - 8, by], [cx - 7, by - 60], [cx + 8, by - 60], [cx + 8, by]], 3);
-        const signBoard = sampleSmoothLoop([[cx - 42, by - 94], [cx + 28, by - 96], [cx + 54, by - 74], [cx + 28, by - 52], [cx - 42, by - 54]], 3);
-        fillOilPastel(c, signPost, "#966034", 740, { cols: ["#744622", "#966034", "#b47a4a"], dabSize: 9, dabAlpha: 0.26, toothAlpha: 0.30, calm: true });
-        fillOilPastel(c, signBoard, "#f2c468", 741, { cols: ["#d8a446", "#f2c468", "#fae08e"], dabSize: 12, dabAlpha: 0.24, toothAlpha: 0.30, calm: true });
-        dabStroke(c, cx - 2, by - 74, 34, 5.5, 0, "#7a441e", 0.88, 742);
-        dabStroke(c, cx + 18, by - 78, 14, 4.5, 0.65, "#7a441e", 0.88, 743);
-        dabStroke(c, cx + 18, by - 70, 14, 4.5, -0.65, "#7a441e", 0.88, 744);
-      })
-    }];
+    gen1Stroke(tc, trunkPts, "#8a522a", 4.2, 601);
+    // Scalloped Gen-1 Orchard canopy + highlight + glossy red apple
+    gen1Stroke(tc, treeCanopy, "#449e36", 4.5, 604, "#66c848");
+    const subLobe = sampleSmoothLoop([[cx - 44, by - 136], [cx - 18, by - 166], [cx + 18, by - 166], [cx + 42, by - 134], [cx + 22, by - 110], [cx - 24, by - 110]], 3);
+    tc.save();
+    tracePoly(tc, subLobe);
+    tc.fillStyle = "rgba(124, 218, 86, 0.42)";
+    tc.fill();
+    tc.restore();
+    // Red apple
+    const applePts = makeEllipsePts(cx - 2, by - 118, 16, 15, 16, 607);
+    gen1Stroke(tc, applePts, "#f03628", 3.6, 607);
+    tc.fillStyle = "rgba(255,255,255,0.62)";
+    tc.beginPath(); tc.ellipse(cx - 8, by - 124, 4.8, 3, -0.5, 0, TAU); tc.fill();
+    tc.strokeStyle = "#2b1b22"; tc.lineWidth = 3; tc.beginPath(); tc.moveTo(cx - 2, by - 133); tc.lineTo(cx, by - 142); tc.stroke();
+    gen1Stroke(tc, sampleSmoothLoop([[cx, by - 139], [cx + 11, by - 147], [cx + 14, by - 137], [cx + 4, by - 135]], 2), "#5cc644", 2.6, 609);
+    layers.tree = [{ zOff: 0, cv: treeCv }];
 
-    const fenceOuter = sampleSmoothLoop([
-      [cx - 84, by - 20], [cx - 84, by - 68], [cx - 70, by - 68], [cx - 60, by - 88], [cx - 48, by - 68],
-      [cx - 30, by - 68], [cx - 20, by - 88], [cx - 10, by - 68],
-      [cx + 10, by - 68], [cx + 20, by - 88], [cx + 30, by - 68],
-      [cx + 48, by - 68], [cx + 60, by - 88], [cx + 70, by - 68],
-      [cx + 84, by - 68], [cx + 84, by - 20], [cx + 70, by - 20], [cx + 70, by],
-      [cx + 50, by], [cx + 50, by - 20], [cx + 30, by - 20], [cx + 30, by],
-      [cx + 10, by], [cx + 10, by - 20], [cx - 10, by - 20], [cx - 10, by],
-      [cx - 30, by], [cx - 30, by - 20], [cx - 50, by - 20], [cx - 50, by],
-      [cx - 70, by], [cx - 70, by - 20]
-    ], 2);
-    layers.fence = [{
-      zOff: 0,
-      cv: makeCardboardSlab(S, S, fenceOuter, {
-        thickX: 8, thickY: 6, lip: 0.5, seed: 760, outerOl: false, unclippedDabs: true, pastelProp: true
-      }, (c) => {
-        fillOilPastel(c, sampleSmoothLoop([[cx - 84, by - 36], [cx + 84, by - 38], [cx + 84, by - 20], [cx - 84, by - 20]], 2), "#cc904c", 760, {
-          cols: ["#a46c32", "#cc904c", "#dfaa64"], dabSize: 10, dabAlpha: 0.26, toothAlpha: 0.30, calm: true
-        });
-        fillOilPastel(c, sampleSmoothLoop([[cx - 84, by - 68], [cx + 84, by - 68], [cx + 84, by - 52], [cx - 84, by - 52]], 2), "#dfaa64", 761, {
-          cols: ["#b87c3c", "#dfaa64", "#f0c480"], dabSize: 10, dabAlpha: 0.26, toothAlpha: 0.30, calm: true
-        });
-        [-60, -20, 20, 60].forEach((px, idx) => {
-          const pPts = sampleSmoothLoop([[cx + px - 10, by], [cx + px - 9, by - 72], [cx + px, by - 88], [cx + px + 9, by - 72], [cx + px + 10, by]], 2);
-          fillOilPastel(c, pPts, "#f0c480", 770 + idx, {
-            cols: ["#cc924c", "#f0c480", "#f8d89c"], dabSize: 10, dabAlpha: 0.26, toothAlpha: 0.30, calm: true
-          });
-        });
-      })
-    }];
+    // Gen-1 Bush
+    const bushCv = document.createElement("canvas");
+    bushCv.width = S; bushCv.height = S;
+    const bc = bushCv.getContext("2d");
+    const bushPts = sampleSmoothLoop([
+      [cx - 58, by - 8], [cx - 66, by - 36], [cx - 44, by - 64], [cx - 12, by - 72],
+      [cx + 16, by - 72], [cx + 48, by - 62], [cx + 66, by - 34], [cx + 56, by - 8], [cx, by - 4]
+    ], 4);
+    gen1Stroke(bc, bushPts, "#48a638", 4.2, 700, "#72d452");
+    // Cute pink & yellow flowers
+    for (const [fx, fy, fc] of [[cx - 20, by - 38, "#ff7aa8"], [cx + 18, by - 30, "#ffd846"]]) {
+      bc.fillStyle = fc; bc.strokeStyle = "#2b1b22"; bc.lineWidth = 2.6;
+      bc.beginPath(); bc.arc(fx, fy, 7.5, 0, TAU); bc.fill(); bc.stroke();
+      bc.fillStyle = "#fff8d6"; bc.beginPath(); bc.arc(fx, fy, 2.8, 0, TAU); bc.fill();
+    }
+    layers.bush = [{ zOff: 0, cv: bushCv }];
+
+    // Gen-1 Rock
+    const rockCv = document.createElement("canvas");
+    rockCv.width = S; rockCv.height = S;
+    const rc = rockCv.getContext("2d");
+    const rockPts = sampleSmoothLoop([[cx - 52, by], [cx - 40, by - 52], [cx + 10, by - 62], [cx + 50, by - 24], [cx + 44, by + 2]], 4);
+    gen1Stroke(rc, rockPts, "#949ca6", 4.2, 720, "#c8cfd8");
+    layers.rock = [{ zOff: 0, cv: rockCv }];
+
+    // Gen-1 Signpost
+    const signCv = document.createElement("canvas");
+    signCv.width = S; signCv.height = S;
+    const sc2 = signCv.getContext("2d");
+    gen1Stroke(sc2, sampleSmoothLoop([[cx - 8, by], [cx - 7, by - 60], [cx + 8, by - 60], [cx + 8, by]], 3), "#8e582e", 3.8, 740);
+    gen1Stroke(sc2, sampleSmoothLoop([[cx - 42, by - 94], [cx + 28, by - 96], [cx + 54, by - 74], [cx + 28, by - 52], [cx - 42, by - 54]], 3), "#f4c864", 4.0, 741);
+    sc2.strokeStyle = "#6e3e1c"; sc2.lineWidth = 4; sc2.lineCap = "round";
+    sc2.beginPath(); sc2.moveTo(cx - 24, by - 74); sc2.lineTo(cx + 22, by - 74); sc2.lineTo(cx + 12, by - 82); sc2.moveTo(cx + 22, by - 74); sc2.lineTo(cx + 12, by - 66); sc2.stroke();
+    layers.sign = [{ zOff: 0, cv: signCv }];
+
+    // Gen-1 Wooden Fence
+    const fenceCv = document.createElement("canvas");
+    fenceCv.width = S; fenceCv.height = S;
+    const fc2 = fenceCv.getContext("2d");
+    gen1Stroke(fc2, sampleSmoothLoop([[cx - 82, by - 36], [cx + 82, by - 36], [cx + 82, by - 20], [cx - 82, by - 20]], 2), "#c68846", 3.6, 760);
+    gen1Stroke(fc2, sampleSmoothLoop([[cx - 82, by - 66], [cx + 82, by - 66], [cx + 82, by - 50], [cx - 82, by - 50]], 2), "#dfaa62", 3.6, 761);
+    [-58, -18, 22, 60].forEach((px, idx) => {
+      gen1Stroke(fc2, sampleSmoothLoop([[cx + px - 10, by], [cx + px - 9, by - 72], [cx + px, by - 88], [cx + px + 9, by - 72], [cx + px + 10, by]], 2), "#f0c47a", 3.6, 770 + idx);
+    });
+    layers.fence = [{ zOff: 0, cv: fenceCv }];
 
     // 2. ORIGINAL GEN-1 CHARACTER SPRITES glued onto corrugated cardboard standees!
     const spriteSpecs = [
@@ -980,16 +954,17 @@
       ["coco",      "assets/pets/coco-1.webp",      { maxW: 170, maxH: 184 }],
       ["taro",      "assets/pets/taro-1.webp",      { maxW: 172, maxH: 188 }],
       ["chestnut",  "assets/pets/chestnut-1.webp",  { maxW: 174, maxH: 190 }],
-      ["z1",        "assets/enemies/z-1.webp",      { maxW: 158, maxH: 182 }],
-      ["z2",        "assets/enemies/z-2.webp",      { maxW: 158, maxH: 182 }],
-      ["z3",        "assets/enemies/z-3.webp",      { maxW: 162, maxH: 194 }],
-      ["z4",        "assets/enemies/z-4.webp",      { maxW: 162, maxH: 192 }],
-      ["z5",        "assets/enemies/z-5.webp",      { maxW: 168, maxH: 194 }],
-      ["z6",        "assets/enemies/z-6.webp",      { maxW: 164, maxH: 194 }],
-      ["b1",        "assets/enemies/b-1.webp",      { maxW: 184, maxH: 204 }],
-      ["b2",        "assets/enemies/b-2.webp",      { maxW: 186, maxH: 204 }],
-      ["b3",        "assets/enemies/b-3.webp",      { maxW: 186, maxH: 204 }],
-      ["b4",        "assets/enemies/b-4.webp",      { maxW: 186, maxH: 204 }],
+      ["z1",        "assets/enemies/z-1.webp",        { maxW: 158, maxH: 182, noCardboard: true }],
+      ["z2",        "assets/enemies/z-2.webp",        { maxW: 158, maxH: 182, noCardboard: true }],
+      ["z3",        "assets/enemies/z-3.webp",        { maxW: 162, maxH: 194, noCardboard: true }],
+      ["z4",        "assets/enemies/z-4.webp",        { maxW: 162, maxH: 192, noCardboard: true }],
+      ["z5",        "assets/enemies/z-5.webp",        { maxW: 168, maxH: 194, noCardboard: true }],
+      ["z6",        "assets/enemies/z-6.webp",        { maxW: 164, maxH: 194, noCardboard: true }],
+      ["spitter",   "assets/enemies/mob-ranged.webp", { maxW: 166, maxH: 186, noCardboard: true }],
+      ["b1",        "assets/enemies/b-1.webp",        { maxW: 186, maxH: 206, noCardboard: true }],
+      ["b2",        "assets/enemies/b-2.webp",        { maxW: 186, maxH: 206, noCardboard: true }],
+      ["b3",        "assets/enemies/b-3.webp",        { maxW: 186, maxH: 206, noCardboard: true }],
+      ["b4",        "assets/enemies/b-4.webp",        { maxW: 186, maxH: 206, noCardboard: true }],
       ["egg",       "assets/fx/hen-egg.webp",       { maxW: 164, maxH: 178 }]
     ];
 

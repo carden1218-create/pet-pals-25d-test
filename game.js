@@ -116,34 +116,34 @@
   ];
 
   const SCENIC_PROPS = [
-    { kind: "tree",  gx: 0.65,  gy: -0.18, scale: 0.92, seed: 11, hillLayers: 2 },
-    { kind: "bush",  gx: 2.75,  gy: -0.15, scale: 0.92, seed: 33, hillLayers: 2 },
-    { kind: "tree",  gx: 6.15,  gy: -0.20, scale: 0.92, seed: 22, hillLayers: 2 },
-    { kind: "bush",  gx: 7.95,  gy: -0.14, scale: 0.92, seed: 38, hillLayers: 2 },
-    { kind: "tree",  gx: 9.75,  gy: -0.12, scale: 0.92, seed: 29, hillLayers: 2 },
-    { kind: "rock",  gx: -0.40, gy: 3.85,  scale: 0.96, seed: 44, hillLayers: 0 },
-    { kind: "tree",  gx: 10.92, gy: 1.75,  scale: 0.95, seed: 55, hillLayers: 0 },
-    { kind: "sign",  gx: 0.45,  gy: 0.62,  scale: 0.92, seed: 77, hillLayers: 0 },
-    { kind: "fence", gx: 1.25,  gy: 7.12,  scale: 1.00, seed: 81, hillLayers: 0 },
-    { kind: "bush",  gx: 3.65,  gy: 7.08,  scale: 0.95, seed: 66, hillLayers: 0 },
-    { kind: "fence", gx: 5.55,  gy: 7.08,  scale: 1.00, seed: 82, hillLayers: 0 },
-    { kind: "rock",  gx: 7.65,  gy: 7.14,  scale: 0.92, seed: 69, hillLayers: 0 },
-    { kind: "fence", gx: 9.45,  gy: 7.14,  scale: 1.00, seed: 83, hillLayers: 0 }
+    { kind: "tree",  gx: -0.35, gy: 0.45, scale: 1.06, seed: 51, hillLayers: 0 },
+    { kind: "tree",  gx: 3.10,  gy: -0.35, scale: 1.00, seed: 52, hillLayers: 0 },
+    { kind: "tree",  gx: 7.40,  gy: -0.35, scale: 1.04, seed: 53, hillLayers: 0 },
+    { kind: "tree",  gx: 11.25, gy: 0.55, scale: 1.06, seed: 54, hillLayers: 0 },
+    { kind: "tree",  gx: 7.40,  gy: 7.35, scale: 1.00, seed: 55, hillLayers: 0 },
+    { kind: "bush",  gx: 1.45,  gy: -0.35, scale: 0.95, seed: 61, hillLayers: 0 },
+    { kind: "bush",  gx: 5.20,  gy: -0.38, scale: 0.96, seed: 62, hillLayers: 0 },
+    { kind: "bush",  gx: 9.45,  gy: -0.32, scale: 0.94, seed: 63, hillLayers: 0 },
+    { kind: "rock",  gx: -0.38, gy: 3.45, scale: 0.92, seed: 68, hillLayers: 0 },
+    { kind: "sign",  gx: 0.35,  gy: 0.42, scale: 0.92, seed: 77, hillLayers: 0 },
+    { kind: "bush",  gx: 2.25,  gy: 7.28, scale: 0.95, seed: 66, hillLayers: 0 },
+    { kind: "fence", gx: 5.35,  gy: 7.26, scale: 0.96, seed: 82, hillLayers: 0 },
+    { kind: "bush",  gx: 8.65,  gy: 7.25, scale: 0.94, seed: 69, hillLayers: 0 }
   ];
 
   // Gen-1 Slime & Boss roster (normal, water, fast ember, lightning-cloud zap, armored pebble, flying splitter puff, archer spitter, 4 Bosses!)
   const ENEMY_DEF = {
-    z1:     { img: "z1", name: "嫩芽史莱姆", hp: 50,   speed: 1.42, size: 1.00, tint: "#86de44", reward: 10, role: "normal" },
-    z2:     { img: "z2", name: "果冻史莱姆", hp: 74,   speed: 1.38, size: 1.04, tint: "#62c0ff", reward: 12, role: "water" },
-    z3:     { img: "z3", name: "火焰史莱姆", hp: 64,   speed: 2.05, size: 1.06, tint: "#ff7236", reward: 14, role: "fast" },
-    z4:     { img: "z4", name: "电池史莱姆", hp: 82,   speed: 1.72, size: 1.08, tint: "#ffe042", reward: 16, role: "zap" },
-    z5:     { img: "z5", name: "岩石史莱姆", hp: 185,  speed: 1.05, size: 1.20, tint: "#9c948c", reward: 22, role: "armored" },
-    z6:     { img: "z6", name: "气球史莱姆", hp: 68,   speed: 1.76, size: 1.08, tint: "#ff8ab8", reward: 16, role: "glider", fly: true, splits: 2 },
-    archer: { img: "z4", name: "弓箭史莱姆", hp: 78,   speed: 1.30, size: 1.10, tint: "#ffb842", reward: 20, role: "archer" },
-    b1:     { img: "b1", name: "果冻史莱姆王", hp: 960,  speed: 0.96, size: 1.48, tint: "#ff7ab8", reward: 85, boss: true, role: "boss" },
-    b2:     { img: "b2", name: "岩甲史莱姆王", hp: 1350, speed: 0.90, size: 1.54, tint: "#8faa8f", reward: 110, boss: true, role: "boss" },
-    b3:     { img: "b3", name: "熔岩史莱姆王", hp: 1750, speed: 0.98, size: 1.54, tint: "#e03a2a", reward: 140, boss: true, role: "boss" },
-    b4:     { img: "b4", name: "混沌史莱姆王", hp: 2200, speed: 1.02, size: 1.56, tint: "#8a4ad0", reward: 180, boss: true, role: "boss" }
+    z1:      { img: "z1",      name: "嫩芽史莱姆", hp: 50,   speed: 1.42, size: 1.00, tint: "#86de44", reward: 10, role: "normal" },
+    z2:      { img: "z2",      name: "果冻史莱姆", hp: 74,   speed: 1.38, size: 1.04, tint: "#62c0ff", reward: 12, role: "water" },
+    z3:      { img: "z3",      name: "火焰史莱姆", hp: 64,   speed: 2.05, size: 1.06, tint: "#ff7236", reward: 14, role: "fast" },
+    z4:      { img: "z4",      name: "电池史莱姆", hp: 82,   speed: 1.72, size: 1.08, tint: "#ffe042", reward: 16, role: "zap" },
+    z5:      { img: "z5",      name: "岩石史莱姆", hp: 185,  speed: 1.05, size: 1.20, tint: "#9c948c", reward: 22, role: "armored" },
+    z6:      { img: "z6",      name: "气球史莱姆", hp: 68,   speed: 1.76, size: 1.08, tint: "#ff8ab8", reward: 16, role: "glider", fly: true, splits: 2 },
+    spitter: { img: "spitter", name: "远程史莱姆", hp: 78,   speed: 1.30, size: 1.08, tint: "#7acf3a", reward: 20, role: "spitter" },
+    b1:      { img: "b1",      name: "果冻史莱姆王", hp: 960,  speed: 0.96, size: 1.48, tint: "#ff7ab8", reward: 85, boss: true, role: "boss" },
+    b2:      { img: "b2",      name: "岩甲史莱姆王", hp: 1350, speed: 0.90, size: 1.54, tint: "#8faa8f", reward: 110, boss: true, role: "boss" },
+    b3:      { img: "b3",      name: "熔岩史莱姆王", hp: 1750, speed: 0.98, size: 1.54, tint: "#e03a2a", reward: 140, boss: true, role: "boss" },
+    b4:      { img: "b4",      name: "混沌史莱姆王", hp: 2200, speed: 1.02, size: 1.56, tint: "#8a4ad0", reward: 180, boss: true, role: "boss" }
   };
 
   function generateWave(waveNum) {
@@ -153,8 +153,8 @@
     const pool = ["z1", "z2"];
     if (waveNum >= 2) pool.push("z3");
     if (waveNum >= 3) pool.push("z4", "z3");
-    if (waveNum >= 4) pool.push("z5", "archer");
-    if (waveNum >= 5) pool.push("z6", "archer", "z5");
+    if (waveNum >= 4) pool.push("z5", "spitter");
+    if (waveNum >= 5) pool.push("z6", "spitter", "z5");
     const entries = [];
     for (let i = 0; i < count; i++) {
       const kind = pool[(i * 7 + waveNum * 3) % pool.length];
@@ -203,11 +203,11 @@
       });
     });
   }
-  /* ================= Flat Full-Screen Continuous Wax Crayon Floor ================= */
+  /* ================= 2.5D Isometric Raised GEN-1 Orchard Diorama (v1 Depth + Gen-1 Orchard Crayon Look) ================= */
   const canvas = document.getElementById("c");
   const ctx = canvas.getContext("2d");
   let W = 1280, H = 720, DPR = 1;
-  let cam = { ox: 640, oy: 400, tw: 84, th: 40, zs: 80, unit: 84, portrait: false, cosA: Math.cos(0.22), sinA: Math.sin(0.22) };
+  let cam = { ox: 640, oy: 380, tw: 62, th: 28, zs: 66, slab: 32, unit: 68, portrait: false, cosA: Math.cos(0.72), sinA: Math.sin(0.72) };
   let bgCache = null;
 
   function updateLayout() {
@@ -218,23 +218,24 @@
     canvas.height = Math.round(H * DPR);
 
     const portrait = W < H;
-    // Landscape: sleek 12.6 deg oblique 3D tilt filling ~92% screen width; Portrait: 66 deg tall 3D orientation filling width & height!
-    const ang = portrait ? 1.24 : 0.16;
+    // v1's iconic 3D isometric angle (slightly tailored for 11x7 board so front-left & front-right cardboard walls shine!)
+    const ang = portrait ? 1.06 : 0.64;
     const cosA = Math.cos(ang), sinA = Math.sin(ang);
-    const tilt = portrait ? 1.14 : 0.44;
-    const spanU = COLS * cosA + ROWS * sinA + (portrait ? 0.85 : 1.05);
-    const spanV = COLS * sinA + ROWS * cosA + (portrait ? 0.75 : 0.85);
-    const maxTwByW = (W * (portrait ? 0.90 : 0.95)) / (spanU * 0.95);
-    const maxTwByH = (H * (portrait ? 0.81 : 0.78)) / (spanV * tilt * 0.94 + 0.78);
-    const tw = Math.max(28, Math.min(maxTwByW, maxTwByH));
+    const tilt = portrait ? 0.68 : 0.44;
+    const spanU = COLS * cosA + ROWS * sinA + 1.25;
+    const spanV = COLS * sinA + ROWS * cosA + 1.15;
+    const maxTwByW = (W * (portrait ? 0.88 : 0.82)) / (spanU * 0.96);
+    const maxTwByH = (H * (portrait ? 0.62 : 0.69)) / (spanV * tilt * 0.96 + 1.5);
+    const tw = Math.max(24, Math.min(maxTwByW, maxTwByH));
     const th = tw * tilt;
 
     cam = {
-      ox: W * (portrait ? 0.495 : 0.488),
-      oy: H * (portrait ? 0.505 : 0.528),
+      ox: W * 0.50,
+      oy: H * (portrait ? 0.54 : 0.55),
       tw, th,
-      zs: tw * (portrait ? 1.26 : 0.90),
-      unit: tw,
+      zs: tw * (portrait ? 1.15 : 1.04),
+      slab: Math.max(22, tw * 0.52),
+      unit: tw * 1.12,
       portrait, cosA, sinA
     };
     bgCache = null;
@@ -282,396 +283,217 @@
   }
 
   function getHillLayerH() {
-    return Math.max(17, Math.min(26, cam.unit * (cam.portrait ? 0.42 : 0.27)));
+    return Math.max(16, Math.min(24, cam.slab * 0.65));
   }
 
-  // Draw an irregular raised cardboard hill/terrace with two-plane directional lighting (sunlit left, darker right),
-  // visible corrugated flutes, ambient occlusion seams, and GREEN crayon top on every protruding ledge!
-  function drawCardboardHillSlab(c, pts, layerH, numLayers, seed, opts = {}) {
-    const riseUp = !!opts.riseUp;
-    const topFillFn = opts.topFillFn || null;
-    const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length;
-    const cy = pts.reduce((a, p) => a + p[1], 0) / pts.length;
-
-    let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
-    for (const p of pts) {
-      if (p[0] < minX) minX = p[0]; if (p[0] > maxX) maxX = p[0];
-      if (p[1] < minY) minY = p[1]; if (p[1] > maxY) maxY = p[1];
-    }
-
-    const expandUneven = (src, L, sSeed) => {
-      const baseStep = opts.stepOut ?? (cam.portrait ? 4.8 : 6.8);
-      const phase1 = hash(seed, 17) * TAU;
-      return src.map(([x, y], i) => {
-        const rough = (hash(i * 19 + seed, L * 31 + 3) - 0.5) * 1.6;
-        if (L === 0) return [x + rough * 0.5, y + rough * 0.35];
-        const dx = x - cx, dy = y - cy;
-        const d = Math.max(1, Math.hypot(dx, dy));
-        const ang = Math.atan2(dy, dx);
-        const lobe = 0.90 + 0.14 * Math.sin(ang * 3 + phase1);
-        const distOut = L * baseStep * lobe;
-        return [x + (dx / d) * distOut + rough, y + (dy / d) * distOut * (cam.portrait ? 0.84 : 0.62) + rough * 0.5];
-      });
-    };
-
-    // Uneven thickness per stacked cardboard sheet (mimics hand-glued layered corrugated board!)
-    const layerHeights = [];
-    for (let L = 0; L < numLayers; L++) {
-      layerHeights[L] = Math.max(9.0, layerH * (0.86 + hash(L, seed + 53) * 0.30));
-    }
-    const yOffsets = new Array(numLayers).fill(0);
-    if (riseUp) {
-      let acc = 0;
-      for (let L = numLayers - 2; L >= 0; L--) {
-        acc -= layerHeights[L];
-        yOffsets[L] = acc;
-      }
-    } else {
-      let acc = 0;
-      for (let L = 1; L < numLayers; L++) {
-        acc += layerHeights[L - 1];
-        yOffsets[L] = acc;
-      }
-    }
-    const botYOff = riseUp ? layerHeights[numLayers - 1] : yOffsets[numLayers - 1] + layerHeights[numLayers - 1];
-
-    // Grounded darker-teal shadow anchored directly beneath the cardboard cliff base
+  function crayonPolyGen1(c, pts, fillCol, seed, opts = {}) {
+    const lw = opts.lw ?? 2.4;
+    const ol = opts.ol ?? "#2b1b22";
+    const amp = opts.amp ?? 1.4;
+    const jPts = pts.map(([x, y], i) => [
+      x + jit(i, seed) * amp,
+      y + jit(i + 37, seed + 7) * amp
+    ]);
     c.save();
-    c.translate(8, botYOff + 8);
-    tracePoly(c, expandUneven(pts, numLayers - 1, seed + 1));
-    c.fillStyle = "rgba(42, 66, 20, 0.30)";
+    tracePoly(c, jPts);
+    if (fillCol) { c.fillStyle = fillCol; c.fill(); }
+    if (opts.hatch) {
+      c.save(); c.clip();
+      let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+      for (const [x, y] of jPts) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+      c.strokeStyle = opts.hatch;
+      c.globalAlpha = opts.hatchAlpha ?? 0.25;
+      c.lineWidth = 2.0;
+      const step = opts.hatchStep ?? 11;
+      for (let x = minX - (maxY - minY); x < maxX + (maxY - minY); x += step) {
+        c.beginPath(); c.moveTo(x, minY); c.lineTo(x + (maxY - minY) * 0.45, maxY); c.stroke();
+      }
+      c.restore();
+    }
+    if (opts.hi) {
+      c.save(); c.strokeStyle = opts.hi; c.lineWidth = opts.hiW ?? 3.5; c.globalAlpha = opts.hiAlpha ?? 0.42;
+      c.lineCap = "round";
+      c.beginPath(); c.moveTo(jPts[0][0], jPts[0][1]); c.lineTo(jPts[1][0], jPts[1][1]); c.stroke();
+      c.restore();
+    }
+    if (lw > 0) {
+      tracePoly(c, jPts);
+      c.strokeStyle = ol; c.lineWidth = lw; c.lineJoin = "round"; c.stroke();
+    }
+    c.restore();
+  }
+
+  function drawGen1DioramaBoard(c) {
+    // 1. Warm sunlit v1 crayon sky -> meadow cream gradient + diagonal sunbeams
+    const grad = c.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, "#fdf6de");
+    grad.addColorStop(0.45, "#f8eed2");
+    grad.addColorStop(1, "#e8efd0");
+    c.fillStyle = grad;
+    c.fillRect(0, 0, W, H);
+
+    // Diagonal warm sunlight beams (v1 signature!)
+    c.save();
+    c.fillStyle = "rgba(255, 253, 240, 0.46)";
+    for (let i = 0; i < 3; i++) {
+      const bx = W * (0.04 + i * 0.22);
+      c.beginPath();
+      c.moveTo(bx, 0); c.lineTo(bx + W * 0.12, 0);
+      c.lineTo(bx + W * 0.36, H); c.lineTo(bx + W * 0.16, H);
+      c.closePath(); c.fill();
+    }
+    c.restore();
+
+    // Rolling Gen-1 Orchard green meadow hills behind the floating 2.5D island
+    const hillY = cam.oy - cam.th * (cam.portrait ? 3.2 : 4.2);
+    c.save();
+    const hill1 = [[0, H], [0, hillY + 28]];
+    for (let x = 0; x <= W + 60; x += 60) hill1.push([x, hillY + Math.sin(x * 0.0055 + 0.7) * 24 + 18]);
+    hill1.push([W, H]);
+    tracePoly(c, hill1);
+    c.fillStyle = "rgba(176, 218, 120, 0.48)";
+    c.fill();
+
+    const hill2 = [[0, H], [0, hillY + 58]];
+    for (let x = 0; x <= W + 50; x += 50) hill2.push([x, hillY + 50 + Math.cos(x * 0.007 - 0.5) * 18]);
+    hill2.push([W, H]);
+    tracePoly(c, hill2);
+    c.fillStyle = "rgba(146, 200, 92, 0.42)";
     c.fill();
     c.restore();
 
-    for (let L = numLayers - 1; L >= 0; L--) {
-      const yOff = yOffsets[L];
-      const curH = layerHeights[L];
-      const layerPts = expandUneven(pts, L, seed + L * 29);
-
-      // Soft contact shadow tucked underneath this stacked layer onto the layer below!
-      if (L < numLayers - 1 || !riseUp) {
-        c.save();
-        c.translate(3.5, yOff + curH + 4.5);
-        tracePoly(c, layerPts);
-        c.fillStyle = "rgba(26, 12, 3, 0.24)";
-        c.fill();
-        c.translate(1.5, 2.5);
-        c.fillStyle = "rgba(26, 12, 3, 0.16)";
-        c.fill();
-        c.restore();
-      }
-
-      // Build exposed cardboard cliff wall mask (only visible front & side thickness, NOT top face)
-      const wallMask = document.createElement("canvas");
-      wallMask.width = c.canvas.width; wallMask.height = c.canvas.height;
-      const wc = wallMask.getContext("2d");
-      wc.scale(DPR, DPR);
-      const steps = Math.max(10, Math.round(curH));
-      for (let s = steps; s >= 1; s--) {
-        wc.save(); wc.translate(0, yOff + (s / steps) * curH); tracePoly(wc, layerPts); wc.fillStyle = "#000"; wc.fill(); wc.restore();
-      }
-      wc.globalCompositeOperation = "destination-out";
-      wc.save(); wc.translate(0, yOff); tracePoly(wc, layerPts); wc.fillStyle = "#000"; wc.fill(); wc.restore();
-
-      const wallArt = document.createElement("canvas");
-      wallArt.width = c.canvas.width; wallArt.height = c.canvas.height;
-      const fc = wallArt.getContext("2d");
-      fc.scale(DPR, DPR);
-
-      // Warm oil-pastel kraft cardboard side wall (sunlit left -> shaded right) + paper grain!
-      const wallGrad = fc.createLinearGradient(minX - 40, cy, maxX + 40, cy);
-      wallGrad.addColorStop(0, "#c88d52");
-      wallGrad.addColorStop(0.55, "#a06636");
-      wallGrad.addColorStop(1, "#74441e");
-      fc.fillStyle = wallGrad;
-      fc.fillRect(0, 0, W, H);
-
-      paintKraftMottle(fc, minX - 60, minY + yOff - 20, (maxX - minX) + 120, (maxY - minY) + curH + 60, seed + L * 37);
-      // Soft oil-pastel strokes across cardboard wall so it blends naturally with the painted world
-      for (let wi = 0; wi < 18; wi++) {
-        const wx = minX + hash(wi * 11, seed + L * 13) * (maxX - minX);
-        const wy = minY + yOff + hash(wi * 7, seed + L * 17) * (maxY - minY + curH);
-        dabStroke(fc, wx, wy, 28, 9, 0.08, wi % 2 ? "#d9a268" : "#804d24", 0.22, seed + wi);
-      }
-
-      // Subtle vertical dent / crush creases in the cardboard wall
-      for (let di = 0; di < 7; di++) {
-        const dx = minX + hash(di * 13, seed + L * 19) * (maxX - minX);
-        fc.fillStyle = di % 2 ? "rgba(42, 20, 6, 0.16)" : "rgba(232, 192, 144, 0.12)";
-        fc.fillRect(dx, minY + yOff, 3.5 + hash(di, seed) * 5, (maxY - minY) + curH + 40);
-      }
-
-      // Authentic two-liner + continuous sinusoidal corrugated flute wave (no polka dots!)
-      drawCorrugatedWallFlutes(fc, layerPts, yOff, curH, seed + L * 43, minX, maxX);
-
-      // Clip wall art cleanly to exposed side wall and stamp
-      fc.globalCompositeOperation = "destination-in";
-      fc.setTransform(1, 0, 0, 1, 0, 0);
-      fc.drawImage(wallMask, 0, 0);
-
-      c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(wallArt, 0, 0); c.restore();
-
-      // Soft warm umber cut bottom edge of corrugated layer (no harsh black ink!)
-      c.save();
-      c.translate(0, yOff + curH);
-      strokeWaxCrayon(c, layerPts, "rgba(74, 40, 18, 0.72)", 1.7, seed + L * 71, true);
-      c.restore();
-
-      // Top face of EVERY raised/protruding cardboard stratum painted in thick oil-pastel (NO black outline!)
-      c.save();
-      c.translate(0, yOff);
-      if (L > 0) {
-        const shelfCols = ["#8dc748", "#9ed455", "#80b83c"];
-        fillOilPastel(c, layerPts, shelfCols[L % shelfCols.length], seed + L * 17, {
-          cols: [shelfCols[L % shelfCols.length], "#aee064"], dabSize: 26, dabAlpha: 0.16, toothAlpha: 0.34, edgeBleed: true, calm: true
-        });
-        c.save(); tracePoly(c, layerPts); c.clip();
-        drawCrumpledPaperOverlay(c, W, H, 920 + seed + L, { cell: 64, strength: 0.58, coloredSurface: true });
-        c.restore();
-      } else {
-        if (topFillFn) {
-          topFillFn(layerPts);
-        } else {
-          fillOilPastel(c, layerPts, "#a4d658", seed + 30, {
-            cols: ["#84bc3c", "#a4d658", "#c0e674"], dabSize: 28, dabAlpha: 0.18, toothAlpha: 0.38, edgeBleed: true, calm: true
-          });
-          c.save(); tracePoly(c, layerPts); c.clip();
-          drawCrumpledPaperOverlay(c, W, H, 935 + seed, { cell: 60, strength: 0.48, coloredSurface: true });
-          c.restore();
-        }
-      }
-      c.restore();
-    }
-  }
-
-  function drawRaisedMoundByKey(c, mSpec) {
-    const layerH = getHillLayerH();
-    const mPts = sampleSmoothLoop(mSpec.ctrl.map(([gx, gy]) => proj(gx, gy, 0)), 4);
-    drawCardboardHillSlab(c, mPts, layerH * 0.95, mSpec.layers, mSpec.seed, {
-      riseUp: true, stepOut: cam.portrait ? 4.2 : 5.6
-    });
-  }
-
-  function drawFlatFloor(c) {
-    // 1. Cheerful v10 Blue Sky band painted with calm oil-pastel strokes (NO hard black outlines!)
-    const horizonY = H * (cam.portrait ? 0.145 : 0.155);
-    const skyGrad = c.createLinearGradient(0, 0, 0, horizonY + 64);
-    skyGrad.addColorStop(0, "#8ed0f8");
-    skyGrad.addColorStop(0.58, "#b8e4fc");
-    skyGrad.addColorStop(1, "#e2f3fc");
-    c.fillStyle = skyGrad;
-    c.fillRect(0, 0, W, horizonY + 64);
-    fillOilPastel(c, [[0, 0], [W, 0], [W, horizonY + 64], [0, horizonY + 64]], "#9ad6fa", 12, {
-      withBase: false, cols: ["#84caf6", "#a8dcfa", "#d2eefc"], dabSize: 42, dabAlpha: 0.16, toothAlpha: 0.24, edgeBleed: false, calm: true
-    });
-
-    // Warm yellow oil-pastel sun in upper-left sky (NO black outline!)
-    const sunX = W * (cam.portrait ? 0.15 : 0.085);
-    const sunY = H * (cam.portrait ? 0.115 : 0.135);
-    const sunR = Math.min(W, H) * 0.036;
-    fillOilPastel(c, makeEllipsePts(sunX, sunY, sunR, sunR, 16, 20), "#ffe664", 20, {
-      cols: ["#ffd24a", "#ffe664", "#fff29a"], dabSize: sunR * 0.55, dabAlpha: 0.18, toothAlpha: 0.22, edgeBleed: true
-    });
-
-    // Puffy cream-white oil-pastel clouds with soft sky-blue belly (NO black outline!)
-    const clouds = [[0.33, 0.10, 0.90], [0.62, 0.11, 1.05], [0.87, 0.095, 0.85]];
-    for (let ci = 0; ci < clouds.length; ci++) {
-      const [cxr, cyr, sc] = clouds[ci];
-      const clx = W * cxr, cly = H * cyr;
-      const u = Math.min(W, H) * 0.036 * sc;
-      const cPts = sampleSmoothLoop([
-        [clx - u * 1.65, cly + u * 0.35], [clx - u * 1.75, cly - u * 0.12],
-        [clx - u * 1.05, cly - u * 0.52], [clx - u * 0.35, cly - u * 0.80],
-        [clx + u * 0.45, cly - u * 0.78], [clx + u * 1.15, cly - u * 0.42],
-        [clx + u * 1.72, cly - u * 0.06], [clx + u * 1.55, cly + u * 0.38], [clx, cly + u * 0.44]
-      ], 3);
-      fillOilPastel(c, cPts, "#fffdf5", 30 + ci * 7, {
-        cols: ["#d8ecf9", "#fffdf5", "#ffffff"], dabSize: u * 0.55, dabAlpha: 0.20, toothAlpha: 0.20, edgeBleed: true
-      });
-    }
-
-    // 2. Cheerful v10 Bright-Green Rolling Meadow Hills (calm oil-pastel strokes, NO teal palette!)
-    const bgHill1 = [[0, H], [0, horizonY + 14]];
-    for (let x = 0; x <= W + 40; x += 40) bgHill1.push([x, horizonY + 10 + Math.sin(x * 0.0055 + 0.7) * 18]);
-    bgHill1.push([W, H]);
-    fillOilPastel(c, bgHill1, "#c4e282", 40, {
-      cols: ["#b2d66c", "#c4e282", "#d6ee96"], dabSize: 36, dabAlpha: 0.16, toothAlpha: 0.28, edgeBleed: false, calm: true
-    });
-
-    const bgHill2 = [[0, H], [0, horizonY + 46]];
-    for (let x = 0; x <= W + 40; x += 40) bgHill2.push([x, horizonY + 42 + Math.cos(x * 0.007 - 0.5) * 14]);
-    bgHill2.push([W, H]);
-    fillOilPastel(c, bgHill2, "#add462", 42, {
-      cols: ["#98c44a", "#add462", "#c0e278"], dabSize: 40, dabAlpha: 0.16, toothAlpha: 0.34, edgeBleed: false, calm: true
-    });
-
+    // Cute hand-drawn crayon sun (v1) + puffy crayon clouds
+    const sunX = W * (cam.portrait ? 0.15 : 0.11);
+    const sunY = H * (cam.portrait ? 0.14 : 0.17);
+    const sunR = Math.min(W, H) * 0.045;
     c.save();
-    tracePoly(c, bgHill2);
-    c.clip();
-    // Broad calm sunlit & slightly deeper meadow patches (zero noisy confetti!)
-    fillOilPastel(c, makeEllipsePts(W * 0.20, H * 0.44, W * 0.22, H * 0.15, 16, 151), "#9ac84e", 151, {
-      cols: ["#8ab840", "#9ac84e"], dabSize: 36, dabAlpha: 0.15, toothAlpha: 0.28, edgeBleed: true, calm: true, alpha: 0.60
-    });
-    fillOilPastel(c, makeEllipsePts(W * 0.82, H * 0.72, W * 0.24, H * 0.18, 16, 155), "#96c44c", 155, {
-      cols: ["#86b43e", "#96c44c"], dabSize: 36, dabAlpha: 0.15, toothAlpha: 0.28, edgeBleed: true, calm: true, alpha: 0.62
-    });
+    c.strokeStyle = "#2b1b22"; c.lineWidth = 2.6; c.lineCap = "round";
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * TAU;
+      c.fillStyle = "#ffd64a";
+      c.beginPath();
+      c.moveTo(sunX + Math.cos(a) * sunR * 1.24, sunY + Math.sin(a) * sunR * 1.24);
+      c.lineTo(sunX + Math.cos(a) * sunR * 1.62, sunY + Math.sin(a) * sunR * 1.62);
+      c.stroke();
+    }
+    crayonPolyGen1(c, makeEllipsePts(sunX, sunY, sunR, sunR, 18, 20), "#ffe564", 20, { lw: 2.8, amp: 1.1 });
     c.restore();
 
-    // Soft crumpled paper texture over sky & distant meadow
-    drawCrumpledPaperOverlay(c, W, H, 808, { cell: 112, strength: 0.64, coloredSurface: false });
+    for (let ci = 0; ci < 3; ci++) {
+      const clx = W * (0.31 + ci * 0.27);
+      const cly = H * (0.10 + (ci % 2) * 0.05);
+      const u = Math.min(W, H) * 0.036;
+      const cPts = sampleSmoothLoop([
+        [clx - u * 1.5, cly + u * 0.3], [clx - u * 1.3, cly - u * 0.3], [clx - u * 0.4, cly - u * 0.65],
+        [clx + u * 0.45, cly - u * 0.72], [clx + u * 1.25, cly - u * 0.32], [clx + u * 1.55, cly + u * 0.3], [clx, cly + u * 0.4]
+      ], 3);
+      crayonPolyGen1(c, cPts, "#ffffff", 30 + ci, { lw: 2.0, ol: "rgba(43, 27, 34, 0.35)", amp: 1.0 });
+    }
 
-    const layerH = getHillLayerH();
-    const ox = cam.portrait ? 0.32 : 0.60;
+    // 2. Raised 3D Isometric Cardboard Island Board (-0.58 .. COLS+0.58, -0.58 .. ROWS+0.58)
+    const M = 0.58;
+    const iT = proj(-M, -M, 0);
+    const iR = proj(COLS + M, -M, 0);
+    const iB = proj(COLS + M, ROWS + M, 0);
+    const iL = proj(-M, ROWS + M, 0);
+    const sL = cam.slab * iL[2] * 1.25;
+    const sB = cam.slab * iB[2] * 1.25;
+    const sR = cam.slab * iR[2] * 1.25;
 
-    // 3. Solid, thick raised Cardboard Hill Island (v10 framing + solid attached cardboard strata!)
-    const hillCtrl = [
-      proj(-0.22 - ox * 0.3, -0.05, 0),
-      proj(1.40, -0.24, 0),
-      proj(3.55, -0.06, 0),
-      proj(6.05, -0.26, 0),
-      proj(8.25, -0.06, 0),
-      proj(10.35, -0.22, 0),
-      proj(11.24 + ox * 0.3,  0.35, 0),
-      proj(11.44 + ox * 0.45, 2.05, 0),
-      proj(11.12 + ox * 0.18, 4.10, 0),
-      proj(11.30 + ox * 0.35, 5.85, 0),
-      proj(10.92 + ox * 0.22, 7.24, 0),
-      proj(8.85,  7.36, 0),
-      proj(7.15,  7.10, 0),
-      proj(5.45,  7.04, 0),
-      proj(3.75,  7.14, 0),
-      proj(1.75,  7.34, 0),
-      proj(-0.20 - ox * 0.2, 7.20, 0),
-      proj(-0.26 - ox * 0.25, 5.35, 0),
-      proj(-0.46 - ox * 0.42, 3.82, 0),
-      proj(-0.22 - ox * 0.2,  1.85, 0)
-    ];
-    const mainHillPts = sampleSmoothLoop(hillCtrl, 4);
+    // Ground drop shadow under the floating 2.5D island
+    c.save();
+    c.fillStyle = "rgba(43, 27, 34, 0.22)";
+    tracePoly(c, [
+      [iT[0] + 12, iT[1] + sB + 18],
+      [iR[0] + 18, iR[1] + sR + 20],
+      [iB[0] + 14, iB[1] + sB + 24],
+      [iL[0] + 4,  iL[1] + sL + 18]
+    ]);
+    c.fill();
+    c.restore();
 
-    drawCardboardHillSlab(c, mainHillPts, layerH * 1.12, 2, 25, {
-      riseUp: false,
-      stepOut: cam.portrait ? 7.0 : 11.5,
-      topFillFn: (pts) => {
-        // CALM BRIGHT GREEN v10 meadow painted in broad oil-pastel strokes (NO black outlines, NO confetti noise!)
-        fillOilPastel(c, pts, "#9ed252", 71, {
-          cols: ["#8ac23e", "#9ed252", "#b4e268"], dabSize: 40, dabAlpha: 0.16, toothAlpha: 0.42, edgeBleed: true, calm: true
-        });
+    // Extruded 3D Cardboard / Soil Cliff Walls (front-left sunlit #9f6f46, front-right shaded #7d5230 + corrugated wave flutes!)
+    const cliffL = [iL, iB, [iB[0] - 5 * iB[2], iB[1] + sB], [iL[0] + 5 * iL[2], iL[1] + sL]];
+    crayonPolyGen1(c, cliffL, "#9f6f46", 111, { lw: 3.2, amp: 1.5, hatch: "#6b4324", hatchStep: 12, hatchAlpha: 0.25 });
+    const cliffR = [iB, iR, [iR[0] - 5 * iR[2], iR[1] + sR], [iB[0] - 5 * iB[2], iB[1] + sB]];
+    crayonPolyGen1(c, cliffR, "#7d5230", 112, { lw: 3.2, amp: 1.5, hatch: "#4c2d16", hatchStep: 12, hatchAlpha: 0.28 });
 
-        c.save();
-        tracePoly(c, pts);
-        c.clip();
+    // Corrugated cardboard flute pebbles & wave line along cliff walls (v1 + cardboard look!)
+    for (let i = 0; i < 8; i++) {
+      const t = (i + 0.5) / 8;
+      crayonPolyGen1(c, makeEllipsePts(lerp(iL[0], iB[0], t), lerp(iL[1], iB[1], t) + lerp(sL, sB, t) * 0.62, cam.tw * 0.08, cam.tw * 0.048, 10, 210 + i), "#c89b6e", 210 + i, { lw: 1.8 });
+    }
+    for (let i = 0; i < 7; i++) {
+      const t = (i + 0.5) / 7;
+      crayonPolyGen1(c, makeEllipsePts(lerp(iB[0], iR[0], t), lerp(iB[1], iR[1], t) + lerp(sB, sR, t) * 0.62, cam.tw * 0.075, cam.tw * 0.045, 10, 230 + i), "#a8784c", 230 + i, { lw: 1.8 });
+    }
 
-        // 4 LARGE calm sweeping green value patches (sunlit lime-green & soft deeper grass green — NO blotches!)
-        const broadZones = [
-          { gx: 2.2, gy: 1.5, r: 2.6, col: "#b2e268", cols: ["#a2d658", "#b2e268", "#c2ec78"], a: 0.72 },
-          { gx: 8.6, gy: 1.8, r: 2.5, col: "#aad85e", cols: ["#9acc50", "#aad85e", "#bbe672"], a: 0.68 },
-          { gx: 5.5, gy: 5.8, r: 2.8, col: "#80b83a", cols: ["#72aa2e", "#80b83a"], a: 0.56 },
-          { gx: 9.8, gy: 5.4, r: 2.2, col: "#7bb236", cols: ["#6ea42c", "#7bb236"], a: 0.55 }
-        ];
-        broadZones.forEach((bz, idx) => {
-          const [px, py, pp] = proj(bz.gx, bz.gy, 0);
-          const rx = cam.unit * bz.r * pp;
-          fillOilPastel(c, makeEllipsePts(px, py, rx, rx * 0.54, 18, 90 + idx), bz.col, 90 + idx, {
-            cols: bz.cols, dabSize: Math.max(28, rx * 0.35), dabAlpha: 0.14, toothAlpha: 0.30, edgeBleed: true, calm: true, alpha: bz.a
+    // Overhanging GEN-1 green grass lip along island rim
+    const lip = 0.34;
+    crayonPolyGen1(c, [iL, iB, [iB[0], iB[1] + sB * lip], [iL[0], iL[1] + sL * lip]], "#6bc442", 113, { lw: 2.8, amp: 1.4 });
+    crayonPolyGen1(c, [iB, iR, [iR[0], iR[1] + sR * lip], [iB[0], iB[1] + sB * lip]], "#4ea32e", 114, { lw: 2.8, amp: 1.4 });
+
+    // Top Orchard grassy border shelf
+    crayonPolyGen1(c, [iT, iR, iB, iL], "#74c246", 115, { lw: 3.4, amp: 1.3, hi: "#b8ef7c", hiW: 5, hiAlpha: 0.45 });
+
+    // 3. GEN-1 Orchard Checkerboard Lawn + Winding Sandy Crayon Path (11x7 grid!)
+    for (let d = 0; d <= COLS + ROWS - 2; d++) {
+      for (let tx = 0; tx < COLS; tx++) {
+        const ty = d - tx;
+        if (ty < 0 || ty >= ROWS) continue;
+        const isPath = PATH_SET.has(tx + "," + ty);
+        const corners = tileCorners(tx, ty, 0, 0);
+        if (isPath) {
+          // Sandy crayon path with dark border & recessed bevel
+          crayonPolyGen1(c, corners, "#edd49f", 300 + tx * 11 + ty, { lw: 2.0, ol: "rgba(92, 58, 28, 0.72)", amp: 1.0 });
+          c.save();
+          c.strokeStyle = "rgba(128, 86, 42, 0.42)";
+          c.lineWidth = Math.max(2.6, cam.tw * 0.07 * corners[0][2]);
+          c.lineCap = "round";
+          c.beginPath(); c.moveTo(corners[3][0], corners[3][1]); c.lineTo(corners[0][0], corners[0][1]); c.lineTo(corners[1][0], corners[1][1]); c.stroke();
+          c.restore();
+          for (let k = 0; k < 2; k++) {
+            const gx = tx + 0.26 + hash(tx * 7 + k, ty * 13) * 0.48;
+            const gy = ty + 0.26 + hash(tx * 17, ty * 5 + k) * 0.48;
+            const [px, py, pp] = proj(gx, gy, 0);
+            crayonPolyGen1(c, makeEllipsePts(px, py, cam.tw * 0.08 * pp, cam.th * 0.08 * pp, 10, 400 + tx + ty + k), k ? "#d7b67f" : "#f7e5be", 400 + tx + ty + k, { lw: 1.4 });
+          }
+        } else {
+          // Genuine GEN-1 Orchard 2-tone green checkerboard (#95ce4c / #81bc38)!
+          const even = (tx + ty) % 2 === 0;
+          crayonPolyGen1(c, corners, even ? "#96cf4e" : "#80bc38", 500 + tx * 13 + ty, {
+            lw: 1.6, ol: "rgba(43, 86, 28, 0.42)", amp: 0.9, hi: even ? "#c4f082" : "#ace26a", hiW: 2.2, hiAlpha: 0.36
           });
-        });
+          // Crisp dashed chalk placement marker
+          const inner = tileCorners(tx, ty, 0.14, 0);
+          c.save();
+          c.setLineDash([5, 5]);
+          c.strokeStyle = "rgba(255, 255, 240, 0.56)";
+          c.lineWidth = 1.5;
+          tracePoly(c, inner);
+          c.stroke();
+          c.restore();
 
-        // Subtle sunlit top-left rim glow along upper hill contour
-        c.save();
-        c.strokeStyle = "rgba(220, 250, 148, 0.45)";
-        c.lineWidth = 7;
-        c.lineCap = "round";
-        tracePoly(c, pts.slice(0, Math.floor(pts.length * 0.36)), false);
-        c.stroke();
-        c.restore();
-
-        // Subtle pale-cream corner ticks for 52 deployable slots + sparse green grass blades & tiny flowers (NO black grid lines!)
-        for (let tx = 0; tx < COLS; tx++) {
-          for (let ty = 0; ty < ROWS; ty++) {
-            if (PATH_SET.has(tx + "," + ty)) continue;
-            const [cx0, cy0, pp0] = proj(tx + 0.5, ty + 0.5, 0);
-            const inner = tileCorners(tx, ty, 0.16, 0);
-            for (let ci = 0; ci < 4; ci++) {
-              const pA = inner[ci];
-              dabStroke(c, pA[0], pA[1], Math.max(3.6, 5.2 * pp0), Math.max(2.0, 2.8 * pp0), ci * 0.8 + 0.4, "rgba(255, 252, 224, 0.52)", 0.85, 610 + tx * 11 + ty * 5 + ci);
+          // Gen-1 grass tufts & little flowers
+          const rnd = hash(tx + 5, ty + 11);
+          if (rnd > 0.62) {
+            const [gx, gy, pp] = proj(tx + 0.24, ty + 0.76, 0);
+            c.save();
+            c.strokeStyle = "#3c8422"; c.lineWidth = 2.2; c.lineCap = "round";
+            c.beginPath(); c.moveTo(gx, gy); c.lineTo(gx - 3.5 * pp, gy - 8 * pp); c.moveTo(gx + 2 * pp, gy); c.lineTo(gx + 4 * pp, gy - 9 * pp); c.stroke();
+            if (rnd > 0.84) {
+              c.fillStyle = (tx + ty) % 2 ? "#ff78a8" : "#ffe258";
+              c.strokeStyle = "#2b1b22"; c.lineWidth = 1.4;
+              c.beginPath(); c.arc(gx + 8 * pp, gy - 5 * pp, 3.6 * pp, 0, TAU); c.fill(); c.stroke();
             }
-            const rnd = hash(tx + 5, ty + 11);
-            if (rnd > 0.68) {
-              const [gx, gy, pp] = proj(tx + 0.24 + (rnd - 0.65) * 0.8, ty + 0.72, 0);
-              dabStroke(c, gx - 2.2 * pp, gy - 2 * pp, 5.0 * pp, 2.0 * pp, -1.15, "#3f8824", 0.78, 700 + tx + ty);
-              dabStroke(c, gx + 2.2 * pp, gy - 3 * pp, 5.2 * pp, 2.0 * pp, -1.85, "#5eb638", 0.78, 705 + tx + ty);
-            }
-            if (rnd > 0.83) {
-              const [fx, fy, pp] = proj(tx + 0.66, ty + 0.32, 0);
-              const isPink = (tx + ty) % 2 === 1;
-              dabPastelCluster(c, fx, fy, 6.2 * pp, 3.8 * pp, isPink
-                ? { shadow: "#df5c96", mid: "#ff8eba", light: "#ffc0da" }
-                : { shadow: "#deb628", mid: "#ffe658", light: "#fff498" },
-                800 + tx * 7 + ty, { count: 4, dabSize: Math.max(3.2, 4.4 * pp) }
-              );
-            }
+            c.restore();
           }
         }
-
-        // Smooth Continuous Sandy/Beige v10 Path Ribbon painted with calm oil-pastel strokes + soft ragged edges (NO black outline!)
-        const pathScreen = PATH.map(([tx, ty]) => proj(tx + 0.5, ty + 0.5, 0));
-        const pathW = cam.unit * (cam.portrait ? 0.86 : 0.76);
-        c.save();
-        c.lineCap = "round"; c.lineJoin = "round";
-        // Soft slightly darker same-hue sandy-tan feather edge
-        c.strokeStyle = "rgba(202, 162, 88, 0.76)";
-        c.lineWidth = pathW * 1.07;
-        c.beginPath();
-        pathScreen.forEach((pt, idx) => idx === 0 ? c.moveTo(pt[0], pt[1]) : c.lineTo(pt[0], pt[1]));
-        c.stroke();
-        // Calm sandy-beige path body (v10 palette!)
-        c.strokeStyle = "#e8c47c";
-        c.lineWidth = pathW * 0.96;
-        c.stroke();
-        // Subtle sunlit warm cream-sand flow down center
-        c.strokeStyle = "rgba(244, 220, 158, 0.45)";
-        c.lineWidth = pathW * 0.52;
-        c.stroke();
-        c.restore();
-
-        // Gentle ragged pastel edge dabs along sandy path + subtle cream/tan path pebbles (no dark ink!)
-        for (let i = 0; i < PATH.length; i++) {
-          const [tx, ty] = PATH[i];
-          const [px, py, pp] = proj(tx + 0.5, ty + 0.5, 0);
-          for (let ei = 0; ei < 3; ei++) {
-            const a = hash(i * 7 + ei, 321) * TAU;
-            const rEdge = pathW * 0.46;
-            dabStroke(c, px + Math.cos(a) * rEdge, py + Math.sin(a) * rEdge * 0.76, 16 * pp, 7.5 * pp, a + 1.5, ei % 2 ? "#e8c47c" : "#d8b164", 0.72, 330 + i * 5 + ei);
-          }
-          if (i % 2 === 0) {
-            const [rx, ry, rpp] = proj(tx + 0.25 + hash(tx, ty) * 0.5, ty + 0.28 + hash(ty, tx) * 0.45, 0);
-            dabStroke(c, rx, ry, 8.5 * rpp, 5.0 * rpp, 0.25, i % 4 === 0 ? "#f5ead2" : "#b88446", 0.85, 400 + i);
-          }
-        }
-
-        // Paper grain & subtle crumpled paper creases over the meadow & path
-        drawCrumpledPaperOverlay(c, W, H, 955, { cell: 104, strength: 0.60, coloredSurface: true });
-
-        c.restore();
       }
-    });
+    }
 
-    // 4. Solid, thick raised Back & Side Cardboard Hill Terraces (v10 hills, bright green grass caps sitting ON tall cardboard cliffs!)
-    const backAndSideMounds = [
-      {
-        layers: 2, seed: 41,
-        ctrl: [[-0.35, 0.02], [-0.25, -0.72], [1.05, -0.96], [2.65, -0.82], [3.65, -0.42], [3.55, 0.04], [1.75, 0.08]]
-      },
-      {
-        layers: 2, seed: 53,
-        ctrl: [[5.05, 0.02], [5.35, -0.70], [7.00, -1.00], [8.95, -0.88], [10.50, -0.52], [10.65, 0.04], [7.85, 0.08]]
-      },
-      {
-        layers: 2, seed: 64,
-        ctrl: [[-0.95 - ox * 0.50, 3.40], [-0.72 - ox * 0.35, 2.75], [-0.18, 2.95], [-0.16, 4.65], [-0.72 - ox * 0.35, 4.82]]
-      }
-    ];
-    for (const mk of backAndSideMounds) drawRaisedMoundByKey(c, mk);
+    // Gen-1 Crayon Paper Grain Overlay across the whole board (ui/grain feeling!)
+    drawCrumpledPaperOverlay(c, W, H, 955, { cell: 104, strength: 0.52, coloredSurface: true });
   }
 
   function ensureBgCache() {
@@ -681,7 +503,7 @@
     bgCache.height = canvas.height;
     const bc = bgCache.getContext("2d");
     bc.scale(DPR, DPR);
-    drawFlatFloor(bc);
+    drawGen1DioramaBoard(bc);
     return bgCache;
   }
 
@@ -1232,18 +1054,28 @@
   }
 
   function spawnImpactDoodle(gx, gy, gz, isKill, opt = {}) {
-    const words = opt.words || ["HIT!"];
+    const words = opt.words || ["POW!", "BOOM!", "轰!", "炸!"];
     const word = words[Math.floor(Math.random() * words.length)];
     const fxKind = opt.fxKind || "fire";
+    const burstCol = opt.burstCol || "#ffe24a";
     const isCrit = !!(opt.crit || isKill);
+    const bScale = (opt.blastScale || 1.0) * 1.32 * (isCrit ? 1.26 : 1.10);
 
-    triggerHitStop(isCrit ? 0.072 : 0.054);
-    if (isCrit) triggerShake(1.4, 0.05);
-    if (isCrit) triggerScreenFlash(fxKind === "frost" ? "#dff6ff" : (fxKind === "lightning" ? "#fff8b8" : "#ffe6c4"), 0.06);
+    // Punchy hit-stop + strictly <= 1.6px micro-shake!
+    triggerHitStop(isCrit ? 0.082 : 0.060);
+    triggerShake(isCrit ? 1.6 : 1.1, 0.06);
+    if (isCrit) triggerScreenFlash(fxKind === "frost" ? "#dff6ff" : (fxKind === "lightning" ? "#fff8b8" : "#ffe6c4"), 0.07);
     AudioSys.sfxHit(fxKind, isCrit);
 
-    // Moderate, crisp high-contrast layered rings + fine debris (never screen-obscuring size!)
-    const ringR = isCrit ? 0.92 : 0.68;
+    // 1. Intense 10-ray contact spark + bright white flash core right ON the target!
+    addFx({
+      k: "impactSpark", fxKind, gx, gy, gz: gz + 0.14,
+      col: fxKind === "frost" ? "#b4f0ff" : (fxKind === "lightning" ? "#fff45e" : (fxKind === "water" ? "#7cd8ff" : (fxKind === "slash" ? "#7cf5ff" : "#ffa83a"))),
+      scale: bScale * (isCrit ? 1.48 : 1.24),
+      life: 0.28, max: 0.28, seed: Math.floor(Math.random() * 9999)
+    });
+
+    // 2. BIG EXPLOSIVE 3-layer starburst comic burst + bold comic words (v11 signature, scaled up!)
     const colMap = {
       fire: ["#6b1808", "#ff6d28", "#fff099"],
       lightning: ["#13428c", "#26a8ff", "#fff8a6"],
@@ -1253,27 +1085,32 @@
       slash: ["#1a2858", "#4eeeff", "#ffffff"]
     };
     const [rimCol, midCol, coreCol] = colMap[fxKind] || colMap.fire;
+    addFx({
+      k: "hit", fxKind, gx: gx + (Math.random() - 0.5) * 0.12, gy: gy - 0.08, gz: gz + 0.42,
+      word, big: isCrit, burstCol: opt.burstCol || midCol, wordOl: opt.wordOl || rimCol,
+      scale: bScale * (isCrit ? 1.30 : 1.06),
+      life: 0.44, max: 0.44, seed: Math.floor(Math.random() * 9999)
+    });
 
-    addFx({ k: "shockRing", fxKind, gx, gy, gz: 0.05, r: ringR, col: rimCol, innerCol: coreCol, life: 0.28, max: 0.28, seed: Math.floor(Math.random() * 9999) });
-    if (isCrit) {
-      addFx({ k: "shockRing", fxKind, gx, gy, gz: 0.06, r: ringR * 1.32, col: midCol, innerCol: "#ffffff", life: 0.34, max: 0.34, seed: Math.floor(Math.random() * 9999) });
+    // 3. Double concentric expanding shockwaves!
+    if (fxKind === "frost") {
+      addFx({ k: "frostRing", gx, gy, gz: 0.04, r: (opt.splash || 1.65) * bScale, life: 0.46, max: 0.46, seed: Math.floor(Math.random() * 9999) });
+    } else {
+      addFx({ k: "shockRing", fxKind, gx, gy, gz: 0.04, r: 1.38 * bScale, col: rimCol, innerCol: coreCol, life: 0.40, max: 0.40, seed: Math.floor(Math.random() * 9999) });
     }
+    addFx({ k: "shockRing", fxKind, gx, gy, gz: 0.06, r: 0.92 * bScale, col: "#fffef0", innerCol: midCol, life: 0.24, max: 0.24, seed: Math.floor(Math.random() * 9999) });
 
-    // Crisp fine directional sparks / shards / droplets (element-specific!)
-    const chipN = isCrit ? 11 : 7;
+    // 4. Lots of chunky cardboard/crayon debris flying outward with gravity!
+    const chipN = isCrit ? 22 : 14;
     for (let i = 0; i < chipN; i++) {
-      const ang = (i / chipN) * TAU + (Math.random() - 0.5) * 0.45;
-      const spd = 1.4 + Math.random() * 1.6;
+      const ang = (i / chipN) * TAU + (Math.random() - 0.5) * 0.42;
+      const spd = 2.1 + Math.random() * 2.4;
       addFx({
-        k: "cardChip", fxKind, gx, gy, gz: gz + 0.12,
-        vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd * 0.72, vz: 1.4 + Math.random() * 1.4,
-        rot: Math.random() * TAU, vrot: (Math.random() - 0.5) * 14,
-        col: i % 2 ? coreCol : midCol, rimCol, life: 0.34 + Math.random() * 0.14, max: 0.48, seed: Math.floor(Math.random() * 9999)
+        k: "cardChip", fxKind, gx, gy, gz: gz + 0.22,
+        vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd * 0.72, vz: 2.2 + Math.random() * 2.2,
+        rot: Math.random() * TAU, vrot: (Math.random() - 0.5) * 18,
+        col: i % 2 ? coreCol : midCol, rimCol, life: 0.44 + Math.random() * 0.16, max: 0.60, seed: Math.floor(Math.random() * 9999)
       });
-    }
-
-    if (isCrit) {
-      addFx({ k: "hit", fxKind, gx, gy: gy - 0.08, gz: gz + 0.38, word, big: true, burstCol: midCol, wordOl: rimCol, scale: 0.76, life: 0.34, max: 0.34, seed: Math.floor(Math.random() * 9999) });
     }
   }
 
@@ -2422,7 +2259,7 @@
       }
 
       // Archer Slime: wide-area telegraphed arrow volley!
-      if (e.role === "archer" && hero.deadT <= 0) {
+      if (e.role === "spitter" && hero.deadT <= 0) {
         e.archerCd -= dt;
         if (e.archerCd <= 0 && Math.hypot(hero.gx - e.gx, hero.gy - e.gy) <= 6.2) {
           e.archerCd = 3.6;
@@ -3055,7 +2892,7 @@
           const [gx0, gy0, pp0] = proj(egx, egy, 0);
           const [sx, sy, pp] = proj(egx, egy, e.gz);
           const hPx = cam.unit * (cam.portrait ? 1.62 : 1.12) * e.size * pp;
-          drawCardboardBaseAndShadow(ctx, gx0, gy0, hPx * 0.85 * pp0 / pp, e.gz, 760, true, false);
+          drawCardboardBaseAndShadow(ctx, gx0, gy0, hPx * 0.86 * pp0 / pp, e.gz, 760, false, false);
 
           // Elemental under-effects (Lightning cloud under zap, ember under ember, etc.)
           if (e.role === "zap" || e.kind === "b4") {
@@ -3130,13 +2967,7 @@
             ctx.beginPath(); ctx.ellipse(sx, sy - hPx * 0.42, br, br * 0.92, 0, 0, TAU); ctx.fill(); ctx.stroke();
             ctx.restore();
           }
-          // Archer bow badge
-          if (e.role === "archer") {
-            ctx.save();
-            ctx.font = `900 ${Math.round(14 * pp)}px sans-serif`;
-            ctx.fillText("🏹", sx + hPx * 0.28, sy - hPx * 0.72);
-            ctx.restore();
-          }
+
           if (e.boss) {
             const cy = sy - hPx - 8 * pp, cw = hPx * 0.20;
             drawCardboardCutoutChip(ctx, [
@@ -3171,7 +3002,7 @@
             const chargeP = clamp(z.t / z.chargeDur, 0, 1);
             // Cloud brightens as Lemon's head lightning charges it!
             const col = charging ? (chargeP > 0.5 ? "#809cd4" : "#4b6294") : "#fff6a8";
-            fillOilPastel(ctx, makeEllipsePts(sxz, syz, cam.unit * 0.34 * pp, cam.unit * 0.18 * pp, 12, z.seed), col, z.seed, { cols: ["#334670", col, "#fff8be"], dabSize: 9, calm: true });
+            fillOilPastel(ctx, makeEllipsePts(sxz, syz, cam.unit * 0.48 * pp, cam.unit * 0.25 * pp, 12, z.seed), col, z.seed, { cols: ["#334670", col, "#fff8be"], dabSize: 9, calm: true });
             if (charging && z.attackerRef) {
               const [hx, hy] = proj(z.attackerRef.gx, z.attackerRef.gy, (z.attackerRef.gz || 0) + 0.72);
               drawThunderbolt(ctx, hx, hy, sxz, syz, 2.4, z.seed + boil);
@@ -3179,19 +3010,19 @@
           } else if (z.kind === "cocoWhirlWave") {
             if (z.t < z.spinDur) {
               const p = z.t / z.spinDur;
-              const rr = cam.unit * (0.28 + p * 0.44) * pp;
+              const rr = cam.unit * (0.42 + p * 0.60) * pp;
               ctx.strokeStyle = "#125096"; ctx.lineWidth = 3.2;
               for (let r = 0; r < 3; r++) {
                 ctx.beginPath(); ctx.ellipse(sx, sy, rr * (1 - r * 0.26), rr * 0.44 * (1 - r * 0.26), z.t * 10 + r, 0, Math.PI * 1.45); ctx.stroke();
               }
             } else {
               // Curling Tsunami Wave surging to target!
-              const wh = cam.unit * 0.85 * pp, ww = cam.unit * 0.58 * pp;
+              const wh = cam.unit * 1.15 * pp, ww = cam.unit * 0.78 * pp;
               const wPts = sampleSmoothLoop([[sx - ww, sy + 4], [sx - ww * 0.4, sy - wh], [sx + ww * 0.8, sy - wh * 0.75], [sx + ww * 0.4, sy - wh * 0.25], [sx + ww, sy + 4]], 3);
               drawCardboardCutoutChip(ctx, wPts, "#2ea2ff", z.seed, { thickX: 4, thickY: 3, lw: 2.0 });
             }
           } else if (z.kind === "taroSkyRock") {
-            const br = cam.unit * 0.26 * pp;
+            const br = cam.unit * 0.38 * pp;
             drawCardboardCutoutChip(ctx, [[sx - br, sy + br * 0.2], [sx - br * 0.6, sy - br * 0.8], [sx + br * 0.4, sy - br * 0.9], [sx + br, sy - br * 0.1], [sx + br * 0.6, sy + br * 0.5]], "#8c7464", z.seed, { thickX: 4, thickY: 3, lw: 2.0 });
           } else if (z.kind === "fireFan" || z.kind === "fireWall") {
             const rr = cam.unit * (z.r || z.len * 0.5) * pp;
@@ -3202,39 +3033,55 @@
               const ox = Math.cos(z.ang || 0) * ((fi - 3) * 0.45);
               const oy = Math.sin(z.ang || 0) * ((fi - 3) * 0.35);
               const [fx, fy, fpp] = proj(z.gx + ox, z.gy + oy, 0.04);
-              drawCardboardFlame(ctx, fx, fy, cam.unit * (0.34 + (z.lv || 1) * 0.06) * fpp, z.seed + fi, boil, hotness > 0.6 ? "#ff9432" : "#ff441c", hotness > 0.6 ? "#ffffff" : "#ffe658");
+              drawCardboardFlame(ctx, fx, fy, cam.unit * (0.48 + (z.lv || 1) * 0.08) * fpp, z.seed + fi, boil, hotness > 0.6 ? "#ff9432" : "#ff441c", hotness > 0.6 ? "#ffffff" : "#ffe658");
             }
           } else if (z.kind === "fireDragon") {
-            drawCardboardFlame(ctx, sx, sy, cam.unit * 0.65 * pp, z.seed, boil, "#ff3b14", "#fff499");
+            drawCardboardFlame(ctx, sx, sy, cam.unit * 0.90 * pp, z.seed, boil, "#ff3b14", "#fff499");
           } else if (z.kind === "zeusPhantom") {
             // Holy white cloud + helmeted Zeus bird phantom with 2 lightning bolts!
-            fillOilPastel(ctx, makeEllipsePts(sx, sy + 4, cam.unit * 0.44 * pp, cam.unit * 0.22 * pp, 12, z.seed), "#ffffff", z.seed, { cols: ["#e2f1ff", "#ffffff"], dabSize: 10, calm: true });
+            fillOilPastel(ctx, makeEllipsePts(sx, sy + 4, cam.unit * 0.62 * pp, cam.unit * 0.30 * pp, 12, z.seed), "#ffffff", z.seed, { cols: ["#e2f1ff", "#ffffff"], dabSize: 10, calm: true });
             ctx.globalAlpha = 0.85;
-            drawLayeredStandee(ctx, "lemon", sx, sy - 6 * pp, cam.unit * 0.92 * pp, 1, 0, 0.35, 0, 0, "#fff8d0");
+            drawLayeredStandee(ctx, "lemon", sx, sy - 6 * pp, cam.unit * 1.18 * pp, 1, 0, 0.35, 0, 0, "#fff8d0");
             drawThunderbolt(ctx, sx - 12 * pp, sy - cam.unit * 0.85 * pp, sx - 6 * pp, sy - cam.unit * 0.55 * pp, 2.2, z.seed + 1, true);
             drawThunderbolt(ctx, sx + 12 * pp, sy - cam.unit * 0.85 * pp, sx + 6 * pp, sy - cam.unit * 0.55 * pp, 2.2, z.seed + 2, true);
           } else if (z.kind === "angryCloud") {
             const [cx0, cy0] = proj(z.gx, z.gy, 2.3);
-            fillOilPastel(ctx, makeEllipsePts(cx0, cy0, cam.unit * 0.72 * pp, cam.unit * 0.36 * pp, 14, z.seed), "#323c58", z.seed, { cols: ["#22293e", "#46557a"], dabSize: 14, calm: true });
-            // Angry crayon brows & glowing eyes!
-            ctx.strokeStyle = "#ffe64a"; ctx.lineWidth = 3.0;
-            ctx.beginPath(); ctx.moveTo(cx0 - 14, cy0 - 6); ctx.lineTo(cx0 - 4, cy0); ctx.moveTo(cx0 + 14, cy0 - 6); ctx.lineTo(cx0 + 4, cy0); ctx.stroke();
+            const cw = cam.unit * 1.12 * pp, ch = cam.unit * 0.56 * pp;
+            const cPts = sampleSmoothLoop([
+              [cx0 - cw, cy0 + ch * 0.25], [cx0 - cw * 0.85, cy0 - ch * 0.55], [cx0 - cw * 0.28, cy0 - ch * 0.95],
+              [cx0 + cw * 0.28, cy0 - ch * 0.92], [cx0 + cw * 0.88, cy0 - ch * 0.48], [cx0 + cw, cy0 + ch * 0.25],
+              [cx0 + cw * 0.4, cy0 + ch * 0.52], [cx0 - cw * 0.4, cy0 + ch * 0.52]
+            ], 3);
+            fillOilPastel(ctx, cPts, "#323c58", z.seed, { cols: ["#22293e", "#46557a"], dabSize: 14, calm: true });
+            tracePoly(ctx, cPts); ctx.strokeStyle = "#2b1b22"; ctx.lineWidth = 3.2 * pp; ctx.stroke();
+            // Angry crayon face: furrowed brows, glowing yellow eyes, zig-zag scowl!
+            ctx.fillStyle = "#ffe64a"; ctx.strokeStyle = "#2b1b22"; ctx.lineWidth = 2.0 * pp;
+            for (const sd of [-1, 1]) {
+              ctx.beginPath(); ctx.arc(cx0 + sd * 14 * pp, cy0 - 2 * pp, 5.2 * pp, 0, TAU); ctx.fill(); ctx.stroke();
+            }
+            ctx.strokeStyle = "#2b1b22"; ctx.lineWidth = 3.8 * pp; ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(cx0 - 22 * pp, cy0 - 12 * pp); ctx.lineTo(cx0 - 7 * pp, cy0 - 5 * pp);
+            ctx.moveTo(cx0 + 22 * pp, cy0 - 12 * pp); ctx.lineTo(cx0 + 7 * pp, cy0 - 5 * pp);
+            ctx.moveTo(cx0 - 14 * pp, cy0 + 13 * pp); ctx.lineTo(cx0 - 5 * pp, cy0 + 9 * pp);
+            ctx.lineTo(cx0 + 5 * pp, cy0 + 14 * pp); ctx.lineTo(cx0 + 14 * pp, cy0 + 9 * pp);
+            ctx.stroke();
           } else if (z.kind === "frostBreath") {
             const rr = cam.unit * z.r * pp;
             ctx.fillStyle = "rgba(132, 224, 255, 0.32)";
             ctx.beginPath(); ctx.ellipse(sx, sy, rr, rr * 0.46, 0, 0, TAU); ctx.fill();
-            drawSnowflake(ctx, sx, sy - 14 * pp, cam.unit * 0.32 * pp, z.t * 4, z.seed);
+            drawSnowflake(ctx, sx, sy - 14 * pp, cam.unit * 0.46 * pp, z.t * 4, z.seed);
           } else if (z.kind === "slidingIce") {
-            const ir = cam.unit * 0.38 * pp;
+            const ir = cam.unit * 0.52 * pp;
             drawCardboardCutoutChip(ctx, [[sx - ir, sy], [sx - ir * 0.7, sy - ir * 1.1], [sx + ir * 0.7, sy - ir * 1.1], [sx + ir, sy]], "#9ce8ff", z.seed, { thickX: 4, thickY: 3, lw: 2 });
           } else if (z.kind === "blizzard") {
             for (let f = 0; f < 16; f++) {
               const fx = ((hash(f * 7, z.seed) + z.t * 0.35) % 1) * W;
               const fy = ((hash(f * 13, z.seed) + z.t * 0.65) % 1) * H;
-              drawSnowflake(ctx, fx, fy, 11, z.t * 3 + f, z.seed + f);
+              drawSnowflake(ctx, fx, fy, 16, z.t * 3 + f, z.seed + f);
             }
           } else if (z.kind === "waterTornado") {
-            const rr = cam.unit * 0.42 * pp;
+            const rr = cam.unit * 0.60 * pp;
             for (let r = 0; r < 4; r++) {
               ctx.strokeStyle = r % 2 ? "#e6f9ff" : "#2490f0"; ctx.lineWidth = 3.2;
               ctx.beginPath(); ctx.ellipse(sx, sy - r * 12 * pp, rr * (0.45 + r * 0.18), rr * 0.22, z.t * 9 + r, 0, Math.PI * 1.5); ctx.stroke();
@@ -3249,34 +3096,76 @@
               ctx.beginPath(); ctx.ellipse(cx0, cy0, cam.unit * 0.75 * pp, cam.unit * 0.32 * pp, z.t * 8, 0, Math.PI * 1.6); ctx.stroke();
             } else if (z.t < z.chargeDur + z.waveDur && z.waveX != null) {
               const [wx, wy, wpp] = proj(z.waveX, 3.5, 0.2);
-              const wh = cam.unit * 2.2 * wpp, ww = cam.unit * 1.0 * wpp;
-              drawCardboardCutoutChip(ctx, [[wx - ww, wy + 12], [wx - ww * 0.4, wy - wh], [wx + ww * 0.85, wy - wh * 0.7], [wx + ww * 0.9, wy + 12]], "#2292f2", z.seed, { thickX: 5, thickY: 4, lw: 2.2 });
-              if (z.hasShip) drawCardboardCutoutChip(ctx, [[wx - 18, wy - wh * 0.5], [wx + 24, wy - wh * 0.5], [wx + 14, wy - wh * 0.28], [wx - 10, wy - wh * 0.28]], "#8a5228", z.seed + 9, { thickX: 3, thickY: 2, lw: 1.8 });
+              const wh = cam.unit * 2.85 * wpp, ww = cam.unit * 1.55 * wpp;
+              const wavePts = sampleSmoothLoop([
+                [wx - ww * 1.05, wy + 14], [wx - ww * 0.78, wy - wh * 0.55], [wx - ww * 0.12, wy - wh * 1.02],
+                [wx + ww * 0.85, wy - wh * 0.92], [wx + ww * 1.10, wy - wh * 0.62], [wx + ww * 0.62, wy - wh * 0.52],
+                [wx + ww * 0.52, wy - wh * 0.18], [wx + ww * 0.95, wy + 14]
+              ], 3);
+              drawCardboardCutoutChip(ctx, wavePts, "#1e8cf0", z.seed, { thickX: 6, thickY: 4.5, lw: 2.4 });
+              // White frothy curling crest + swirling wave streaks!
+              const crestPts = sampleSmoothLoop([
+                [wx - ww * 0.25, wy - wh * 0.92], [wx + ww * 0.45, wy - wh * 1.04],
+                [wx + ww * 1.05, wy - wh * 0.78], [wx + ww * 0.75, wy - wh * 0.55], [wx + ww * 0.25, wy - wh * 0.72]
+              ], 3);
+              drawCardboardCutoutChip(ctx, crestPts, "#eefaff", z.seed + 3, { thickX: 3, thickY: 2, lw: 1.8 });
+              // Curling purple-pink octopus tentacle riding inside the tsunami!
+              ctx.strokeStyle = "#2b1b22"; ctx.lineWidth = 7 * wpp; ctx.lineCap = "round";
+              ctx.beginPath(); ctx.moveTo(wx - ww * 0.6, wy + 4); ctx.quadraticCurveTo(wx - ww * 0.75, wy - wh * 0.35, wx - ww * 0.38, wy - wh * 0.52); ctx.stroke();
+              ctx.strokeStyle = "#ff68a8"; ctx.lineWidth = 4.2 * wpp; ctx.stroke();
+              if (z.hasShip) {
+              // Proper detailed crayon wooden sailing ship riding the tsunami wave!
+              const sx0 = wx, sy0 = wy - wh * 0.46, shS = Math.max(0.9, wpp);
+              // Wooden hull + stern cabin
+              drawCardboardCutoutChip(ctx, [
+                [sx0 - 44 * shS, sy0 - 10 * shS], [sx0 + 48 * shS, sy0 - 12 * shS],
+                [sx0 + 34 * shS, sy0 + 18 * shS], [sx0 - 30 * shS, sy0 + 18 * shS]
+              ], "#8c5024", z.seed + 9, { thickX: 4, thickY: 3, lw: 2.2 });
+              drawCardboardCutoutChip(ctx, [
+                [sx0 - 40 * shS, sy0 - 24 * shS], [sx0 - 16 * shS, sy0 - 24 * shS],
+                [sx0 - 14 * shS, sy0 - 10 * shS], [sx0 - 42 * shS, sy0 - 10 * shS]
+              ], "#b26c34", z.seed + 10, { thickX: 3, thickY: 2, lw: 1.8 });
+              // Tall mast + billowing cream mainsail + red pennant!
+              ctx.strokeStyle = "#4b2810"; ctx.lineWidth = 4 * shS;
+              ctx.beginPath(); ctx.moveTo(sx0 + 4 * shS, sy0 - 10 * shS); ctx.lineTo(sx0 + 4 * shS, sy0 - 72 * shS); ctx.stroke();
+              drawCardboardCutoutChip(ctx, [
+                [sx0 + 6 * shS, sy0 - 64 * shS], [sx0 + 36 * shS, sy0 - 48 * shS],
+                [sx0 + 32 * shS, sy0 - 22 * shS], [sx0 + 6 * shS, sy0 - 24 * shS]
+              ], "#fff7e2", z.seed + 11, { thickX: 3, thickY: 2, lw: 2.0 });
+              drawCardboardCutoutChip(ctx, [
+                [sx0 + 4 * shS, sy0 - 72 * shS], [sx0 + 24 * shS, sy0 - 67 * shS], [sx0 + 4 * shS, sy0 - 61 * shS]
+              ], "#ff4848", z.seed + 12, { thickX: 2, thickY: 1.5, lw: 1.6 });
+              // Portholes + white bow foam
+              ctx.fillStyle = "#ffe680"; ctx.strokeStyle = "#2b1b22"; ctx.lineWidth = 1.8;
+              for (const pxOff of [-14, 4, 22]) {
+                ctx.beginPath(); ctx.arc(sx0 + pxOff * shS, sy0 + 4 * shS, 4.2 * shS, 0, TAU); ctx.fill(); ctx.stroke();
+              }
+            }
             } else {
               const [wx, wy, wpp] = proj(5.5, 3.5, 0.02);
               ctx.strokeStyle = "#1876d2"; ctx.lineWidth = 3.5;
               ctx.beginPath(); ctx.ellipse(wx, wy, cam.unit * 1.2 * wpp, cam.unit * 0.55 * wpp, z.t * 7, 0, Math.PI * 1.6); ctx.stroke();
             }
           } else if (z.kind === "volcano") {
-            const mw = cam.unit * 0.95 * pp, mh = cam.unit * 1.15 * pp;
+            const mw = cam.unit * 1.28 * pp, mh = cam.unit * 1.52 * pp;
             drawCardboardCutoutChip(ctx, [[sx - mw, sy + 6], [sx - mw * 0.35, sy - mh], [sx + mw * 0.35, sy - mh], [sx + mw, sy + 6]], z.erupted ? "#8c3b20" : "#786250", z.seed, { thickX: 5, thickY: 4, lw: 2.2 });
-            if (z.erupted) drawCardboardFlame(ctx, sx, sy - mh, cam.unit * 0.55 * pp, z.seed, boil);
+            if (z.erupted) drawCardboardFlame(ctx, sx, sy - mh, cam.unit * 0.78 * pp, z.seed, boil);
             if (z.hasMole && z.erupted) {
               fillOilPastel(ctx, makeEllipsePts(sx + Math.sin(z.t * 4) * 26 * pp, sy, 14 * pp, 11 * pp, 10, z.seed + 3), "#7c5236", z.seed + 3, { cols: ["#5a3a24", "#9e6b48"], dabSize: 6, calm: true });
             }
           } else if (z.kind === "sawSword") {
-            drawCrayonSword(ctx, sx, sy - 18 * pp, cam.unit * 0.65 * pp, z.t * 18, z.seed, "#72f5ff");
+            drawCrayonSword(ctx, sx, sy - 18 * pp, cam.unit * 0.90 * pp, z.t * 18, z.seed, "#72f5ff");
           } else if (z.kind === "swordOrbiters") {
             for (let si = 0; si < z.count; si++) {
               const a = (si / z.count) * TAU + z.t * 4.5;
               const [ox, oy, opp] = proj(game.hero.gx + Math.cos(a) * 1.1, game.hero.gy + Math.sin(a) * 0.8, 0.65);
-              drawCrayonSword(ctx, ox, oy, cam.unit * 0.52 * opp, a + 1.2, z.seed + si, "#ffe866");
+              drawCrayonSword(ctx, ox, oy, cam.unit * 0.72 * opp, a + 1.2, z.seed + si, "#ffe866");
             }
           } else if (z.kind === "plantedSword") {
             const fallP = clamp(z.t / z.dropDur, 0, 1);
             const curZ = z.t < z.dropDur ? lerp(2.8, 0.12, fallP * fallP) : 0.12;
             const [px, py, ppp] = proj(z.gx, z.gy, curZ);
-            drawCrayonSword(ctx, px, py - 14 * ppp, cam.unit * 0.58 * ppp, Math.PI * 0.5, z.seed, "#72f5ff");
+            drawCrayonSword(ctx, px, py - 14 * ppp, cam.unit * 0.80 * ppp, Math.PI * 0.5, z.seed, "#72f5ff");
           }
           ctx.restore();
         }
@@ -3291,7 +3180,7 @@
           const [sx, sy, pp] = proj(s.gx, s.gy, s.gz);
           const prog = clamp(s.t, 0, 1);
           if (s.kind === "fireTornado") {
-            const sc = (0.38 + prog * 0.62) * (s.growMax || 1.1);
+            const sc = (0.52 + prog * 0.78) * (s.growMax || 1.25);
             const h = cam.unit * 0.72 * sc * pp;
             const w = cam.unit * 0.34 * sc * pp;
             ctx.save();
@@ -3307,10 +3196,10 @@
             drawCardboardFlame(ctx, sx, sy - h * 0.35, w * 0.58, s.seed, boil, "#ff8828", "#ffffff");
             ctx.restore();
           } else if (s.kind === "iceSnowflake" || s.kind === "miniSplit") {
-            const r = cam.unit * (s.kind === "miniSplit" ? 0.14 : 0.24) * pp;
+            const r = cam.unit * (s.kind === "miniSplit" ? 0.20 : 0.34) * pp;
             drawSnowflake(ctx, sx, sy, r, simTime * 9 + s.seed, s.seed);
           } else if (s.kind === "flyingSword") {
-            drawCrayonSword(ctx, sx, sy, cam.unit * 0.48 * pp, s.ang || 0, s.seed, "#72f5ff");
+            drawCrayonSword(ctx, sx, sy, cam.unit * 0.66 * pp, s.ang || 0, s.seed, "#72f5ff");
           }
         }
       });
@@ -3395,7 +3284,7 @@
             dabStroke(ctx, sx - 10 * pp, sy - vh * 0.55, 11 * pp, 5 * pp, -0.5, "#66cc42", 0.9, f.seed);
             dabStroke(ctx, sx + 9 * pp, sy - vh * 0.75, 11 * pp, 5 * pp, 0.45, "#82e456", 0.9, f.seed + 1);
           } else if (f.k === "swordSlash") {
-            const rr = cam.unit * (f.r || 0.95) * (0.75 + prog * 0.35) * pp;
+            const rr = cam.unit * (f.r || 0.95) * 1.35 * (0.75 + prog * 0.35) * pp;
             ctx.save(); ctx.translate(sx, sy); ctx.rotate(f.ang || 0);
             ctx.strokeStyle = "#1a2858"; ctx.lineWidth = (f.inner ? 5 : 8) * (1 - prog * 0.5) * pp; ctx.lineCap = "round";
             ctx.beginPath(); ctx.arc(0, 0, rr, -0.95, 0.95); ctx.stroke();
@@ -3403,7 +3292,7 @@
             ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2.2 * (1 - prog * 0.5) * pp; ctx.stroke();
             ctx.restore();
           } else if (f.k === "tornadoOpen") {
-            const rr = cam.unit * 0.55 * (f.scale || 1) * (0.5 + prog * 0.7) * pp;
+            const rr = cam.unit * 0.78 * (f.scale || 1) * (0.5 + prog * 0.7) * pp;
             for (let a = 0; a < 5; a++) {
               const ang = (a / 5) * TAU + prog * 6;
               dabStroke(ctx, sx + Math.cos(ang) * rr, sy + Math.sin(ang) * rr * 0.55, 14 * pp, 6 * pp, ang + 1.2, a % 2 ? "#ffe04a" : "#ff5224", fade, f.seed + a);
@@ -3412,8 +3301,31 @@
             const cw = cam.unit * 0.48 * pp;
             fillOilPastel(ctx, makeEllipsePts(sx, sy, cw, cw * 0.45, 12, f.seed), "#445480", f.seed, { cols: ["#2a3656", "#6478b0"], dabSize: 10, calm: true });
           } else if (f.k === "skyBolt") {
-            const [tx, ty] = proj(f.gx, f.gy, f.gz + 2.15);
-            drawThunderbolt(ctx, tx, ty, sx, sy, (f.thin ? 2.8 : 4.6) * pp, f.seed + boil, !!f.holy);
+            const slam = Math.min(1, prog * 3.8);
+            const tx = sx, ty = sy;
+            const topY = Math.max(cam.portrait ? 84 : 48, ty - cam.unit * (f.thin ? 2.8 : 3.5) * pp);
+            const curBotY = lerp(topY + 20, ty, slam);
+            const wHalf = (f.thin ? 13 : 21) * pp;
+            const jog = (f.thin ? 22 : 34) * pp;
+            const dSign = (f.seed % 2 === 0) ? 1 : -1;
+            const y1 = lerp(topY, curBotY, 0.36), y2 = lerp(topY, curBotY, 0.58);
+            const boltPoly = [
+              [tx - wHalf * 0.75 * dSign, topY], [tx + wHalf * 0.85 * dSign, topY],
+              [tx + jog * 0.45 * dSign, y1 - wHalf * 0.3], [tx + jog * 1.05 * dSign, y1 + wHalf * 0.25],
+              [tx + jog * 0.20 * dSign, y2 - wHalf * 0.1], [tx + jog * 0.80 * dSign, y2 + wHalf * 0.35],
+              [tx, curBotY + 4], [tx - jog * 0.25 * dSign, y2 + wHalf * 0.05],
+              [tx + jog * 0.18 * dSign, y1 + wHalf * 0.18], [tx - jog * 0.55 * dSign, y1 - wHalf * 0.08]
+            ];
+            drawCardboardCutoutChip(ctx, boltPoly, f.holy ? "#fffdf0" : "#ffe938", f.seed, {
+              thickX: f.thin ? 4.5 : 6.5, thickY: f.thin ? 3.5 : 5.0, lw: 2.3
+            });
+            ctx.save();
+            ctx.strokeStyle = f.holy ? "#ffe878" : "#fffef4";
+            ctx.lineWidth = (f.thin ? 2.4 : 3.8) * pp;
+            ctx.lineCap = "round"; ctx.lineJoin = "round";
+            ctx.beginPath(); ctx.moveTo(tx, topY + 6); ctx.lineTo(tx + jog * 0.45 * dSign, y1);
+            ctx.lineTo(tx + jog * 0.25 * dSign, y2); ctx.lineTo(tx, curBotY); ctx.stroke();
+            ctx.restore();
           } else if (f.k === "arcLine") {
             const [x0, y0] = proj(f.gx0, f.gy0, f.gz0 || 0.35);
             const [x1, y1] = proj(f.gx1, f.gy1, f.gz1 || 0.35);
@@ -3436,7 +3348,7 @@
             const r = cam.unit * 0.16 * (f.scale || 1) * pp;
             fillWaxCrayon(ctx, makeEllipsePts(sx, sy, r, r * 0.45, 10, f.seed), f.col || "#76d038", f.seed, { withBase: false, coverage: 0.55, lw: 1.2 });
           } else if (f.k === "cardChip" || f.k === "confetti" || f.k === "ashFlake") {
-            const sz = Math.max(4.5, cam.unit * 0.075 * pp);
+            const sz = Math.max(6.8, cam.unit * 0.115 * pp);
             ctx.save(); ctx.translate(sx, sy); ctx.rotate(f.rot || 0);
             ctx.fillStyle = f.col || "#ffe24a";
             ctx.strokeStyle = f.rimCol || OL; ctx.lineWidth = 1.2;
@@ -3449,14 +3361,53 @@
             for (let k = -1; k <= 1; k += 2) {
               fillWaxCrayon(ctx, makeEllipsePts(sx + k * sp, sy, cam.unit * 0.09 * sc * pp, cam.unit * 0.065 * sc * pp, 8, f.seed + k), "#d6b082", f.seed + k, { lw: 1.2 });
             }
+          } else if (f.k === "impactSpark") {
+            const spR = cam.unit * 0.78 * (f.scale || 1) * (0.45 + prog * 0.85) * pp;
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.strokeStyle = f.col || "#fff47a";
+            ctx.lineWidth = Math.max(3.2, 5.2 * pp * (1 - prog * 0.5));
+            ctx.lineCap = "round";
+            for (let ri = 0; ri < 10; ri++) {
+              const a = (ri / 10) * TAU + f.seed;
+              const r0 = spR * 0.30, r1 = spR * (ri % 2 === 0 ? 1.22 : 0.85);
+              ctx.beginPath(); ctx.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); ctx.lineTo(Math.cos(a) * r1, Math.sin(a) * r1); ctx.stroke();
+            }
+            ctx.fillStyle = "#fffef6";
+            ctx.beginPath(); ctx.arc(0, 0, spR * 0.32 * (1 - prog * 0.4), 0, TAU); ctx.fill();
+            ctx.restore();
           } else if (f.k === "hit") {
-            const popScale = easeOutBack(Math.min(1, prog * 3.0));
-            const fs = Math.round(Math.max(15, cam.unit * 0.30 * (f.scale || 0.8) * popScale * pp));
+            // v11 BIG EXPLOSIVE 3-layer starburst + comic words (scaled up!)
+            const popScale = easeOutBack(Math.min(1, prog * 2.8));
+            const rOut = cam.unit * (cam.portrait ? 1.48 : 1.16) * (f.big ? 0.96 : 0.80) * (f.scale || 1) * popScale * pp;
+            const rIn = rOut * 0.42;
+            const hudSafeTop = cam.portrait ? 110 : 72;
+            const hx = clamp(sx, Math.max(54, rOut * 0.85), W - Math.max(54, rOut * 0.85));
+            const hy = clamp(sy, hudSafeTop + rOut * 0.65, H - 60);
+            const spikes = f.fxKind === "frost" ? 6 : (f.fxKind === "lightning" ? 9 : 8);
+            const outerPts = [], midPts = [], corePts = [];
+            for (let i = 0; i < spikes * 2; i++) {
+              const a = (i / (spikes * 2)) * TAU + f.seed;
+              const rr = (i % 2 === 0 ? rOut : rIn) * (0.88 + hash(i, f.seed) * 0.20);
+              outerPts.push([hx + Math.cos(a) * rr, hy + Math.sin(a) * rr * 0.82]);
+              midPts.push([hx + Math.cos(a + 0.16) * rr * 0.64, hy + Math.sin(a + 0.16) * rr * 0.54]);
+              corePts.push([hx + Math.cos(a + 0.32) * rr * 0.34, hy + Math.sin(a + 0.32) * rr * 0.28]);
+            }
+            drawCardboardCutoutChip(ctx, outerPts, f.burstCol || "#ffe24a", f.seed, { thickX: 6, thickY: 4.5, lw: 2.5 });
+            const midCol = f.fxKind === "frost" ? "#2672e8" : (f.fxKind === "lightning" ? "#1e96ff" : (f.fxKind === "water" ? "#2498ff" : (f.fxKind === "slash" ? "#4eeeff" : "#ff3b14")));
+            drawCardboardCutoutChip(ctx, midPts, midCol, f.seed + 3, { thickX: 4, thickY: 3, lw: 2.0 });
+            const coreCol = f.fxKind === "frost" ? "#eefaff" : "#fff799";
+            fillWaxCrayon(ctx, corePts, coreCol, f.seed + 7, { lw: 1.4, softEdge: false });
+            ctx.save();
+            ctx.translate(hx, hy - rOut * 0.10);
+            ctx.rotate((hash(f.seed, 2) - 0.5) * 0.22);
+            const fs = Math.round(Math.max(19, cam.unit * (cam.portrait ? 1.38 : 1.12) * (f.big ? 0.38 : 0.32) * popScale * pp));
             ctx.font = `900 ${fs}px "Fredoka", "PingFang SC", sans-serif`;
             ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
-            ctx.strokeStyle = f.wordOl || OL; ctx.lineWidth = Math.max(4, fs * 0.18);
-            ctx.strokeText(f.word, sx, sy);
-            ctx.fillStyle = f.burstCol || "#fffef8"; ctx.fillText(f.word, sx, sy);
+            ctx.strokeStyle = f.wordOl || OL; ctx.lineWidth = Math.max(5.0, fs * 0.20);
+            ctx.strokeText(f.word, 0, 0);
+            ctx.fillStyle = "#fffef8"; ctx.fillText(f.word, 0, 0);
+            ctx.restore();
           } else if (f.k === "pop") {
             const popBounce = easeOutBack(Math.min(1, prog * 4.2));
             const fs = Math.round(Math.max(15, cam.unit * (f.crit ? 0.32 : 0.23) * popBounce * pp));
@@ -3631,6 +3582,8 @@
   }
 
   window.__proto25d = {
+    getGame() { return game; },
+    renderNow() { render(); },
     pickHero(k) { startWithHero(k || "chili"); },
     moveHeroTo(gx, gy) { if (game && game.hero) game.hero.target = { gx, gy }; },
     setHeroPos(gx, gy) { if (game && game.hero) { game.hero.gx = gx; game.hero.gy = gy; game.hero.vx = 0; game.hero.vy = 0; game.hero.target = null; } },
