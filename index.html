@@ -30,6 +30,22 @@
   }
   .pill-title .zh-sub { opacity: 0.85; font-size: 12.5px; }
   .pill-gold { background: #fff4bc; }
+  .pill-xp { background: #eef8ff; gap: 6px; }
+  .xp-bar { width: 54px; height: 9px; border: 2px solid #24183a; border-radius: 999px; background: #fff; overflow: hidden; }
+  .xp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #4ec6ff, #ffe04a); transition: width 0.16s ease; }
+  .upg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+  .upg-card {
+    cursor: pointer; background: #fffdf6; color: #24183a;
+    border: 3px solid #24183a; border-radius: 16px;
+    padding: 12px 10px; text-align: center;
+    box-shadow: 3px 4px 0 #c9ae86;
+    transition: transform 0.1s ease, background 0.1s ease;
+  }
+  .upg-card:hover { transform: translateY(-2px); background: #fff7d4; }
+  .upg-card:active { transform: translate(1px, 2px); }
+  .upg-ico { font-size: 28px; line-height: 1.1; margin-bottom: 5px; }
+  .upg-title { font-size: 14px; font-weight: 900; color: #24183a; margin-bottom: 4px; }
+  .upg-desc { font-size: 11.5px; font-weight: 700; color: #4c3b64; line-height: 1.35; }
   .pill-btn { cursor: pointer; background: #ffe478; transition: transform 0.08s ease; }
   .pill-btn:active { transform: translate(1px, 2px); }
   .pill-btn.active { background: #ff9c54; }
@@ -78,6 +94,36 @@
     font-size: 18px; font-weight: 900;
   }
 
+
+  .skill-btn {
+    position: fixed; right: 16px; bottom: max(18px, env(safe-area-inset-bottom));
+    width: 82px; height: 82px; border-radius: 50%;
+    background: #fffdf6; color: #24183a;
+    border: 3.5px solid #24183a;
+    box-shadow: 3px 4px 0 #c9ae86, 3px 4px 0 1px #24183a;
+    cursor: pointer; z-index: 15; padding: 4px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    overflow: hidden; transition: transform 0.08s ease;
+  }
+  .skill-btn.hidden { display: none; }
+  .skill-btn.ready { background: #fff4b2; animation: skillPulse 1.3s ease-in-out infinite; }
+  .skill-btn:active { transform: translate(1px, 2px); }
+  @keyframes skillPulse {
+    0%,100% { box-shadow: 3px 4px 0 #c9ae86, 0 0 0 0 rgba(255, 196, 54, 0.55); }
+    50% { box-shadow: 3px 4px 0 #c9ae86, 0 0 0 9px rgba(255, 196, 54, 0); }
+  }
+  .skill-cd-mask {
+    position: absolute; inset: 0; border-radius: 50%;
+    pointer-events: none; display: none;
+    align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 900; color: #24183a;
+    text-shadow: 0 0 4px #fffdf6, 0 0 4px #fffdf6;
+  }
+  .skill-btn.on-cd .skill-cd-mask { display: flex; }
+  .skill-ico { font-size: 25px; line-height: 1.05; position: relative; z-index: 1; }
+  .skill-lbl { font-size: 11px; font-weight: 900; line-height: 1.1; color: #24183a; position: relative; z-index: 1; margin-top: 1px; }
+  .skill-key { font-size: 9.5px; font-weight: 800; color: #5b4875; position: relative; z-index: 1; }
+
   .overlay {
     position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
     background: rgba(247, 243, 227, 0.56); backdrop-filter: blur(2px);
@@ -88,11 +134,11 @@
     background: #fffdf6; color: #24183a;
     border: 4px solid #24183a; border-radius: 24px;
     box-shadow: 5px 6px 0 #c9ae86, 5px 6px 0 2px #24183a;
-    padding: 20px 22px; max-width: 580px; width: 100%; text-align: center;
+    padding: 20px 22px; max-width: 780px; width: 100%; text-align: center;
   }
   .card h1 { margin: 0 0 6px; font-size: 24px; font-weight: 900; }
   .card p { margin: 0 0 14px; font-size: 14px; font-weight: 700; color: #4c3b64; line-height: 1.4; }
-  .hero-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 6px; }
+  .hero-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; margin-bottom: 6px; }
   .hero-opt {
     cursor: pointer; background: #fffdf8; color: #24183a;
     border: 3px solid #24183a; border-radius: 18px;
@@ -121,12 +167,19 @@
     .pill-title .zh-sub { display: none; }
     .joy-zone { width: 88px; height: 88px; left: 10px; bottom: max(54px, env(safe-area-inset-bottom)); }
     .joy-knob { width: 38px; height: 38px; font-size: 15px; }
+    .skill-btn { width: 74px; height: 74px; right: 12px; bottom: max(56px, env(safe-area-inset-bottom)); }
+    .skill-key { display: none; }
     .bottom-bar { width: calc(100% - 16px); justify-content: center; }
     .hint { display: none; }
-    .hero-grid { gap: 7px; }
+    .hero-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .card { padding: 14px 12px; }
     .hero-thumb { width: 62px; height: 62px; }
     .hero-opt .hname { font-size: 12.5px; }
     .hero-opt .hsub { font-size: 10.5px; }
+    .xp-bar { width: 38px; height: 8px; }
+    .upg-grid { grid-template-columns: 1fr; gap: 8px; }
+    .upg-card { display: flex; align-items: center; gap: 10px; text-align: left; padding: 9px 11px; }
+    .upg-ico { font-size: 24px; margin-bottom: 0; }
   }
 </style>
 </head>
@@ -138,6 +191,7 @@
     <div class="pill pill-title">🌶️ Pet Pals Defense 2: 3D War <span class="zh-sub">· 萌宠防线 2：3D战争</span></div>
     <div class="pill" id="hud-wave">Wave 1 / 5</div>
     <div class="pill pill-gold" id="hud-gold">🪙 60</div>
+    <div class="pill pill-xp" id="hud-xp"><span id="xp-lvl">Lv.1</span><span class="xp-bar"><span class="xp-fill" id="xp-fill"></span></span></div>
   </div>
   <div class="pill-group right">
     <div class="pill" id="hud-life">❤️ 1</div>
@@ -149,6 +203,13 @@
 <div class="joy-zone" id="joy-zone" aria-label="Move Joystick">
   <div class="joy-knob" id="joy-knob">🐾</div>
 </div>
+
+<button class="skill-btn hidden" id="btn-skill" type="button" aria-label="Active Skill">
+  <span class="skill-ico" id="skill-ico">🔥</span>
+  <span class="skill-lbl" id="skill-lbl">火环</span>
+  <span class="skill-key">[Q/空格]</span>
+  <span class="skill-cd-mask" id="skill-cd-mask"></span>
+</button>
 
 <div class="bottom-bar">
   <button class="mode-btn plant" id="btn-mode" type="button">🌱 点草地种椒椒鼠 (50🪙)</button>
@@ -175,7 +236,25 @@
         <div class="hname">🫐 蓝莓枭</div>
         <div class="hsub">Blueberry · 冰霜溅射</div>
       </button>
+      <button class="hero-opt" data-hero="coco" type="button">
+        <canvas class="hero-thumb" width="130" height="130" data-thumb="coco"></canvas>
+        <div class="hname">💧 椰椰獭</div>
+        <div class="hsub">Coco · 水浪击退</div>
+      </button>
+      <button class="hero-opt" data-hero="taro" type="button">
+        <canvas class="hero-thumb" width="130" height="130" data-thumb="taro"></canvas>
+        <div class="hname">🪨 芋岩熊</div>
+        <div class="hsub">Taro · 巨岩震击</div>
+      </button>
     </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="levelup-overlay">
+  <div class="card">
+    <h1 id="lvl-title">⭐ 主角升级！选一个强化</h1>
+    <p id="lvl-sub">点击卡片或按 1 / 2 / 3 选择，打怪更快更爽！</p>
+    <div class="upg-grid" id="upg-grid"></div>
   </div>
 </div>
 
@@ -187,7 +266,7 @@
   </div>
 </div>
 
-<script src="paper-craft.js?v=11"></script>
-<script src="game.js?v=11"></script>
+<script src="paper-craft.js?v=14"></script>
+<script src="game.js?v=14"></script>
 </body>
 </html>

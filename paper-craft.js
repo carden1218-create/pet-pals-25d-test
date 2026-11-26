@@ -250,6 +250,167 @@
     }
   }
 
+  // Single chunky oil-pastel dab with broken dry-brush end & soft organic silhouette
+  function dabStroke(c, x, y, w, h, ang, col, alpha = 0.92, seed = 1) {
+    c.save();
+    c.translate(x, y);
+    c.rotate(ang);
+    c.globalAlpha *= alpha;
+    c.fillStyle = col;
+    const hw = w * 0.5, hh = h * 0.5;
+    const r = Math.min(hw, hh) * 0.72;
+    c.beginPath();
+    c.moveTo(-hw + r, -hh);
+    c.quadraticCurveTo(0, -hh * (1 + (hash(seed, 3) - 0.5) * 0.25), hw - r, -hh);
+    c.quadraticCurveTo(hw * 1.06, 0, hw - r, hh);
+    c.quadraticCurveTo(0, hh * (1 + (hash(seed, 7) - 0.5) * 0.25), -hw + r, hh);
+    c.quadraticCurveTo(-hw * 1.06, 0, -hw + r, -hh);
+    c.closePath();
+    c.fill();
+    c.restore();
+  }
+
+  // Thick oil-pastel colour blob: ragged broken edges, NO black outline, value mottling + visible paper grain!
+  function fillOilPastel(c, pts, col, seed = 1, opts = {}) {
+    if (!pts || pts.length < 3) return;
+    let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+    for (const [x, y] of pts) {
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+    const bw = Math.max(8, maxX - minX), bh = Math.max(8, maxY - minY);
+    const cols = opts.cols && opts.cols.length ? opts.cols : [col];
+    const toothCol = opts.toothCol ?? "#f7eed8";
+    const alpha = opts.alpha ?? 0.94;
+    const dabSize = opts.dabSize ?? Math.max(8, Math.min(24, Math.min(bw, bh) * 0.22));
+
+    // 1. Soft ragged underpaint (2 slightly shifted broken-edge passes — zero ink outline!)
+    if (opts.withBase !== false) {
+      for (let pass = 0; pass < 2; pass++) {
+        c.save();
+        c.globalAlpha = pass === 0 ? alpha * 0.72 : Math.min(1, alpha + 0.06);
+        const jAmt = pass === 0 ? 3.6 : 1.8;
+        const jPts = pts.map(([x, y], i) => [
+          x + jit(i + pass * 11, seed + 17) * jAmt,
+          y + jit(i + pass * 19, seed + 31) * jAmt
+        ]);
+        tracePoly(c, jPts);
+        c.fillStyle = pass === 0 ? cols[0] : (cols[Math.min(1, cols.length - 1)] || col);
+        c.fill();
+        c.restore();
+      }
+    }
+
+    // 2. Clipped thick pastel impasto dabs + coarse paper grain inside the blob
+    c.save();
+    tracePoly(c, pts);
+    c.clip();
+
+    const step = Math.max(5, dabSize * 0.65 / (opts.density ?? 1));
+    const nCols = Math.min(48, Math.ceil(bw / step));
+    const nRows = Math.min(48, Math.ceil(bh / step));
+    for (let ry = 0; ry < nRows; ry++) {
+      for (let rx = 0; rx < nCols; rx++) {
+        const idx = ry * nCols + rx;
+        if (hash(idx, seed + 9) < 0.22) continue;
+        const px = minX + (rx + 0.15 + hash(idx * 3, seed + 5) * 0.7) * (bw / nCols);
+        const py = minY + (ry + 0.15 + hash(idx * 7, seed + 13) * 0.7) * (bh / nRows);
+        const cPick = cols[Math.floor(hash(idx, seed + 23) * cols.length)];
+        const ang = (opts.angle ?? -0.45) + (hash(idx, seed + 29) - 0.5) * 0.75;
+        const dw = dabSize * (0.75 + hash(idx, seed + 37) * 0.85);
+        const dh = dabSize * (0.38 + hash(idx, seed + 41) * 0.42);
+        dabStroke(c, px, py, dw, dh, ang, cPick, alpha * (0.55 + hash(idx, seed + 43) * 0.38), seed + idx);
+      }
+    }
+
+    // Visible coarse paper tooth texture + dry-pastel grain flecks
+    ensureToothTextures();
+    const toothAlpha = opts.toothAlpha ?? 0.42;
+    if (toothAlpha > 0) {
+      c.save();
+      c.translate((seed * 29) % 192, (seed * 47) % 192);
+      c.globalAlpha = toothAlpha * 0.72;
+      c.fillStyle = c.createPattern(toothPatCanvas, "repeat");
+      c.fillRect(minX - 200, minY - 200, bw + 400, bh + 400);
+      c.globalAlpha = toothAlpha * 0.34;
+      c.fillStyle = c.createPattern(darkGrainCanvas, "repeat");
+      c.fillRect(minX - 200, minY - 200, bw + 400, bh + 400);
+      c.restore();
+
+      const specks = Math.min(180, Math.max(18, Math.round((bw * bh) / 140)));
+      c.save();
+      c.fillStyle = toothCol;
+      for (let i = 0; i < specks; i++) {
+        const sx = minX + hash(i * 5, seed + 61) * bw;
+        const sy = minY + hash(i * 11, seed + 73) * bh;
+        c.globalAlpha = toothAlpha * (0.28 + hash(i, seed + 83) * 0.55);
+        c.fillRect(sx, sy, 1.3 + hash(i, seed + 89) * 1.9, 1.1 + hash(i, seed + 97) * 1.6);
+      }
+      c.restore();
+    }
+    c.restore();
+
+    // 3. Soft ragged broken-edge pastel dabs along perimeter (shapes defined by value, NO dark outline!)
+    if (opts.edgeBleed !== false) {
+      const perimStep = Math.max(1, Math.floor(pts.length / Math.min(48, Math.max(14, Math.round((bw + bh) / Math.max(8, dabSize * 0.75))))));
+      for (let i = 0; i < pts.length; i += perimStep) {
+        const p0 = pts[i], p1 = pts[(i + 1) % pts.length];
+        const ang = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]) + (hash(i, seed + 101) - 0.5) * 0.65;
+        const cPick = cols[Math.floor(hash(i, seed + 107) * cols.length)];
+        const ox = (hash(i, seed + 113) - 0.5) * dabSize * 0.45;
+        const oy = (hash(i, seed + 127) - 0.5) * dabSize * 0.45;
+        dabStroke(
+          c, p0[0] + ox, p0[1] + oy,
+          dabSize * (0.62 + hash(i, seed + 131) * 0.65),
+          dabSize * (0.34 + hash(i, seed + 137) * 0.34),
+          ang, cPick, alpha * (0.58 + hash(i, seed + 139) * 0.34), seed + i * 3
+        );
+      }
+    }
+  }
+
+  // Cluster of small dabbed oil-pastel strokes (ideal for mauve trees, teal bushes, flower clumps!)
+  function dabPastelCluster(c, cx, cy, rx, ry, palette, seed = 1, opts = {}) {
+    const count = opts.count ?? 44;
+    const dabR = opts.dabSize ?? Math.max(7, Math.min(rx, ry) * 0.30);
+    const toothCol = opts.toothCol ?? "#f7eed8";
+    // palette = { shadow, mid, light, accent }
+    const sh = palette.shadow || palette[0];
+    const mid = palette.mid || palette[1] || sh;
+    const hi = palette.light || palette[2] || mid;
+    const acc = palette.accent || hi;
+
+    for (let i = 0; i < count; i++) {
+      // Sample organically inside ellipse; lower-right biases toward shadow, upper-left toward sunlit highlight
+      const a = hash(i * 7, seed + 11) * TAU;
+      const rr = Math.pow(hash(i * 13, seed + 19), 0.55);
+      const nx = Math.cos(a) * rr;
+      const ny = Math.sin(a) * rr;
+      const px = cx + nx * rx;
+      const py = cy + ny * ry;
+      const sunBias = (-nx * 0.55 - ny * 0.65); // + = top-left sunlit, - = bottom-right shaded
+      let col = mid;
+      if (sunBias < -0.22) col = sh;
+      else if (sunBias > 0.28) col = hi;
+      else if (hash(i, seed + 29) > 0.86) col = acc;
+      else if (hash(i, seed + 31) < 0.24) col = sh;
+
+      const ang = -0.5 + (hash(i, seed + 37) - 0.5) * 1.4;
+      const w = dabR * (0.78 + hash(i, seed + 41) * 0.72);
+      const h = dabR * (0.52 + hash(i, seed + 43) * 0.42);
+      dabStroke(c, px, py, w, h, ang, col, 0.86 + hash(i, seed + 47) * 0.12, seed + i * 5);
+
+      // Subtle paper grain flecks on top of dabs
+      if (i % 3 === 0) {
+        c.save();
+        c.fillStyle = toothCol;
+        c.globalAlpha = 0.20 + hash(i, seed + 53) * 0.22;
+        c.fillRect(px + (hash(i, seed + 59) - 0.5) * w * 0.5, py + (hash(i, seed + 61) - 0.5) * h * 0.5, 1.8, 1.4);
+        c.restore();
+      }
+    }
+  }
+
   // Dilate an opaque mask uniformly by `padPx` to produce a clean die-cut cardboard silhouette!
   function dilateMask(srcMask, padPx) {
     const w = srcMask.width, h = srcMask.height;
@@ -407,13 +568,15 @@
     fc.globalCompositeOperation = "destination-in";
     fc.drawImage(boardMask, 0, 0);
 
-    const frontRim = dilateMask(boardMask, 1.3);
-    const frc = frontRim.getContext("2d");
-    frc.globalCompositeOperation = "source-in";
-    frc.fillStyle = "#482a12";
-    frc.fillRect(0, 0, w, h);
-    c.drawImage(frontRim, 0, 0);
-    c.drawImage(frontBoard, 0, 0);
+    if (!opts.pastelProp) {
+      const frontRim = dilateMask(boardMask, 1.3);
+      const frc = frontRim.getContext("2d");
+      frc.globalCompositeOperation = "source-in";
+      frc.fillStyle = opts.softRim ? "#7c522c" : "#482a12";
+      frc.fillRect(0, 0, w, h);
+      c.drawImage(frontRim, 0, 0);
+      c.drawImage(frontBoard, 0, 0);
+    }
 
     // 4. Glue front art cleanly on top of the cardboard face!
     if (drawFrontArtFn) drawFrontArtFn(c);
@@ -432,10 +595,12 @@
     return makeCardboardStandeeFromMask(w, h, innerMask, opts, (c) => {
       if (drawFrontArtFn) {
         c.save();
-        tracePoly(c, silhouettePts);
-        c.clip();
-        c.fillStyle = "#fcf5e3";
-        c.fillRect(0, 0, w, h);
+        if (!opts.unclippedDabs) {
+          tracePoly(c, silhouettePts);
+          c.clip();
+          c.fillStyle = opts.paperBg || "#fcf5e3";
+          c.fillRect(0, 0, w, h);
+        }
         drawFrontArtFn(c);
         c.restore();
         if (opts.outerOl !== false) {
@@ -487,33 +652,171 @@
     const dx = cx - dw * 0.5;
     const dy = by - dh;
 
-    // 2. Render scaled original Gen-1 sprite onto 260x260 canvas
+    // 2. Render scaled original Gen-1 sprite onto 260x260 canvas (preserve raw copy for before/after verification)
+    const rawScaledCv = document.createElement("canvas");
+    rawScaledCv.width = S; rawScaledCv.height = S;
+    const rsc = rawScaledCv.getContext("2d");
+    rsc.drawImage(rawCv, minX, minY, bw, bh, dx, dy, dw, dh);
+
+    // 2b. Apply baked painterly oil-pastel/crayon treatment (identical silhouette, colours & design — textured onto paper!)
     const spriteCv = document.createElement("canvas");
     spriteCv.width = S; spriteCv.height = S;
     const sc = spriteCv.getContext("2d");
-    sc.drawImage(rawCv, minX, minY, bw, bh, dx, dy, dw, dh);
+    sc.drawImage(rawScaledCv, 0, 0);
+
+    ensureToothTextures();
+    const imgData = sc.getImageData(0, 0, S, S);
+    const px = imgData.data;
+    const seedBase = opts.seed || (Math.round(bw * 13 + bh * 31) + 77);
+
+    // Collect interior color samples & soften harsh digital black outlines + ragged pastel edge tooth
+    const copyPx = new Uint8ClampedArray(px);
+    for (let y = 1; y < S - 1; y++) {
+      for (let x = 1; x < S - 1; x++) {
+        const idx = (y * S + x) * 4;
+        const a = copyPx[idx + 3];
+        if (a < 20) continue;
+
+        const r = copyPx[idx], g = copyPx[idx + 1], b = copyPx[idx + 2];
+        const lum = r * 0.299 + g * 0.587 + b * 0.114;
+
+        // Check if pixel is near outer edge (softly ragged pastel boundary instead of crisp digital cut)
+        const nAlphaMin = Math.min(
+          copyPx[((y - 1) * S + x) * 4 + 3],
+          copyPx[((y + 1) * S + x) * 4 + 3],
+          copyPx[(y * S + (x - 1)) * 4 + 3],
+          copyPx[(y * S + (x + 1)) * 4 + 3],
+          copyPx[((y - 2 > 0 ? y - 2 : 0) * S + x) * 4 + 3],
+          copyPx[((y + 2 < S ? y + 2 : S - 1) * S + x) * 4 + 3]
+        );
+        const edgeNoise = hash(x * 3 + y * 11, seedBase + 19);
+        if (nAlphaMin < 140) {
+          // Ragged oil-pastel paper break right at outer perimeter
+          if (edgeNoise < 0.24 && a < 235) {
+            px[idx + 3] = Math.round(a * 0.35);
+          } else if (edgeNoise > 0.72) {
+            px[idx + 3] = Math.min(255, Math.round(a * 0.85));
+          }
+        }
+
+        // Soften pure black/near-black outlines to warm darker pastel stroke (never crisp #000 digital ink!)
+        if (lum < 78) {
+          // Sample neighbor interior color (3px inward) to tint outline toward warm darker same-hue pastel
+          let nr = 84, ng = 52, nb = 42, cnt = 0;
+          for (let oy = -3; oy <= 3; oy += 3) {
+            for (let ox = -3; ox <= 3; ox += 3) {
+              const nx = x + ox, ny = y + oy;
+              if (nx < 0 || nx >= S || ny < 0 || ny >= S) continue;
+              const nIdx = (ny * S + nx) * 4;
+              if (copyPx[nIdx + 3] > 180) {
+                const nl = copyPx[nIdx] * 0.299 + copyPx[nIdx + 1] * 0.587 + copyPx[nIdx + 2] * 0.114;
+                if (nl > 90) {
+                  nr += copyPx[nIdx]; ng += copyPx[nIdx + 1]; nb += copyPx[nIdx + 2]; cnt++;
+                }
+              }
+            }
+          }
+          if (cnt > 0) { nr /= (cnt + 1); ng /= (cnt + 1); nb /= (cnt + 1); }
+          const grain = (hash(x * 7 + y * 5, seedBase + 41) - 0.5) * 24;
+          px[idx]     = Math.max(38, Math.min(255, Math.round(r * 0.42 + nr * 0.36 + 26 + grain)));
+          px[idx + 1] = Math.max(24, Math.min(255, Math.round(g * 0.42 + ng * 0.32 + 16 + grain)));
+          px[idx + 2] = Math.max(20, Math.min(255, Math.round(b * 0.42 + nb * 0.28 + 14 + grain)));
+          // Subtle pastel dry-stroke grain along outlines
+          if (hash(x * 13 + y * 17, seedBase + 53) < 0.22) {
+            px[idx + 3] = Math.round(px[idx + 3] * 0.78);
+          }
+        } else {
+          // Subtle warm paper mottling & pastel pigment variation inside body fills (preserving design & colours!)
+          const macro = (Math.sin(x * 0.14 + y * 0.11 + seedBase) + Math.cos(x * 0.09 - y * 0.13)) * 7.5;
+          const micro = (hash(x * 5 + y * 9, seedBase + 71) - 0.5) * 18;
+          const delta = macro + micro;
+          px[idx]     = Math.max(0, Math.min(255, Math.round(r + delta * 1.05)));
+          px[idx + 1] = Math.max(0, Math.min(255, Math.round(g + delta * 0.98)));
+          px[idx + 2] = Math.max(0, Math.min(255, Math.round(b + delta * 0.90)));
+        }
+      }
+    }
+    sc.putImageData(imgData, 0, 0);
+
+    // 2c. Layer directional waxy oil-pastel strokes following the form + paper-grain tooth (clipped inside sprite!)
+    const strokeOverlay = document.createElement("canvas");
+    strokeOverlay.width = S; strokeOverlay.height = S;
+    const oc = strokeOverlay.getContext("2d");
+    oc.drawImage(spriteCv, 0, 0);
+    oc.globalCompositeOperation = "source-atop";
+
+    // Directional curved oil-pastel strokes across the body (sampled from sprite itself so hues stay 100% faithful!)
+    const cxBody = dx + dw * 0.5, cyBody = dy + dh * 0.5;
+    for (let si = 0; si < 95; si++) {
+      const rx = dx + hash(si * 7, seedBase + 101) * dw;
+      const ry = dy + hash(si * 13, seedBase + 109) * dh;
+      const ix = Math.max(0, Math.min(S - 1, Math.round(rx)));
+      const iy = Math.max(0, Math.min(S - 1, Math.round(ry)));
+      const pIdx = (iy * S + ix) * 4;
+      if (copyPx[pIdx + 3] < 160) continue;
+      const pr = copyPx[pIdx], pg = copyPx[pIdx + 1], pb = copyPx[pIdx + 2];
+      const lum = pr * 0.299 + pg * 0.587 + pb * 0.114;
+      if (lum < 85) continue; // keep eyes/outlines crisp and readable!
+      const shift = (si % 2 === 0 ? 22 : -18);
+      const cStr = `rgb(${Math.max(0, Math.min(255, pr + shift))},${Math.max(0, Math.min(255, pg + shift))},${Math.max(0, Math.min(255, pb + Math.round(shift * 0.85)))})`;
+      // Angle loosely follows radial/contour tangent of the pet form
+      const formAng = Math.atan2(ry - cyBody, rx - cxBody) + Math.PI * 0.5 + (hash(si, seedBase + 113) - 0.5) * 0.45;
+      dabStroke(oc, rx, ry, 10 + hash(si, seedBase + 127) * 10, 4.2 + hash(si, seedBase + 131) * 2.8, formAng, cStr, 0.34, seedBase + si);
+    }
+
+    // Visible paper-grain tooth (warm cream paper specks showing through) + subtle dark wax clumps
+    oc.save();
+    oc.translate((seedBase * 23) % 192, (seedBase * 41) % 192);
+    oc.globalAlpha = 0.52;
+    oc.fillStyle = oc.createPattern(toothPatCanvas, "repeat");
+    oc.fillRect(-200, -200, S + 400, S + 400);
+    oc.globalAlpha = 0.24;
+    oc.fillStyle = oc.createPattern(darkGrainCanvas, "repeat");
+    oc.fillRect(-200, -200, S + 400, S + 400);
+    oc.restore();
+
+    // Extra crisp paper-tooth pinpoints showing through flat fills
+    oc.fillStyle = "#fbf4e2";
+    for (let ti = 0; ti < 140; ti++) {
+      const tx = dx + hash(ti * 11, seedBase + 149) * dw;
+      const ty = dy + hash(ti * 17, seedBase + 157) * dh;
+      const ix = Math.max(0, Math.min(S - 1, Math.round(tx)));
+      const iy = Math.max(0, Math.min(S - 1, Math.round(ty)));
+      const pIdx = (iy * S + ix) * 4;
+      if (copyPx[pIdx + 3] > 180 && (copyPx[pIdx] * 0.3 + copyPx[pIdx + 1] * 0.59 + copyPx[pIdx + 2] * 0.11) > 95) {
+        oc.globalAlpha = 0.26 + hash(ti, seedBase + 163) * 0.28;
+        oc.fillRect(tx, ty, 1.5, 1.3);
+      }
+    }
+
+    // Store raw & textured pair for inspection if requested
+    if (opts.key) {
+      rawVsTexturedPairs[opts.key] = { raw: rawScaledCv, textured: strokeOverlay };
+    }
 
     // 3. Build solid alpha silhouette mask directly from the original sprite
     const innerMask = document.createElement("canvas");
     innerMask.width = S; innerMask.height = S;
     const mc = innerMask.getContext("2d");
-    mc.drawImage(spriteCv, 0, 0);
+    mc.drawImage(rawScaledCv, 0, 0);
     mc.globalCompositeOperation = "source-in";
     mc.fillStyle = "#000";
     mc.fillRect(0, 0, S, S);
 
-    // 4. Glue original Gen-1 crayon sprite directly onto thick die-cut corrugated cardboard!
+    // 4. Glue oil-pastel-textured Gen-1 sprite onto corrugated cardboard standee (softer warm rim)!
     return makeCardboardStandeeFromMask(S, S, innerMask, {
       thickX: opts.thickX ?? 14,
       thickY: opts.thickY ?? 10,
-      lip: opts.lip ?? 4.2
+      lip: opts.lip ?? 3.8,
+      softRim: true
     }, (c) => {
-      c.drawImage(spriteCv, 0, 0);
+      c.drawImage(strokeOverlay, 0, 0);
     });
   }
 
   /* ================= Standee Library (Gen-1 Sprites + Matching Crayon Props) ================= */
   let readyCallbacks = [];
+  const rawVsTexturedPairs = {};
   let isReady = false;
 
   function whenReady(fn) {
@@ -526,68 +829,84 @@
     const cx = S * 0.5, by = S - 24;
     const layers = {};
 
-    // 1. World props (ONE whole heavy real-crayon shape per standee on thick corrugated cardboard!)
+    // 1. World props: Thick Oil-Pastel / Crayon Painterly Style (chunky dabbed strokes, NO black outlines!)
     const treeOuter = sampleSmoothLoop([
-      [cx - 17, by], [cx - 14, by - 66],
-      [cx - 42, by - 68], [cx - 66, by - 92], [cx - 72, by - 122], [cx - 58, by - 154],
-      [cx - 28, by - 174], [cx, by - 180], [cx + 28, by - 174],
-      [cx + 58, by - 154], [cx + 72, by - 122], [cx + 66, by - 92], [cx + 42, by - 68],
-      [cx + 15, by - 66], [cx + 18, by]
+      [cx - 15, by], [cx - 12, by - 62],
+      [cx - 48, by - 68], [cx - 72, by - 98], [cx - 74, by - 134], [cx - 54, by - 166],
+      [cx - 20, by - 182], [cx + 12, by - 184], [cx + 46, by - 168],
+      [cx + 72, by - 136], [cx + 70, by - 96], [cx + 46, by - 68],
+      [cx + 14, by - 62], [cx + 16, by]
     ], 4);
 
     layers.tree = [{
       zOff: 0,
-      cv: makeCardboardSlab(S, S, treeOuter, { thickX: 11, thickY: 8, lip: 3.8, seed: 601, ol: "#322118", outerLw: 4.8 }, (c) => {
-        const trunkPts = sampleSmoothLoop([[cx - 19, by], [cx - 14, by - 76], [cx + 15, by - 76], [cx + 20, by]], 3);
-        fillWaxCrayon(c, trunkPts, "#925a32", 601, { coverage: 0.88, toothAlpha: 0.72, clumpAlpha: 0.34, bleed: true, bleedW: 4 });
-        fillWaxCrayon(c, sampleSmoothLoop([[cx + 2, by - 4], [cx + 4, by - 72], [cx + 15, by - 72], [cx + 18, by - 4]], 2), "#6e4020", 602, { withBase: false, coverage: 0.55, toothAlpha: 0.45 });
-        strokeWaxCrayon(c, [[cx - 5, by - 8], [cx - 4, by - 56]], "#452412", 2.8, 602, false);
-        strokeWaxCrayon(c, [[cx + 6, by - 16], [cx + 6, by - 60]], "#452412", 2.6, 603, false);
+      cv: makeCardboardSlab(S, S, treeOuter, {
+        thickX: 10, thickY: 7, lip: 0.5, seed: 601, outerOl: false, unclippedDabs: true, pastelProp: true
+      }, (c) => {
+        // Warm brown trunk & forked branches (NO black outline!)
+        const trunkPts = sampleSmoothLoop([
+          [cx - 16, by + 2], [cx - 13, by - 78], [cx - 32, by - 110], [cx - 22, by - 114],
+          [cx - 4, by - 84], [cx + 6, by - 84], [cx + 26, by - 112], [cx + 34, by - 106],
+          [cx + 14, by - 76], [cx + 17, by + 2]
+        ], 3);
+        fillOilPastel(c, trunkPts, "#7c4d32", 601, {
+          cols: ["#54301d", "#7c4d32", "#9e6948"], dabSize: 11, toothAlpha: 0.34
+        });
 
+        // Rich solid mauve / pink-purple foliage base + clusters of overlapping dabbed oil-pastel strokes!
         const crownPts = sampleSmoothLoop([
-          [cx - 42, by - 68], [cx - 66, by - 92], [cx - 72, by - 122], [cx - 58, by - 154],
-          [cx - 28, by - 174], [cx, by - 180], [cx + 28, by - 174],
-          [cx + 58, by - 154], [cx + 72, by - 122], [cx + 66, by - 92], [cx + 42, by - 68], [cx, by - 62]
+          [cx - 48, by - 68], [cx - 74, by - 98], [cx - 76, by - 134], [cx - 56, by - 168],
+          [cx - 20, by - 184], [cx + 12, by - 186], [cx + 48, by - 168],
+          [cx + 74, by - 136], [cx + 72, by - 96], [cx + 46, by - 68], [cx, by - 60]
         ], 4);
-        fillWaxCrayon(c, crownPts, "#5cb43e", 604, { withBase: false, coverage: 0.87, toothAlpha: 0.74, clumpAlpha: 0.36 });
-        // Rich crayon colour variation (sunlit chartreuse top-left + deep leafy green lower-right)
-        fillWaxCrayon(c, makeEllipsePts(cx - 16, by - 142, 46, 28, 22, 605, 0.08), "#8ae05a", 605, { withBase: false, coverage: 0.62, toothAlpha: 0.58 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 22, by - 94, 42, 24, 22, 610, 0.09), "#3d8c28", 610, { withBase: false, coverage: 0.52, toothAlpha: 0.55 });
-        // Sketchy crayon leaf doodles inside canopy
-        strokeWaxCrayon(c, [[cx - 44, by - 72], [cx, by - 62], [cx + 44, by - 72]], "#2b4a20", 3.8, 606, false);
-        strokeWaxCrayon(c, [[cx - 42, by - 116], [cx - 30, by - 124], [cx - 20, by - 114]], "#387826", 2.6, 611, false);
-        strokeWaxCrayon(c, [[cx + 22, by - 134], [cx + 34, by - 142], [cx + 42, by - 132]], "#387826", 2.6, 612, false);
-
-        // Bright crayon apple (with subtle warm wax highlight)
-        fillWaxCrayon(c, makeEllipsePts(cx - 2, by - 122, 16, 15, 18, 607), "#e83424", 607, { withBase: false, coverage: 0.90, toothAlpha: 0.52, lw: 3.2, bleed: true, bleedW: 3 });
-        strokeWaxCrayon(c, [[cx - 2, by - 137], [cx, by - 147]], "#3d2214", 2.8, 608, false);
-        fillWaxCrayon(c, sampleSmoothLoop([[cx, by - 142], [cx + 12, by - 150], [cx + 10, by - 138]], 2), "#66c844", 609, { withBase: false, coverage: 0.90, lw: 2.2 });
+        fillOilPastel(c, crownPts, "#b8567c", 604, {
+          cols: ["#7a3052", "#b8567c", "#d87d9e"], dabSize: 18, toothAlpha: 0.28, edgeBleed: true
+        });
+        const mauvePal = { shadow: "#7a3052", mid: "#c8658b", light: "#e594b1", accent: "#f5bacb" };
+        dabPastelCluster(c, cx - 22, by - 116, 46, 36, mauvePal, 610, { count: 48, dabSize: 16 });
+        dabPastelCluster(c, cx + 22, by - 118, 46, 36, mauvePal, 625, { count: 48, dabSize: 16 });
+        dabPastelCluster(c, cx - 2, by - 144, 50, 38, mauvePal, 640, { count: 56, dabSize: 16 });
+        dabPastelCluster(c, cx - 26, by - 154, 28, 20, { shadow: "#c8658b", mid: "#e89cb6", light: "#f7c4d4", accent: "#ffd6e1" }, 655, { count: 24, dabSize: 13 });
+        dabPastelCluster(c, cx + 16, by - 88, 36, 16, { shadow: "#622240", mid: "#7a3052", light: "#9e446a" }, 668, { count: 22, dabSize: 13 });
       })
     }];
 
     const bushOuter = sampleSmoothLoop([
-      [cx - 60, by - 12], [cx - 66, by - 36], [cx - 44, by - 66], [cx - 12, by - 74],
-      [cx + 16, by - 74], [cx + 48, by - 64], [cx + 66, by - 34], [cx + 58, by - 12], [cx, by - 6]
+      [cx - 60, by - 10], [cx - 66, by - 38], [cx - 42, by - 66], [cx - 10, by - 74],
+      [cx + 20, by - 74], [cx + 50, by - 62], [cx + 66, by - 34], [cx + 56, by - 10], [cx, by - 4]
     ], 4);
     layers.bush = [{
       zOff: 0,
-      cv: makeCardboardSlab(S, S, bushOuter, { thickX: 10, thickY: 7, lip: 3.8, seed: 701, ol: "#322118", outerLw: 4.5 }, (c) => {
-        fillWaxCrayon(c, bushOuter, "#54ad38", 701, { coverage: 0.87, toothAlpha: 0.74, clumpAlpha: 0.34 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 12, by - 48, 44, 22, 22, 702, 0.08), "#85de56", 702, { withBase: false, coverage: 0.62, toothAlpha: 0.55 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 18, by - 24, 38, 16, 20, 705, 0.08), "#3a8824", 705, { withBase: false, coverage: 0.48, toothAlpha: 0.50 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 20, by - 42, 9, 8.5, 14, 703), "#ff84ba", 703, { withBase: false, coverage: 0.90, toothAlpha: 0.45, lw: 2.4 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 18, by - 32, 8.5, 8.5, 14, 704), "#ffe24e", 704, { withBase: false, coverage: 0.90, toothAlpha: 0.45, lw: 2.4 });
+      cv: makeCardboardSlab(S, S, bushOuter, {
+        thickX: 9, thickY: 6, lip: 0.5, seed: 701, outerOl: false, unclippedDabs: true, pastelProp: true
+      }, (c) => {
+        // Deep teal-green foliage built from solid pastel body + clustered dabbed strokes (NO black outline!)
+        fillOilPastel(c, bushOuter, "#2c6b5a", 700, {
+          cols: ["#1a473d", "#2c6b5a", "#458d75"], dabSize: 16, toothAlpha: 0.28, edgeBleed: true
+        });
+        const tealPal = { shadow: "#1b493f", mid: "#2e6f5e", light: "#4b957c", accent: "#6ab393" };
+        dabPastelCluster(c, cx - 20, by - 36, 40, 28, tealPal, 701, { count: 44, dabSize: 14 });
+        dabPastelCluster(c, cx + 18, by - 34, 40, 27, tealPal, 715, { count: 44, dabSize: 14 });
+        dabPastelCluster(c, cx, by - 50, 36, 24, tealPal, 728, { count: 36, dabSize: 13 });
+        // Yellow flower clumps & tiny coral-pink blossoms nestled in the foliage
+        dabPastelCluster(c, cx - 22, by - 44, 12, 9, { shadow: "#d49b24", mid: "#f6d458", light: "#ffe98c" }, 740, { count: 10, dabSize: 7 });
+        dabPastelCluster(c, cx + 20, by - 32, 11, 8, { shadow: "#d49b24", mid: "#f6d458", light: "#ffe98c" }, 745, { count: 9, dabSize: 7 });
+        dabPastelCluster(c, cx + 2, by - 52, 8, 6, { shadow: "#c86882", mid: "#ea92a8", light: "#f8b8c8" }, 750, { count: 6, dabSize: 6 });
       })
     }];
 
-    const rockOuter = sampleSmoothLoop([[cx - 56, by], [cx - 42, by - 56], [cx + 10, by - 66], [cx + 54, by - 26], [cx + 46, by + 2]], 4);
+    const rockOuter = sampleSmoothLoop([[cx - 56, by], [cx - 42, by - 54], [cx + 8, by - 64], [cx + 54, by - 26], [cx + 46, by + 2]], 4);
     layers.rock = [{
       zOff: 0,
-      cv: makeCardboardSlab(S, S, rockOuter, { thickX: 10, thickY: 7, lip: 3.5, seed: 720, ol: "#362822", outerLw: 4.5 }, (c) => {
-        fillWaxCrayon(c, rockOuter, "#9a9184", 720, { coverage: 0.88, toothAlpha: 0.72, clumpAlpha: 0.34 });
-        fillWaxCrayon(c, sampleSmoothLoop([[cx - 34, by - 16], [cx - 24, by - 50], [cx + 16, by - 54], [cx + 28, by - 24]], 3), "#d4cabd", 721, { withBase: false, coverage: 0.68, toothAlpha: 0.56 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 22, by - 12, 22, 12, 14, 722), "#7a8c58", 722, { withBase: false, coverage: 0.45, toothAlpha: 0.50 });
-        strokeWaxCrayon(c, [[cx - 18, by - 14], [cx + 6, by - 22], [cx + 26, by - 16]], "#4b4238", 2.4, 723, false);
+      cv: makeCardboardSlab(S, S, rockOuter, {
+        thickX: 9, thickY: 6, lip: 0.5, seed: 720, outerOl: false, unclippedDabs: true, pastelProp: true
+      }, (c) => {
+        // Warm pink / rose-terracotta stone slabs (NO black outline!)
+        fillOilPastel(c, rockOuter, "#d88492", 720, {
+          cols: ["#9e4c5e", "#c87080", "#e298a4", "#efbcc4"], dabSize: 13, toothAlpha: 0.42
+        });
+        dabPastelCluster(c, cx - 12, by - 36, 26, 16, { shadow: "#d88492", mid: "#ebaab4", light: "#f6cdd4" }, 723, { count: 14, dabSize: 10 });
+        dabPastelCluster(c, cx + 22, by - 14, 20, 10, { shadow: "#235449", mid: "#357463", light: "#4b9179" }, 726, { count: 12, dabSize: 8 });
       })
     }];
 
@@ -598,13 +917,17 @@
     ], 3);
     layers.sign = [{
       zOff: 0,
-      cv: makeCardboardSlab(S, S, signOuter, { thickX: 9, thickY: 7, lip: 3.5, seed: 740, ol: "#3a2414", outerLw: 4.2 }, (c) => {
+      cv: makeCardboardSlab(S, S, signOuter, {
+        thickX: 8, thickY: 6, lip: 0.5, seed: 740, outerOl: false, unclippedDabs: true, pastelProp: true
+      }, (c) => {
         const signPost = sampleSmoothLoop([[cx - 8, by], [cx - 7, by - 60], [cx + 8, by - 60], [cx + 8, by]], 3);
         const signBoard = sampleSmoothLoop([[cx - 42, by - 94], [cx + 28, by - 96], [cx + 54, by - 74], [cx + 28, by - 52], [cx - 42, by - 54]], 3);
-        fillWaxCrayon(c, signPost, "#966034", 740, { coverage: 0.88, toothAlpha: 0.70, clumpAlpha: 0.32 });
-        fillWaxCrayon(c, signBoard, "#f2c468", 741, { withBase: false, coverage: 0.90, toothAlpha: 0.68, clumpAlpha: 0.28, lw: 3.2 });
-        strokeWaxCrayon(c, [[cx - 24, by - 74], [cx + 26, by - 74], [cx + 16, by - 82]], "#7a441e", 2.8, 742, false);
-        strokeWaxCrayon(c, [[cx + 26, by - 74], [cx + 16, by - 66]], "#7a441e", 2.8, 743, false);
+        fillOilPastel(c, signPost, "#7c4d32", 740, { cols: ["#5a331e", "#7c4d32", "#9c6644"], dabSize: 9, toothAlpha: 0.36 });
+        fillOilPastel(c, signBoard, "#e08a4e", 741, { cols: ["#c06834", "#e08a4e", "#f0ad70"], dabSize: 11, toothAlpha: 0.38 });
+        // Warm burnt-umber arrow dab (no black outline)
+        dabStroke(c, cx - 2, by - 74, 34, 6, 0, "#7c3f1d", 0.90, 742);
+        dabStroke(c, cx + 18, by - 78, 14, 5, 0.65, "#7c3f1d", 0.90, 743);
+        dabStroke(c, cx + 18, by - 70, 14, 5, -0.65, "#7c3f1d", 0.90, 744);
       })
     }];
 
@@ -621,13 +944,20 @@
     ], 2);
     layers.fence = [{
       zOff: 0,
-      cv: makeCardboardSlab(S, S, fenceOuter, { thickX: 9, thickY: 7, lip: 3.5, seed: 760, ol: "#3a2414", outerLw: 4.2 }, (c) => {
-        fillWaxCrayon(c, sampleSmoothLoop([[cx - 84, by - 36], [cx + 84, by - 38], [cx + 84, by - 20], [cx - 84, by - 20]], 2), "#cc904c", 760, { coverage: 0.88, toothAlpha: 0.68, lw: 2.6 });
-        fillWaxCrayon(c, sampleSmoothLoop([[cx - 84, by - 68], [cx + 84, by - 68], [cx + 84, by - 52], [cx - 84, by - 52]], 2), "#dfaa64", 761, { withBase: false, coverage: 0.88, toothAlpha: 0.68, lw: 2.6 });
+      cv: makeCardboardSlab(S, S, fenceOuter, {
+        thickX: 8, thickY: 6, lip: 0.5, seed: 760, outerOl: false, unclippedDabs: true, pastelProp: true
+      }, (c) => {
+        fillOilPastel(c, sampleSmoothLoop([[cx - 84, by - 36], [cx + 84, by - 38], [cx + 84, by - 20], [cx - 84, by - 20]], 2), "#a8643a", 760, {
+          cols: ["#7d4422", "#a8643a", "#c88254"], dabSize: 10, toothAlpha: 0.36
+        });
+        fillOilPastel(c, sampleSmoothLoop([[cx - 84, by - 68], [cx + 84, by - 68], [cx + 84, by - 52], [cx - 84, by - 52]], 2), "#c67c4c", 761, {
+          cols: ["#94542c", "#c67c4c", "#df9a68"], dabSize: 10, toothAlpha: 0.36
+        });
         [-60, -20, 20, 60].forEach((px, idx) => {
           const pPts = sampleSmoothLoop([[cx + px - 10, by], [cx + px - 9, by - 72], [cx + px, by - 88], [cx + px + 9, by - 72], [cx + px + 10, by]], 2);
-          fillWaxCrayon(c, pPts, "#f0c480", 770 + idx, { withBase: false, coverage: 0.90, toothAlpha: 0.66, lw: 2.8 });
-          strokeWaxCrayon(c, [[cx + px - 2, by - 10], [cx + px - 1, by - 46]], "#9e6632", 1.8, 780 + idx, false);
+          fillOilPastel(c, pPts, "#d9925a", 770 + idx, {
+            cols: ["#a66338", "#d9925a", "#ebb47e"], dabSize: 9, toothAlpha: 0.36
+          });
         });
       })
     }];
@@ -637,6 +967,8 @@
       ["chili",     "assets/pets/chili-1.webp",     { maxW: 174, maxH: 186 }],
       ["lemon",     "assets/pets/lemon-1.webp",     { maxW: 168, maxH: 192 }],
       ["blueberry", "assets/pets/blueberry-1.webp", { maxW: 168, maxH: 184 }],
+      ["coco",      "assets/pets/coco-1.webp",      { maxW: 170, maxH: 184 }],
+      ["taro",      "assets/pets/taro-1.webp",      { maxW: 172, maxH: 188 }],
       ["z1",        "assets/enemies/z-1.webp",      { maxW: 158, maxH: 182 }],
       ["z2",        "assets/enemies/z-2.webp",      { maxW: 158, maxH: 182 }],
       ["z3",        "assets/enemies/z-3.webp",      { maxW: 162, maxH: 194 }],
@@ -646,7 +978,7 @@
     Promise.all(spriteSpecs.map(([key, src, opts]) => new Promise((resolve) => {
       const im = new Image();
       im.onload = () => {
-        layers[key] = [{ zOff: 0, cv: makeSpriteCardboardStandee(im, opts) }];
+        layers[key] = [{ zOff: 0, cv: makeSpriteCardboardStandee(im, { ...opts, key }) }];
         resolve();
       };
       im.onerror = () => resolve();
@@ -916,9 +1248,26 @@
     }
   }
 
+  const _flashCache = new WeakMap();
+  function getStandeeFlashCv(srcCv, col = "#ffffff") {
+    let map = _flashCache.get(srcCv);
+    if (!map) { map = new Map(); _flashCache.set(srcCv, map); }
+    if (map.has(col)) return map.get(col);
+    const fcv = document.createElement("canvas");
+    fcv.width = srcCv.width; fcv.height = srcCv.height;
+    const fc = fcv.getContext("2d");
+    fc.drawImage(srcCv, 0, 0);
+    fc.globalCompositeOperation = "source-in";
+    fc.fillStyle = col;
+    fc.fillRect(0, 0, fcv.width, fcv.height);
+    map.set(col, fcv);
+    return fcv;
+  }
+
   window.PaperCraft = {
+    rawVsTexturedPairs,
     hash, jit, sampleSmoothLoop, makeEllipsePts, tracePoly,
-    strokeWaxCrayon, fillWaxCrayon, makeCardboardSlab,
-    buildCardboardStandees, whenReady, drawCrumpledPaperOverlay, paintKraftMottle, drawCorrugatedWallFlutes
+    strokeWaxCrayon, fillWaxCrayon, fillOilPastel, dabPastelCluster, dabStroke, makeCardboardSlab,
+    buildCardboardStandees, whenReady, drawCrumpledPaperOverlay, paintKraftMottle, drawCorrugatedWallFlutes, getStandeeFlashCv
   };
 })();
