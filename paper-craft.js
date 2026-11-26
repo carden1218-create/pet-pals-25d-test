@@ -106,21 +106,22 @@
     for (let y = 0; y < SZ; y++) {
       for (let x = 0; x < SZ; x++) {
         const idx = (y * SZ + x) * 4;
-        const n1 = vnoise(x, y, 16, 11);
-        const n2 = vnoise(x, y, 5, 37);
-        const n3 = hash(x * 13 + y * 97, 73);
-        const tooth = n1 * 0.30 + n2 * 0.42 + n3 * 0.28;
+        const n1 = vnoise(x, y, 22, 11);
+        const n2 = vnoise(x, y, 7, 37);
+        const n3 = vnoise(x, y, 3, 61);
+        const n4 = hash(x * 13 + y * 97, 73);
+        const tooth = n1 * 0.28 + n2 * 0.34 + n3 * 0.22 + n4 * 0.16;
 
-        if (tooth > 0.56) {
-          const a = Math.min(255, Math.round((tooth - 0.56) * 640));
-          d[idx] = 253; d[idx + 1] = 246; d[idx + 2] = 226; d[idx + 3] = a;
+        if (tooth > 0.51) {
+          const a = Math.min(255, Math.round((tooth - 0.51) * 760));
+          d[idx] = 255; d[idx + 1] = 252; d[idx + 2] = 238; d[idx + 3] = a;
         }
-        if (tooth < 0.42) {
-          const a = Math.min(210, Math.round((0.42 - tooth) * 380));
-          dd[idx] = 42; dd[idx + 1] = 24; dd[idx + 2] = 14; dd[idx + 3] = a;
+        if (tooth < 0.45) {
+          const a = Math.min(230, Math.round((0.45 - tooth) * 440));
+          dd[idx] = 36; dd[idx + 1] = 22; dd[idx + 2] = 10; dd[idx + 3] = a;
         }
-        if (tooth > 0.66) {
-          const a = Math.min(215, Math.round((tooth - 0.66) * 680));
+        if (tooth > 0.62) {
+          const a = Math.min(235, Math.round((tooth - 0.62) * 760));
           od[idx] = 0; od[idx + 1] = 0; od[idx + 2] = 0; od[idx + 3] = a;
         }
       }
@@ -481,9 +482,9 @@
 
     // 4. Glue original Gen-1 crayon sprite directly onto thick die-cut corrugated cardboard!
     return makeCardboardStandeeFromMask(S, S, innerMask, {
-      thickX: opts.thickX ?? 11,
-      thickY: opts.thickY ?? 8,
-      lip: opts.lip ?? 3.8
+      thickX: opts.thickX ?? 14,
+      thickY: opts.thickY ?? 10,
+      lip: opts.lip ?? 4.2
     }, (c) => {
       c.drawImage(spriteCv, 0, 0);
     });
@@ -700,20 +701,20 @@
       c.beginPath();
       c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.lineTo(d[0], d[1]); c.closePath();
 
-      if (tilt > 0.03) {
-        c.fillStyle = `rgba(255, 253, 244, ${Math.min(0.28, tilt * 0.44 * strength)})`;
+      if (tilt > 0.025) {
+        c.fillStyle = `rgba(255, 253, 244, ${Math.min(isColoredSurface ? 0.34 : 0.30, tilt * (isColoredSurface ? 0.54 : 0.46) * strength)})`;
         c.fill();
-      } else if (tilt < -0.03) {
-        c.fillStyle = `rgba(86, 64, 38, ${Math.min(0.16, -tilt * 0.26 * strength)})`;
+      } else if (tilt < -0.025) {
+        c.fillStyle = `rgba(62, 42, 20, ${Math.min(isColoredSurface ? 0.22 : 0.18, -tilt * (isColoredSurface ? 0.36 : 0.28) * strength)})`;
         c.fill();
       }
-      // On colored grass/path: crayon pigment catches slightly denser on ridges & skips lightly in valleys
+      // On colored grass/path: crayon pigment catches denser on ridges & visibly skips in fold valleys
       if (isColoredSurface) {
-        if (ridge > 0.56) {
-          c.fillStyle = `rgba(36, 54, 18, ${Math.min(0.11, (ridge - 0.56) * 0.24 * strength)})`;
+        if (ridge > 0.54) {
+          c.fillStyle = `rgba(30, 48, 14, ${Math.min(0.16, (ridge - 0.54) * 0.34 * strength)})`;
           c.fill();
-        } else if (ridge < 0.40) {
-          c.fillStyle = `rgba(253, 248, 232, ${Math.min(0.18, (0.40 - ridge) * 0.42 * strength)})`;
+        } else if (ridge < 0.43) {
+          c.fillStyle = `rgba(255, 251, 236, ${Math.min(0.24, (0.43 - ridge) * 0.54 * strength)})`;
           c.fill();
         }
       }
@@ -731,15 +732,15 @@
       const my = (pA[1] + pB[1]) * 0.5 + (hash(eSeed, seed + 37) - 0.5) * 6;
 
       // Shadowed fold line
-      c.strokeStyle = `rgba(84, 62, 36, ${(isColoredSurface ? 0.14 : 0.19) * aNorm})`;
-      c.lineWidth = 1.0 + dz * 0.7;
+      c.strokeStyle = `rgba(64, 44, 20, ${(isColoredSurface ? 0.24 : 0.20) * aNorm})`;
+      c.lineWidth = (isColoredSurface ? 1.35 : 1.0) + dz * 0.85;
       c.beginPath(); c.moveTo(pA[0], pA[1]); c.lineTo(mx, my); c.lineTo(pB[0], pB[1]); c.stroke();
 
       // Highlighted ridge / crayon skip over wrinkle
       c.strokeStyle = isColoredSurface
-        ? `rgba(253, 248, 230, ${0.34 * aNorm})`
+        ? `rgba(255, 252, 236, ${0.32 * aNorm})`
         : `rgba(255, 254, 248, ${0.54 * aNorm})`;
-      c.lineWidth = isColoredSurface ? 1.6 : 1.4;
+      c.lineWidth = isColoredSurface ? 1.7 : 1.5;
       c.beginPath();
       c.moveTo(pA[0] + 1.3, pA[1] + 1.2);
       c.lineTo(mx + 1.3, my + 1.2);
