@@ -17,22 +17,50 @@
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
     pointer-events: none; z-index: 10;
   }
-  .pill-group { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .pill-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .pill-group.right { flex-wrap: nowrap; }
   .pill {
     pointer-events: auto;
     background: #fffdf6; color: #24183a;
     border: 2.5px solid #24183a; border-radius: 999px;
-    padding: 5px 12px; font-weight: 900; font-size: 13.5px; line-height: 1.2;
+    padding: 5px 11px; font-weight: 900; font-size: 13px; line-height: 1.2;
     box-shadow: 2px 3px 0 #c9ae86, 2px 3px 0 1px #24183a;
     display: inline-flex; align-items: center; gap: 5px;
     white-space: nowrap;
   }
-  .pill-title .zh-sub { opacity: 0.85; font-size: 12.5px; }
+  .pill-title .zh-sub { opacity: 0.85; font-size: 12px; }
   .pill-gold { background: #fff4bc; }
+  .pill-hp { background: #ffe4e4; gap: 6px; }
+  .hp-mini-bar { width: 52px; height: 9px; border: 2px solid #24183a; border-radius: 999px; background: #fff; overflow: hidden; }
+  .hp-mini-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff5454, #ff9642); transition: width 0.14s ease; }
   .pill-xp { background: #eef8ff; gap: 6px; }
-  .xp-bar { width: 54px; height: 9px; border: 2px solid #24183a; border-radius: 999px; background: #fff; overflow: hidden; }
+  .xp-bar { width: 52px; height: 9px; border: 2px solid #24183a; border-radius: 999px; background: #fff; overflow: hidden; }
   .xp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #4ec6ff, #ffe04a); transition: width 0.16s ease; }
+
+  .boss-bar-wrap {
+    position: fixed; top: max(50px, calc(env(safe-area-inset-top) + 42px)); left: 50%; transform: translateX(-50%);
+    width: min(440px, calc(100% - 24px)); z-index: 11; pointer-events: none;
+    background: #fffdf6; border: 3px solid #24183a; border-radius: 14px;
+    padding: 6px 10px 7px; box-shadow: 3px 4px 0 #c9ae86, 3px 4px 0 1px #24183a;
+  }
+  .boss-bar-wrap.hidden { display: none; }
+  .boss-bar-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12.5px; font-weight: 900; margin-bottom: 4px; color: #24183a;
+  }
+  .boss-skill-tag {
+    background: #ffe066; border: 1.5px solid #24183a; border-radius: 999px;
+    padding: 1px 7px; font-size: 11px; font-weight: 900;
+  }
+  .boss-bar-track {
+    width: 100%; height: 12px; border: 2px solid #24183a; border-radius: 999px;
+    background: #3a2334; overflow: hidden;
+  }
+  .boss-bar-fill {
+    height: 100%; width: 100%; background: linear-gradient(90deg, #ff3e55, #ff8f3a);
+    transition: width 0.1s ease;
+  }
+
   .upg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
   .upg-card {
     cursor: pointer; background: #fffdf6; color: #24183a;
@@ -60,19 +88,10 @@
     position: fixed; bottom: max(10px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
     display: flex; align-items: center; gap: 8px; z-index: 12; pointer-events: none;
   }
-  .mode-btn {
-    pointer-events: auto; cursor: pointer;
-    background: #fffdf6; color: #24183a;
-    border: 2.5px solid #24183a; border-radius: 999px;
-    padding: 6px 13px; font-weight: 900; font-size: 12.5px; white-space: nowrap;
-    box-shadow: 2px 3px 0 #c9ae86, 2px 3px 0 1px #24183a;
-  }
-  .mode-btn.plant { background: #dff5b0; }
-  .mode-btn.move { background: #ffe285; }
   .hint {
     background: rgba(255, 253, 246, 0.94); color: #24183a;
     border: 2.5px solid #24183a; border-radius: 999px;
-    padding: 5px 12px; font-weight: 800; font-size: 12px; white-space: nowrap;
+    padding: 5px 13px; font-weight: 800; font-size: 12px; white-space: nowrap;
     box-shadow: 2px 3px 0 #c9ae86;
   }
 
@@ -94,14 +113,17 @@
     font-size: 18px; font-weight: 900;
   }
 
-
+  .skill-bar {
+    position: fixed; right: 14px; bottom: max(16px, env(safe-area-inset-bottom));
+    display: flex; align-items: flex-end; gap: 9px; z-index: 15;
+  }
   .skill-btn {
-    position: fixed; right: 16px; bottom: max(18px, env(safe-area-inset-bottom));
-    width: 82px; height: 82px; border-radius: 50%;
+    position: relative;
+    width: 76px; height: 76px; border-radius: 50%;
     background: #fffdf6; color: #24183a;
-    border: 3.5px solid #24183a;
+    border: 3px solid #24183a;
     box-shadow: 3px 4px 0 #c9ae86, 3px 4px 0 1px #24183a;
-    cursor: pointer; z-index: 15; padding: 4px;
+    cursor: pointer; padding: 3px;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     overflow: hidden; transition: transform 0.08s ease;
   }
@@ -110,19 +132,26 @@
   .skill-btn:active { transform: translate(1px, 2px); }
   @keyframes skillPulse {
     0%,100% { box-shadow: 3px 4px 0 #c9ae86, 0 0 0 0 rgba(255, 196, 54, 0.55); }
-    50% { box-shadow: 3px 4px 0 #c9ae86, 0 0 0 9px rgba(255, 196, 54, 0); }
+    50% { box-shadow: 3px 4px 0 #c9ae86, 0 0 0 8px rgba(255, 196, 54, 0); }
+  }
+  .skill-lvl-badge {
+    position: absolute; top: 3px; right: 7px; z-index: 2;
+    font-size: 9.5px; font-weight: 900; color: #fff;
+    background: #d94c2c; border: 1.5px solid #24183a; border-radius: 999px;
+    padding: 0 4px; line-height: 1.2;
   }
   .skill-cd-mask {
     position: absolute; inset: 0; border-radius: 50%;
     pointer-events: none; display: none;
     align-items: center; justify-content: center;
-    font-size: 18px; font-weight: 900; color: #24183a;
+    font-size: 16px; font-weight: 900; color: #24183a;
     text-shadow: 0 0 4px #fffdf6, 0 0 4px #fffdf6;
+    z-index: 3;
   }
   .skill-btn.on-cd .skill-cd-mask { display: flex; }
-  .skill-ico { font-size: 25px; line-height: 1.05; position: relative; z-index: 1; }
-  .skill-lbl { font-size: 11px; font-weight: 900; line-height: 1.1; color: #24183a; position: relative; z-index: 1; margin-top: 1px; }
-  .skill-key { font-size: 9.5px; font-weight: 800; color: #5b4875; position: relative; z-index: 1; }
+  .skill-ico { font-size: 23px; line-height: 1.05; position: relative; z-index: 1; }
+  .skill-lbl { font-size: 10.5px; font-weight: 900; line-height: 1.1; color: #24183a; position: relative; z-index: 1; margin-top: 1px; }
+  .skill-key { font-size: 9px; font-weight: 800; color: #5b4875; position: relative; z-index: 1; }
 
   .overlay {
     position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -134,23 +163,23 @@
     background: #fffdf6; color: #24183a;
     border: 4px solid #24183a; border-radius: 24px;
     box-shadow: 5px 6px 0 #c9ae86, 5px 6px 0 2px #24183a;
-    padding: 20px 22px; max-width: 780px; width: 100%; text-align: center;
+    padding: 18px 20px; max-width: 720px; width: 100%; text-align: center;
   }
-  .card h1 { margin: 0 0 6px; font-size: 24px; font-weight: 900; }
-  .card p { margin: 0 0 14px; font-size: 14px; font-weight: 700; color: #4c3b64; line-height: 1.4; }
-  .hero-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; margin-bottom: 6px; }
+  .card h1 { margin: 0 0 6px; font-size: 23px; font-weight: 900; }
+  .card p { margin: 0 0 12px; font-size: 13.5px; font-weight: 700; color: #4c3b64; line-height: 1.4; }
+  .hero-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 4px; }
   .hero-opt {
     cursor: pointer; background: #fffdf8; color: #24183a;
     border: 3px solid #24183a; border-radius: 18px;
-    padding: 10px 8px; text-align: center;
+    padding: 8px 8px; text-align: center;
     box-shadow: 3px 4px 0 #c9ae86;
     transition: transform 0.1s ease, background 0.1s ease;
   }
   .hero-opt:hover { transform: translateY(-2px); background: #fff7d4; }
   .hero-opt:active { transform: translate(1px, 2px); }
-  .hero-thumb { width: 84px; height: 84px; display: block; margin: 0 auto 4px; }
-  .hero-opt .hname { font-size: 14.5px; font-weight: 900; line-height: 1.2; }
-  .hero-opt .hsub { font-size: 11.5px; font-weight: 800; color: #5b4875; margin-top: 3px; }
+  .hero-thumb { width: 74px; height: 74px; display: block; margin: 0 auto 3px; }
+  .hero-opt .hname { font-size: 14px; font-weight: 900; line-height: 1.2; }
+  .hero-opt .hsub { font-size: 11px; font-weight: 800; color: #5b4875; margin-top: 2px; }
   .big-btn {
     display: inline-block; cursor: pointer;
     background: #ffe14a; color: #24183a;
@@ -163,20 +192,22 @@
   @media (max-width: 720px) {
     .hud { left: 8px; right: 8px; gap: 4px; align-items: flex-start; }
     .pill-group { gap: 4px; }
-    .pill { font-size: 11px; padding: 4px 7px; border-width: 2px; }
-    .pill-title .zh-sub { display: none; }
-    .joy-zone { width: 88px; height: 88px; left: 10px; bottom: max(54px, env(safe-area-inset-bottom)); }
-    .joy-knob { width: 38px; height: 38px; font-size: 15px; }
-    .skill-btn { width: 74px; height: 74px; right: 12px; bottom: max(56px, env(safe-area-inset-bottom)); }
+    .pill { font-size: 10.5px; padding: 3.5px 6.5px; border-width: 2px; }
+    .pill-title .zh-sub, .pill-title { display: none; }
+    .joy-zone { width: 84px; height: 84px; left: 10px; bottom: max(22px, env(safe-area-inset-bottom)); }
+    .joy-knob { width: 36px; height: 36px; font-size: 14px; }
+    .skill-bar { right: 10px; bottom: max(22px, env(safe-area-inset-bottom)); gap: 6px; }
+    .skill-btn { width: 64px; height: 64px; }
+    .skill-ico { font-size: 20px; }
+    .skill-lbl { font-size: 9.5px; }
     .skill-key { display: none; }
-    .bottom-bar { width: calc(100% - 16px); justify-content: center; }
-    .hint { display: none; }
+    .bottom-bar { display: none; }
     .hero-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .card { padding: 14px 12px; }
-    .hero-thumb { width: 62px; height: 62px; }
-    .hero-opt .hname { font-size: 12.5px; }
-    .hero-opt .hsub { font-size: 10.5px; }
-    .xp-bar { width: 38px; height: 8px; }
+    .hero-thumb { width: 58px; height: 58px; }
+    .hero-opt .hname { font-size: 12px; }
+    .hero-opt .hsub { font-size: 10px; }
+    .xp-bar, .hp-mini-bar { width: 34px; height: 8px; }
     .upg-grid { grid-template-columns: 1fr; gap: 8px; }
     .upg-card { display: flex; align-items: center; gap: 10px; text-align: left; padding: 9px 11px; }
     .upg-ico { font-size: 24px; margin-bottom: 0; }
@@ -188,48 +219,74 @@
 
 <div class="hud">
   <div class="pill-group">
-    <div class="pill pill-title">🌶️ Pet Pals Defense 2: 3D War <span class="zh-sub">· 萌宠防线 2：3D战争</span></div>
-    <div class="pill" id="hud-wave">Wave 1 / 5</div>
+    <div class="pill pill-title">🌶️ Pet Pals Defense 2 <span class="zh-sub">· 无尽战争</span></div>
+    <div class="pill" id="hud-wave">Wave 1 · 无尽</div>
+    <div class="pill pill-hp" id="hud-hero-hp"><span>HP</span><span class="hp-mini-bar"><span class="hp-mini-fill" id="hero-hp-fill"></span></span><span id="hero-hp-txt">100</span></div>
     <div class="pill pill-gold" id="hud-gold">🪙 60</div>
     <div class="pill pill-xp" id="hud-xp"><span id="xp-lvl">Lv.1</span><span class="xp-bar"><span class="xp-fill" id="xp-fill"></span></span></div>
   </div>
   <div class="pill-group right">
     <div class="pill" id="hud-life">❤️ 1</div>
+    <button class="pill pill-btn" id="btn-mute" type="button" aria-label="Mute">🔊</button>
     <button class="pill pill-btn" id="btn-speed" type="button">1×</button>
     <button class="pill pill-btn" id="btn-reset" type="button">↺</button>
   </div>
+</div>
+
+<div class="boss-bar-wrap hidden" id="boss-bar-wrap">
+  <div class="boss-bar-head">
+    <span id="boss-name">👑 果冻史莱姆王</span>
+    <span class="boss-skill-tag" id="boss-skill-tag">蓄力中</span>
+  </div>
+  <div class="boss-bar-track"><div class="boss-bar-fill" id="boss-bar-fill"></div></div>
 </div>
 
 <div class="joy-zone" id="joy-zone" aria-label="Move Joystick">
   <div class="joy-knob" id="joy-knob">🐾</div>
 </div>
 
-<button class="skill-btn hidden" id="btn-skill" type="button" aria-label="Active Skill">
-  <span class="skill-ico" id="skill-ico">🔥</span>
-  <span class="skill-lbl" id="skill-lbl">火环</span>
-  <span class="skill-key">[Q/空格]</span>
-  <span class="skill-cd-mask" id="skill-cd-mask"></span>
-</button>
+<div class="skill-bar" id="skill-bar">
+  <button class="skill-btn hidden" id="skill-slot-0" type="button" aria-label="Skill 1">
+    <span class="skill-lvl-badge" id="skill-lvl-0">Lv1</span>
+    <span class="skill-ico" id="skill-ico-0">🔥</span>
+    <span class="skill-lbl" id="skill-lbl-0">火环</span>
+    <span class="skill-key">[Q]</span>
+    <span class="skill-cd-mask" id="skill-cd-0"></span>
+  </button>
+  <button class="skill-btn hidden" id="skill-slot-1" type="button" aria-label="Skill 2">
+    <span class="skill-lvl-badge" id="skill-lvl-1">Lv1</span>
+    <span class="skill-ico" id="skill-ico-1">☄️</span>
+    <span class="skill-lbl" id="skill-lbl-1">陨星</span>
+    <span class="skill-key">[E]</span>
+    <span class="skill-cd-mask" id="skill-cd-1"></span>
+  </button>
+  <button class="skill-btn hidden" id="skill-slot-2" type="button" aria-label="Skill 3">
+    <span class="skill-lvl-badge" id="skill-lvl-2">Lv1</span>
+    <span class="skill-ico" id="skill-ico-2">🐉</span>
+    <span class="skill-lbl" id="skill-lbl-2">火墙</span>
+    <span class="skill-key">[R]</span>
+    <span class="skill-cd-mask" id="skill-cd-2"></span>
+  </button>
+</div>
 
 <div class="bottom-bar">
-  <button class="mode-btn plant" id="btn-mode" type="button">🌱 点草地种椒椒鼠 (50🪙)</button>
-  <div class="hint" id="hint">WASD / 摇杆 / 右键自由移动主角 · 点草地种宠物炮台</div>
+  <div class="hint" id="hint">WASD / 摇杆 / 点击草地移动主角 · Q/E/R 或点击技能按钮释放大招 · 无尽生存!</div>
 </div>
 
 <div class="overlay" id="pick-overlay">
   <div class="card">
     <h1>选择你的主角宠物 · Pick Hero</h1>
-    <p>原版一代蜡笔萌宠贴在立体瓦楞纸板上！选一只主角亲自上阵跑动战斗。</p>
+    <p>原版一代萌宠贴在立体瓦楞纸板上！选一只主角亲自跑位、挥剑或释放大招迎战无尽史莱姆大军！</p>
     <div class="hero-grid">
       <button class="hero-opt" data-hero="chili" type="button">
         <canvas class="hero-thumb" width="130" height="130" data-thumb="chili"></canvas>
         <div class="hname">🌶️ 椒椒鼠</div>
-        <div class="hsub">Chili · 火焰蜡笔</div>
+        <div class="hsub">Chili · 火焰连珠</div>
       </button>
       <button class="hero-opt" data-hero="lemon" type="button">
         <canvas class="hero-thumb" width="130" height="130" data-thumb="lemon"></canvas>
         <div class="hname">⚡ 闪电鸡</div>
-        <div class="hsub">Lemon · 极速闪电</div>
+        <div class="hsub">Lemon · 天雷劈击</div>
       </button>
       <button class="hero-opt" data-hero="blueberry" type="button">
         <canvas class="hero-thumb" width="130" height="130" data-thumb="blueberry"></canvas>
@@ -246,6 +303,11 @@
         <div class="hname">🪨 芋岩熊</div>
         <div class="hsub">Taro · 巨岩震击</div>
       </button>
+      <button class="hero-opt" data-hero="chestnut" type="button">
+        <canvas class="hero-thumb" width="130" height="130" data-thumb="chestnut"></canvas>
+        <div class="hname">⚔️ 刺栗剑圣</div>
+        <div class="hsub">Chestnut · 近战剑舞</div>
+      </button>
     </div>
   </div>
 </div>
@@ -260,13 +322,14 @@
 
 <div class="overlay hidden" id="overlay">
   <div class="card">
-    <h1 id="ov-title">You win!</h1>
-    <p id="ov-sub">守住小窝了！</p>
-    <button class="big-btn" id="ov-btn" type="button">Replay / 再玩一次</button>
+    <h1 id="ov-title">Defeat! 💥</h1>
+    <p id="ov-sub">坚持到了第 1 波！</p>
+    <button class="big-btn" id="ov-btn" type="button">Try again / 再试一次</button>
   </div>
 </div>
 
-<script src="paper-craft.js?v=14"></script>
-<script src="game.js?v=14"></script>
+<script src="audio.js?v=17"></script>
+<script src="paper-craft.js?v=17"></script>
+<script src="game.js?v=17"></script>
 </body>
 </html>

@@ -284,42 +284,46 @@
     const alpha = opts.alpha ?? 0.94;
     const dabSize = opts.dabSize ?? Math.max(8, Math.min(24, Math.min(bw, bh) * 0.22));
 
-    // 1. Soft ragged underpaint (2 slightly shifted broken-edge passes — zero ink outline!)
+    // 1. Calm velvety underpaint with softly ragged edges (NO black outline, NO confetti noise!)
+    const mainCol = cols.length > 1 ? cols[Math.min(1, cols.length - 1)] : col;
     if (opts.withBase !== false) {
       for (let pass = 0; pass < 2; pass++) {
         c.save();
-        c.globalAlpha = pass === 0 ? alpha * 0.72 : Math.min(1, alpha + 0.06);
-        const jAmt = pass === 0 ? 3.6 : 1.8;
+        c.globalAlpha = pass === 0 ? alpha * 0.65 : Math.min(1, alpha + 0.06);
+        const jAmt = pass === 0 ? 4.2 : 1.9;
         const jPts = pts.map(([x, y], i) => [
           x + jit(i + pass * 11, seed + 17) * jAmt,
           y + jit(i + pass * 19, seed + 31) * jAmt
         ]);
         tracePoly(c, jPts);
-        c.fillStyle = pass === 0 ? cols[0] : (cols[Math.min(1, cols.length - 1)] || col);
+        c.fillStyle = pass === 0 ? col : mainCol;
         c.fill();
         c.restore();
       }
     }
 
-    // 2. Clipped thick pastel impasto dabs + coarse paper grain inside the blob
+    // 2. Clipped gentle broad pastel strokes + coarse paper grain (calm flat areas, NOT noisy speckles!)
     c.save();
     tracePoly(c, pts);
     c.clip();
 
-    const step = Math.max(5, dabSize * 0.65 / (opts.density ?? 1));
-    const nCols = Math.min(48, Math.ceil(bw / step));
-    const nRows = Math.min(48, Math.ceil(bh / step));
+    const calm = opts.calm !== false;
+    const strokeSize = calm ? Math.max(24, dabSize * 1.9) : dabSize;
+    const step = calm ? Math.max(18, strokeSize * 0.95 / (opts.density ?? 0.8)) : Math.max(5, dabSize * 0.65 / (opts.density ?? 1));
+    const nCols = Math.min(calm ? 22 : 44, Math.ceil(bw / step));
+    const nRows = Math.min(calm ? 22 : 44, Math.ceil(bh / step));
+    const dabAlpha = opts.dabAlpha ?? (calm ? 0.20 : 0.72);
     for (let ry = 0; ry < nRows; ry++) {
       for (let rx = 0; rx < nCols; rx++) {
         const idx = ry * nCols + rx;
-        if (hash(idx, seed + 9) < 0.22) continue;
+        if (hash(idx, seed + 9) < (calm ? 0.35 : 0.22)) continue;
         const px = minX + (rx + 0.15 + hash(idx * 3, seed + 5) * 0.7) * (bw / nCols);
         const py = minY + (ry + 0.15 + hash(idx * 7, seed + 13) * 0.7) * (bh / nRows);
         const cPick = cols[Math.floor(hash(idx, seed + 23) * cols.length)];
-        const ang = (opts.angle ?? -0.45) + (hash(idx, seed + 29) - 0.5) * 0.75;
-        const dw = dabSize * (0.75 + hash(idx, seed + 37) * 0.85);
-        const dh = dabSize * (0.38 + hash(idx, seed + 41) * 0.42);
-        dabStroke(c, px, py, dw, dh, ang, cPick, alpha * (0.55 + hash(idx, seed + 43) * 0.38), seed + idx);
+        const ang = (opts.angle ?? -0.45) + (hash(idx, seed + 29) - 0.5) * 0.45;
+        const dw = strokeSize * (0.90 + hash(idx, seed + 37) * 0.85);
+        const dh = strokeSize * (0.42 + hash(idx, seed + 41) * 0.36);
+        dabStroke(c, px, py, dw, dh, ang, cPick, alpha * dabAlpha * (0.65 + hash(idx, seed + 43) * 0.35), seed + idx);
       }
     }
 
@@ -356,14 +360,14 @@
       for (let i = 0; i < pts.length; i += perimStep) {
         const p0 = pts[i], p1 = pts[(i + 1) % pts.length];
         const ang = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]) + (hash(i, seed + 101) - 0.5) * 0.65;
-        const cPick = cols[Math.floor(hash(i, seed + 107) * cols.length)];
-        const ox = (hash(i, seed + 113) - 0.5) * dabSize * 0.45;
-        const oy = (hash(i, seed + 127) - 0.5) * dabSize * 0.45;
+        const cPick = hash(i, seed + 107) > 0.35 ? mainCol : col;
+        const ox = (hash(i, seed + 113) - 0.5) * dabSize * 0.35;
+        const oy = (hash(i, seed + 127) - 0.5) * dabSize * 0.35;
         dabStroke(
           c, p0[0] + ox, p0[1] + oy,
-          dabSize * (0.62 + hash(i, seed + 131) * 0.65),
-          dabSize * (0.34 + hash(i, seed + 137) * 0.34),
-          ang, cPick, alpha * (0.58 + hash(i, seed + 139) * 0.34), seed + i * 3
+          dabSize * (0.72 + hash(i, seed + 131) * 0.65),
+          dabSize * (0.32 + hash(i, seed + 137) * 0.28),
+          ang, cPick, alpha * (0.62 + hash(i, seed + 139) * 0.30), seed + i * 3
         );
       }
     }
@@ -699,10 +703,10 @@
           }
         }
 
-        // Soften pure black/near-black outlines to warm darker pastel stroke (never crisp #000 digital ink!)
-        if (lum < 78) {
-          // Sample neighbor interior color (3px inward) to tint outline toward warm darker same-hue pastel
-          let nr = 84, ng = 52, nb = 42, cnt = 0;
+        // ONLY soften true neutral dark ink outlines (low luminance AND low saturation — NEVER dark vivid colors like Blueberry Owl!)
+        const sat = Math.max(r, g, b) - Math.min(r, g, b);
+        if (lum < 56 && sat < 38) {
+          let nr = 72, ng = 48, nb = 42, cnt = 0;
           for (let oy = -3; oy <= 3; oy += 3) {
             for (let ox = -3; ox <= 3; ox += 3) {
               const nx = x + ox, ny = y + oy;
@@ -710,29 +714,28 @@
               const nIdx = (ny * S + nx) * 4;
               if (copyPx[nIdx + 3] > 180) {
                 const nl = copyPx[nIdx] * 0.299 + copyPx[nIdx + 1] * 0.587 + copyPx[nIdx + 2] * 0.114;
-                if (nl > 90) {
+                if (nl > 75) {
                   nr += copyPx[nIdx]; ng += copyPx[nIdx + 1]; nb += copyPx[nIdx + 2]; cnt++;
                 }
               }
             }
           }
           if (cnt > 0) { nr /= (cnt + 1); ng /= (cnt + 1); nb /= (cnt + 1); }
-          const grain = (hash(x * 7 + y * 5, seedBase + 41) - 0.5) * 24;
-          px[idx]     = Math.max(38, Math.min(255, Math.round(r * 0.42 + nr * 0.36 + 26 + grain)));
-          px[idx + 1] = Math.max(24, Math.min(255, Math.round(g * 0.42 + ng * 0.32 + 16 + grain)));
-          px[idx + 2] = Math.max(20, Math.min(255, Math.round(b * 0.42 + nb * 0.28 + 14 + grain)));
-          // Subtle pastel dry-stroke grain along outlines
-          if (hash(x * 13 + y * 17, seedBase + 53) < 0.22) {
-            px[idx + 3] = Math.round(px[idx + 3] * 0.78);
+          const grain = (hash(x * 7 + y * 5, seedBase + 41) - 0.5) * 16;
+          px[idx]     = Math.max(36, Math.min(255, Math.round(r * 0.52 + nr * 0.30 + 18 + grain)));
+          px[idx + 1] = Math.max(24, Math.min(255, Math.round(g * 0.52 + ng * 0.28 + 12 + grain)));
+          px[idx + 2] = Math.max(22, Math.min(255, Math.round(b * 0.52 + nb * 0.28 + 12 + grain)));
+          if (hash(x * 13 + y * 17, seedBase + 53) < 0.20) {
+            px[idx + 3] = Math.round(px[idx + 3] * 0.80);
           }
         } else {
-          // Subtle warm paper mottling & pastel pigment variation inside body fills (preserving design & colours!)
-          const macro = (Math.sin(x * 0.14 + y * 0.11 + seedBase) + Math.cos(x * 0.09 - y * 0.13)) * 7.5;
-          const micro = (hash(x * 5 + y * 9, seedBase + 71) - 0.5) * 18;
+          // Very light pastel pigment mottling preserving exact original sprite hue & brightness!
+          const macro = (Math.sin(x * 0.14 + y * 0.11 + seedBase) + Math.cos(x * 0.09 - y * 0.13)) * 3.5;
+          const micro = (hash(x * 5 + y * 9, seedBase + 71) - 0.5) * 9;
           const delta = macro + micro;
-          px[idx]     = Math.max(0, Math.min(255, Math.round(r + delta * 1.05)));
-          px[idx + 1] = Math.max(0, Math.min(255, Math.round(g + delta * 0.98)));
-          px[idx + 2] = Math.max(0, Math.min(255, Math.round(b + delta * 0.90)));
+          px[idx]     = Math.max(0, Math.min(255, Math.round(r + delta)));
+          px[idx + 1] = Math.max(0, Math.min(255, Math.round(g + delta)));
+          px[idx + 2] = Math.max(0, Math.min(255, Math.round(b + delta)));
         }
       }
     }
@@ -756,21 +759,21 @@
       if (copyPx[pIdx + 3] < 160) continue;
       const pr = copyPx[pIdx], pg = copyPx[pIdx + 1], pb = copyPx[pIdx + 2];
       const lum = pr * 0.299 + pg * 0.587 + pb * 0.114;
-      if (lum < 85) continue; // keep eyes/outlines crisp and readable!
-      const shift = (si % 2 === 0 ? 22 : -18);
-      const cStr = `rgb(${Math.max(0, Math.min(255, pr + shift))},${Math.max(0, Math.min(255, pg + shift))},${Math.max(0, Math.min(255, pb + Math.round(shift * 0.85)))})`;
-      // Angle loosely follows radial/contour tangent of the pet form
+      const sat = Math.max(pr, pg, pb) - Math.min(pr, pg, pb);
+      if (lum < 56 && sat < 38) continue; // keep eyes/outlines crisp and readable!
+      const shift = (si % 2 === 0 ? 14 : -10);
+      const cStr = `rgb(${Math.max(0, Math.min(255, pr + shift))},${Math.max(0, Math.min(255, pg + shift))},${Math.max(0, Math.min(255, pb + shift))})`;
       const formAng = Math.atan2(ry - cyBody, rx - cxBody) + Math.PI * 0.5 + (hash(si, seedBase + 113) - 0.5) * 0.45;
-      dabStroke(oc, rx, ry, 10 + hash(si, seedBase + 127) * 10, 4.2 + hash(si, seedBase + 131) * 2.8, formAng, cStr, 0.34, seedBase + si);
+      dabStroke(oc, rx, ry, 10 + hash(si, seedBase + 127) * 9, 4.0 + hash(si, seedBase + 131) * 2.4, formAng, cStr, 0.22, seedBase + si);
     }
 
-    // Visible paper-grain tooth (warm cream paper specks showing through) + subtle dark wax clumps
+    // Visible paper-grain tooth (warm cream paper specks showing through — minimal darkening!)
     oc.save();
     oc.translate((seedBase * 23) % 192, (seedBase * 41) % 192);
-    oc.globalAlpha = 0.52;
+    oc.globalAlpha = 0.40;
     oc.fillStyle = oc.createPattern(toothPatCanvas, "repeat");
     oc.fillRect(-200, -200, S + 400, S + 400);
-    oc.globalAlpha = 0.24;
+    oc.globalAlpha = 0.08;
     oc.fillStyle = oc.createPattern(darkGrainCanvas, "repeat");
     oc.fillRect(-200, -200, S + 400, S + 400);
     oc.restore();
@@ -783,7 +786,7 @@
       const ix = Math.max(0, Math.min(S - 1, Math.round(tx)));
       const iy = Math.max(0, Math.min(S - 1, Math.round(ty)));
       const pIdx = (iy * S + ix) * 4;
-      if (copyPx[pIdx + 3] > 180 && (copyPx[pIdx] * 0.3 + copyPx[pIdx + 1] * 0.59 + copyPx[pIdx + 2] * 0.11) > 95) {
+      if (copyPx[pIdx + 3] > 180 && ((copyPx[pIdx] * 0.3 + copyPx[pIdx + 1] * 0.59 + copyPx[pIdx + 2] * 0.11) > 72 || (Math.max(copyPx[pIdx], copyPx[pIdx+1], copyPx[pIdx+2]) - Math.min(copyPx[pIdx], copyPx[pIdx+1], copyPx[pIdx+2])) > 45)) {
         oc.globalAlpha = 0.26 + hash(ti, seedBase + 163) * 0.28;
         oc.fillRect(tx, ty, 1.5, 1.3);
       }
@@ -829,13 +832,13 @@
     const cx = S * 0.5, by = S - 24;
     const layers = {};
 
-    // 1. World props: Thick Oil-Pastel / Crayon Painterly Style (chunky dabbed strokes, NO black outlines!)
+    // 1. World props: v10 Colours & Subjects painted with Thick Oil-Pastel Brushstrokes (dabbed foliage, zero black outlines!)
     const treeOuter = sampleSmoothLoop([
-      [cx - 15, by], [cx - 12, by - 62],
-      [cx - 48, by - 68], [cx - 72, by - 98], [cx - 74, by - 134], [cx - 54, by - 166],
-      [cx - 20, by - 182], [cx + 12, by - 184], [cx + 46, by - 168],
-      [cx + 72, by - 136], [cx + 70, by - 96], [cx + 46, by - 68],
-      [cx + 14, by - 62], [cx + 16, by]
+      [cx - 17, by], [cx - 14, by - 66],
+      [cx - 42, by - 68], [cx - 66, by - 92], [cx - 72, by - 122], [cx - 58, by - 154],
+      [cx - 28, by - 174], [cx, by - 180], [cx + 28, by - 174],
+      [cx + 58, by - 154], [cx + 72, by - 122], [cx + 66, by - 92], [cx + 42, by - 68],
+      [cx + 15, by - 66], [cx + 18, by]
     ], 4);
 
     layers.tree = [{
@@ -845,68 +848,76 @@
       }, (c) => {
         // Warm brown trunk & forked branches (NO black outline!)
         const trunkPts = sampleSmoothLoop([
-          [cx - 16, by + 2], [cx - 13, by - 78], [cx - 32, by - 110], [cx - 22, by - 114],
-          [cx - 4, by - 84], [cx + 6, by - 84], [cx + 26, by - 112], [cx + 34, by - 106],
-          [cx + 14, by - 76], [cx + 17, by + 2]
+          [cx - 18, by + 2], [cx - 14, by - 78], [cx - 30, by - 108], [cx - 20, by - 112],
+          [cx - 4, by - 84], [cx + 6, by - 84], [cx + 24, by - 110], [cx + 32, by - 104],
+          [cx + 14, by - 76], [cx + 19, by + 2]
         ], 3);
-        fillOilPastel(c, trunkPts, "#7c4d32", 601, {
-          cols: ["#54301d", "#7c4d32", "#9e6948"], dabSize: 11, toothAlpha: 0.34
+        fillOilPastel(c, trunkPts, "#925a32", 601, {
+          cols: ["#6e4020", "#925a32", "#b27648"], dabSize: 10, dabAlpha: 0.35, toothAlpha: 0.32, calm: true
         });
 
-        // Rich solid mauve / pink-purple foliage base + clusters of overlapping dabbed oil-pastel strokes!
+        // Bright Green Tree Canopy built from clusters of dabbed oil-pastel strokes (v10 greens, NO black outline!)
         const crownPts = sampleSmoothLoop([
-          [cx - 48, by - 68], [cx - 74, by - 98], [cx - 76, by - 134], [cx - 56, by - 168],
-          [cx - 20, by - 184], [cx + 12, by - 186], [cx + 48, by - 168],
-          [cx + 74, by - 136], [cx + 72, by - 96], [cx + 46, by - 68], [cx, by - 60]
+          [cx - 44, by - 68], [cx - 68, by - 94], [cx - 74, by - 124], [cx - 58, by - 156],
+          [cx - 28, by - 176], [cx, by - 182], [cx + 28, by - 176],
+          [cx + 58, by - 156], [cx + 74, by - 124], [cx + 68, by - 94], [cx + 44, by - 68], [cx, by - 62]
         ], 4);
-        fillOilPastel(c, crownPts, "#b8567c", 604, {
-          cols: ["#7a3052", "#b8567c", "#d87d9e"], dabSize: 18, toothAlpha: 0.28, edgeBleed: true
+        fillOilPastel(c, crownPts, "#5cb43e", 604, {
+          cols: ["#3d8c28", "#5cb43e", "#7dd24f"], dabSize: 18, dabAlpha: 0.25, toothAlpha: 0.26, edgeBleed: true, calm: true
         });
-        const mauvePal = { shadow: "#7a3052", mid: "#c8658b", light: "#e594b1", accent: "#f5bacb" };
-        dabPastelCluster(c, cx - 22, by - 116, 46, 36, mauvePal, 610, { count: 48, dabSize: 16 });
-        dabPastelCluster(c, cx + 22, by - 118, 46, 36, mauvePal, 625, { count: 48, dabSize: 16 });
-        dabPastelCluster(c, cx - 2, by - 144, 50, 38, mauvePal, 640, { count: 56, dabSize: 16 });
-        dabPastelCluster(c, cx - 26, by - 154, 28, 20, { shadow: "#c8658b", mid: "#e89cb6", light: "#f7c4d4", accent: "#ffd6e1" }, 655, { count: 24, dabSize: 13 });
-        dabPastelCluster(c, cx + 16, by - 88, 36, 16, { shadow: "#622240", mid: "#7a3052", light: "#9e446a" }, 668, { count: 22, dabSize: 13 });
+        const greenPal = { shadow: "#367f22", mid: "#5cb43e", light: "#8ae05a", accent: "#a4ee72" };
+        dabPastelCluster(c, cx - 22, by - 114, 44, 34, greenPal, 610, { count: 42, dabSize: 15 });
+        dabPastelCluster(c, cx + 22, by - 116, 44, 34, greenPal, 625, { count: 42, dabSize: 15 });
+        dabPastelCluster(c, cx, by - 142, 48, 36, greenPal, 640, { count: 48, dabSize: 15 });
+        dabPastelCluster(c, cx - 22, by - 148, 28, 18, { shadow: "#5cb43e", mid: "#8ae05a", light: "#a8f078" }, 655, { count: 20, dabSize: 12 });
+        dabPastelCluster(c, cx + 16, by - 88, 34, 14, { shadow: "#2d6a1a", mid: "#3d8c28", light: "#52a336" }, 668, { count: 18, dabSize: 12 });
+
+        // Bright red oil-pastel apple + green leaf (NO black outline!)
+        fillOilPastel(c, makeEllipsePts(cx - 2, by - 122, 16, 15, 16, 607), "#e83424", 607, {
+          cols: ["#b82014", "#e83424", "#ff684a"], dabSize: 9, dabAlpha: 0.30, toothAlpha: 0.25, edgeBleed: true
+        });
+        dabStroke(c, cx - 6, by - 128, 7, 4.5, -0.5, "#ff9e82", 0.85, 608);
+        dabStroke(c, cx - 1, by - 140, 10, 3.5, 1.45, "#5c341a", 0.90, 609);
+        dabStroke(c, cx + 8, by - 143, 13, 6.5, -0.35, "#66c844", 0.92, 611);
       })
     }];
 
     const bushOuter = sampleSmoothLoop([
-      [cx - 60, by - 10], [cx - 66, by - 38], [cx - 42, by - 66], [cx - 10, by - 74],
-      [cx + 20, by - 74], [cx + 50, by - 62], [cx + 66, by - 34], [cx + 56, by - 10], [cx, by - 4]
+      [cx - 60, by - 12], [cx - 66, by - 36], [cx - 44, by - 66], [cx - 12, by - 74],
+      [cx + 16, by - 74], [cx + 48, by - 64], [cx + 66, by - 34], [cx + 58, by - 12], [cx, by - 6]
     ], 4);
     layers.bush = [{
       zOff: 0,
       cv: makeCardboardSlab(S, S, bushOuter, {
         thickX: 9, thickY: 6, lip: 0.5, seed: 701, outerOl: false, unclippedDabs: true, pastelProp: true
       }, (c) => {
-        // Deep teal-green foliage built from solid pastel body + clustered dabbed strokes (NO black outline!)
-        fillOilPastel(c, bushOuter, "#2c6b5a", 700, {
-          cols: ["#1a473d", "#2c6b5a", "#458d75"], dabSize: 16, toothAlpha: 0.28, edgeBleed: true
+        // Bright green oil-pastel bush built from dab clusters + pink & yellow flowers (NO black outline!)
+        fillOilPastel(c, bushOuter, "#54ad38", 700, {
+          cols: ["#3a8824", "#54ad38", "#85de56"], dabSize: 16, dabAlpha: 0.25, toothAlpha: 0.26, edgeBleed: true, calm: true
         });
-        const tealPal = { shadow: "#1b493f", mid: "#2e6f5e", light: "#4b957c", accent: "#6ab393" };
-        dabPastelCluster(c, cx - 20, by - 36, 40, 28, tealPal, 701, { count: 44, dabSize: 14 });
-        dabPastelCluster(c, cx + 18, by - 34, 40, 27, tealPal, 715, { count: 44, dabSize: 14 });
-        dabPastelCluster(c, cx, by - 50, 36, 24, tealPal, 728, { count: 36, dabSize: 13 });
-        // Yellow flower clumps & tiny coral-pink blossoms nestled in the foliage
-        dabPastelCluster(c, cx - 22, by - 44, 12, 9, { shadow: "#d49b24", mid: "#f6d458", light: "#ffe98c" }, 740, { count: 10, dabSize: 7 });
-        dabPastelCluster(c, cx + 20, by - 32, 11, 8, { shadow: "#d49b24", mid: "#f6d458", light: "#ffe98c" }, 745, { count: 9, dabSize: 7 });
-        dabPastelCluster(c, cx + 2, by - 52, 8, 6, { shadow: "#c86882", mid: "#ea92a8", light: "#f8b8c8" }, 750, { count: 6, dabSize: 6 });
+        const bushPal = { shadow: "#347b20", mid: "#54ad38", light: "#85de56", accent: "#a2eb70" };
+        dabPastelCluster(c, cx - 20, by - 36, 38, 26, bushPal, 701, { count: 38, dabSize: 13 });
+        dabPastelCluster(c, cx + 18, by - 34, 38, 25, bushPal, 715, { count: 38, dabSize: 13 });
+        dabPastelCluster(c, cx, by - 50, 34, 22, bushPal, 728, { count: 32, dabSize: 12 });
+        dabPastelCluster(c, cx - 20, by - 42, 10, 8, { shadow: "#df5c96", mid: "#ff84ba", light: "#ffb2d4" }, 740, { count: 7, dabSize: 6.5 });
+        dabPastelCluster(c, cx + 18, by - 32, 10, 8, { shadow: "#deb628", mid: "#ffe24e", light: "#fff08e" }, 745, { count: 7, dabSize: 6.5 });
       })
     }];
 
-    const rockOuter = sampleSmoothLoop([[cx - 56, by], [cx - 42, by - 54], [cx + 8, by - 64], [cx + 54, by - 26], [cx + 46, by + 2]], 4);
+    const rockOuter = sampleSmoothLoop([[cx - 56, by], [cx - 42, by - 56], [cx + 10, by - 66], [cx + 54, by - 26], [cx + 46, by + 2]], 4);
     layers.rock = [{
       zOff: 0,
       cv: makeCardboardSlab(S, S, rockOuter, {
         thickX: 9, thickY: 6, lip: 0.5, seed: 720, outerOl: false, unclippedDabs: true, pastelProp: true
       }, (c) => {
-        // Warm pink / rose-terracotta stone slabs (NO black outline!)
-        fillOilPastel(c, rockOuter, "#d88492", 720, {
-          cols: ["#9e4c5e", "#c87080", "#e298a4", "#efbcc4"], dabSize: 13, toothAlpha: 0.42
+        // Gray oil-pastel stone with warm highlight & moss touch (v10 palette, NO black outline!)
+        fillOilPastel(c, rockOuter, "#9a9184", 720, {
+          cols: ["#756d62", "#9a9184", "#beb5a8"], dabSize: 18, dabAlpha: 0.24, toothAlpha: 0.34, edgeBleed: true, calm: true
         });
-        dabPastelCluster(c, cx - 12, by - 36, 26, 16, { shadow: "#d88492", mid: "#ebaab4", light: "#f6cdd4" }, 723, { count: 14, dabSize: 10 });
-        dabPastelCluster(c, cx + 22, by - 14, 20, 10, { shadow: "#235449", mid: "#357463", light: "#4b9179" }, 726, { count: 12, dabSize: 8 });
+        fillOilPastel(c, sampleSmoothLoop([[cx - 34, by - 16], [cx - 24, by - 50], [cx + 16, by - 54], [cx + 28, by - 24]], 3), "#d4cabd", 721, {
+          cols: ["#beb5a8", "#d4cabd", "#e4dcd0"], dabSize: 12, dabAlpha: 0.22, toothAlpha: 0.28, edgeBleed: true, calm: true
+        });
+        dabPastelCluster(c, cx + 22, by - 12, 18, 9, { shadow: "#5c7040", mid: "#7a8c58", light: "#98ab72" }, 722, { count: 10, dabSize: 8 });
       })
     }];
 
@@ -922,12 +933,11 @@
       }, (c) => {
         const signPost = sampleSmoothLoop([[cx - 8, by], [cx - 7, by - 60], [cx + 8, by - 60], [cx + 8, by]], 3);
         const signBoard = sampleSmoothLoop([[cx - 42, by - 94], [cx + 28, by - 96], [cx + 54, by - 74], [cx + 28, by - 52], [cx - 42, by - 54]], 3);
-        fillOilPastel(c, signPost, "#7c4d32", 740, { cols: ["#5a331e", "#7c4d32", "#9c6644"], dabSize: 9, toothAlpha: 0.36 });
-        fillOilPastel(c, signBoard, "#e08a4e", 741, { cols: ["#c06834", "#e08a4e", "#f0ad70"], dabSize: 11, toothAlpha: 0.38 });
-        // Warm burnt-umber arrow dab (no black outline)
-        dabStroke(c, cx - 2, by - 74, 34, 6, 0, "#7c3f1d", 0.90, 742);
-        dabStroke(c, cx + 18, by - 78, 14, 5, 0.65, "#7c3f1d", 0.90, 743);
-        dabStroke(c, cx + 18, by - 70, 14, 5, -0.65, "#7c3f1d", 0.90, 744);
+        fillOilPastel(c, signPost, "#966034", 740, { cols: ["#744622", "#966034", "#b47a4a"], dabSize: 9, dabAlpha: 0.26, toothAlpha: 0.30, calm: true });
+        fillOilPastel(c, signBoard, "#f2c468", 741, { cols: ["#d8a446", "#f2c468", "#fae08e"], dabSize: 12, dabAlpha: 0.24, toothAlpha: 0.30, calm: true });
+        dabStroke(c, cx - 2, by - 74, 34, 5.5, 0, "#7a441e", 0.88, 742);
+        dabStroke(c, cx + 18, by - 78, 14, 4.5, 0.65, "#7a441e", 0.88, 743);
+        dabStroke(c, cx + 18, by - 70, 14, 4.5, -0.65, "#7a441e", 0.88, 744);
       })
     }];
 
@@ -947,16 +957,16 @@
       cv: makeCardboardSlab(S, S, fenceOuter, {
         thickX: 8, thickY: 6, lip: 0.5, seed: 760, outerOl: false, unclippedDabs: true, pastelProp: true
       }, (c) => {
-        fillOilPastel(c, sampleSmoothLoop([[cx - 84, by - 36], [cx + 84, by - 38], [cx + 84, by - 20], [cx - 84, by - 20]], 2), "#a8643a", 760, {
-          cols: ["#7d4422", "#a8643a", "#c88254"], dabSize: 10, toothAlpha: 0.36
+        fillOilPastel(c, sampleSmoothLoop([[cx - 84, by - 36], [cx + 84, by - 38], [cx + 84, by - 20], [cx - 84, by - 20]], 2), "#cc904c", 760, {
+          cols: ["#a46c32", "#cc904c", "#dfaa64"], dabSize: 10, dabAlpha: 0.26, toothAlpha: 0.30, calm: true
         });
-        fillOilPastel(c, sampleSmoothLoop([[cx - 84, by - 68], [cx + 84, by - 68], [cx + 84, by - 52], [cx - 84, by - 52]], 2), "#c67c4c", 761, {
-          cols: ["#94542c", "#c67c4c", "#df9a68"], dabSize: 10, toothAlpha: 0.36
+        fillOilPastel(c, sampleSmoothLoop([[cx - 84, by - 68], [cx + 84, by - 68], [cx + 84, by - 52], [cx - 84, by - 52]], 2), "#dfaa64", 761, {
+          cols: ["#b87c3c", "#dfaa64", "#f0c480"], dabSize: 10, dabAlpha: 0.26, toothAlpha: 0.30, calm: true
         });
         [-60, -20, 20, 60].forEach((px, idx) => {
           const pPts = sampleSmoothLoop([[cx + px - 10, by], [cx + px - 9, by - 72], [cx + px, by - 88], [cx + px + 9, by - 72], [cx + px + 10, by]], 2);
-          fillOilPastel(c, pPts, "#d9925a", 770 + idx, {
-            cols: ["#a66338", "#d9925a", "#ebb47e"], dabSize: 9, toothAlpha: 0.36
+          fillOilPastel(c, pPts, "#f0c480", 770 + idx, {
+            cols: ["#cc924c", "#f0c480", "#f8d89c"], dabSize: 10, dabAlpha: 0.26, toothAlpha: 0.30, calm: true
           });
         });
       })
@@ -969,9 +979,17 @@
       ["blueberry", "assets/pets/blueberry-1.webp", { maxW: 168, maxH: 184 }],
       ["coco",      "assets/pets/coco-1.webp",      { maxW: 170, maxH: 184 }],
       ["taro",      "assets/pets/taro-1.webp",      { maxW: 172, maxH: 188 }],
+      ["chestnut",  "assets/pets/chestnut-1.webp",  { maxW: 174, maxH: 190 }],
       ["z1",        "assets/enemies/z-1.webp",      { maxW: 158, maxH: 182 }],
       ["z2",        "assets/enemies/z-2.webp",      { maxW: 158, maxH: 182 }],
       ["z3",        "assets/enemies/z-3.webp",      { maxW: 162, maxH: 194 }],
+      ["z4",        "assets/enemies/z-4.webp",      { maxW: 162, maxH: 192 }],
+      ["z5",        "assets/enemies/z-5.webp",      { maxW: 168, maxH: 194 }],
+      ["z6",        "assets/enemies/z-6.webp",      { maxW: 164, maxH: 194 }],
+      ["b1",        "assets/enemies/b-1.webp",      { maxW: 184, maxH: 204 }],
+      ["b2",        "assets/enemies/b-2.webp",      { maxW: 186, maxH: 204 }],
+      ["b3",        "assets/enemies/b-3.webp",      { maxW: 186, maxH: 204 }],
+      ["b4",        "assets/enemies/b-4.webp",      { maxW: 186, maxH: 204 }],
       ["egg",       "assets/fx/hen-egg.webp",       { maxW: 164, maxH: 178 }]
     ];
 
