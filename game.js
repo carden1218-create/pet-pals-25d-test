@@ -7,7 +7,7 @@
   const PET_COST = 50;
 
   const {
-    hash, jit, sampleSmoothLoop, makeEllipsePts, tracePoly, fillWaxCrayon, buildCardboardStandees
+    hash, jit, sampleSmoothLoop, makeEllipsePts, tracePoly, fillWaxCrayon, buildCardboardStandees, whenReady
   } = window.PaperCraft;
 
   const PATH = [
@@ -680,17 +680,20 @@
     const sxScale = 1 + squash * 0.16;
     const syScale = 1 / (1 + squash * 0.12);
     const camOffX = (sx - W * 0.5) / W;
+    const treeRock = swaySeed ? Math.sin(simTime * 1.8 + swaySeed) * 0.025 : 0;
+    const totTilt = tilt + treeRock;
+    // Subtle 3D perspective turn/foreshortening as standee moves or leans
+    const turnScale = 1 - Math.min(0.10, Math.abs(totTilt) * 0.45);
 
     for (let i = 0; i < arr.length; i++) {
       const L = arr[i];
-      const sway = swaySeed && i > 0 ? Math.sin(simTime * 2.2 + swaySeed + i * 0.9) * (i * 1.4) : 0;
-      const dx = camOffX * L.zOff * hPx * 1.0 + sway;
+      const dx = camOffX * L.zOff * hPx * 1.0;
       const dy = -L.zOff * hPx * 0.36;
 
       c.save();
       c.translate(sx + dx, sy + dy);
-      if (tilt) c.rotate(tilt);
-      c.scale(facing * sxScale, syScale);
+      if (totTilt) c.rotate(totTilt);
+      c.scale(facing * sxScale * turnScale, syScale);
       if (i > 0) {
         c.shadowColor = "rgba(44, 24, 10, 0.44)";
         c.shadowOffsetX = 4.0;
@@ -1176,6 +1179,7 @@
   };
 
   renderHeroThumbs();
+  whenReady(() => renderHeroThumbs());
   updateLayout();
   openHeroPicker();
   requestAnimationFrame(loop);

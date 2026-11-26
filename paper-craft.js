@@ -2,7 +2,6 @@
   "use strict";
 
   const TAU = Math.PI * 2;
-  // Warm dark charcoal-umber crayon outline (just like Gen-1!)
   const OL = "#2d202d";
 
   function hash(a, b) {
@@ -15,7 +14,6 @@
   function jit(i, s) { return hash(i * 7 + 3, s * 13 + 1) - 0.5; }
   function lerp(a, b, t) { return a + (b - a) * t; }
 
-  // Smooth Catmull-Rom closed loop sampling -> cute organic silhouettes
   function sampleSmoothLoop(ctrlPts, stepsPerSeg = 6) {
     const n = ctrlPts.length;
     const out = [];
@@ -113,17 +111,14 @@
         const n3 = hash(x * 13 + y * 97, 73);
         const tooth = n1 * 0.30 + n2 * 0.42 + n3 * 0.28;
 
-        // Warm cream paper tooth speckles peeking through wax
         if (tooth > 0.62) {
           const a = Math.min(255, Math.round((tooth - 0.62) * 560));
           d[idx] = 252; d[idx + 1] = 245; d[idx + 2] = 225; d[idx + 3] = a;
         }
-        // Rich darker wax pigment clumps
         if (tooth < 0.36) {
           const a = Math.min(185, Math.round((0.36 - tooth) * 320));
           dd[idx] = 35; dd[idx + 1] = 20; dd[idx + 2] = 15; dd[idx + 3] = a;
         }
-        // Subtle knockout speckles for textured hand-drawn crayon outlines
         if (tooth > 0.72) {
           const a = Math.min(200, Math.round((tooth - 0.72) * 650));
           od[idx] = 0; od[idx + 1] = 0; od[idx + 2] = 0; od[idx + 3] = a;
@@ -135,7 +130,6 @@
     oc.putImageData(imgO, 0, 0);
   }
 
-  // Soft textured hand-drawn wax crayon outline (rough waxy grain, NOT sterile vector ink!)
   function strokeWaxCrayon(c, pts, col = OL, lw = 4.2, seed = 1, closed = true) {
     if (lw <= 0) return;
     ensureToothTextures();
@@ -157,20 +151,17 @@
     g.lineJoin = "round";
     g.lineCap = "round";
 
-    // Primary waxy stroke
     tracePoly(g, pts, closed);
     g.strokeStyle = col;
     g.lineWidth = lw;
     g.globalAlpha = 0.92;
     g.stroke();
 
-    // Soft crumbly secondary wax-drag pass
-    tracePoly(g, pts.map(([x, y], i) => [x + jit(i, seed + 17) * 1.5, y + jit(i + 5, seed + 31) * 1.5]), closed);
+    tracePoly(g, pts.map(([x, y], i) => [x + jit(i, seed + 17) * 1.4, y + jit(i + 5, seed + 31) * 1.4]), closed);
     g.lineWidth = lw * 0.72;
-    g.globalAlpha = 0.48;
+    g.globalAlpha = 0.45;
     g.stroke();
 
-    // Break outline with paper-tooth speckles so it reads as real wax crayon on textured paper
     g.save();
     g.globalCompositeOperation = "destination-out";
     g.globalAlpha = 0.78;
@@ -183,7 +174,6 @@
     c.drawImage(sc, ox, oy);
   }
 
-  // Real Continuous Wax Crayon Fill (ONE continuous coloring pass, grainy paper-tooth speckles, NO stripes!)
   function fillWaxCrayon(c, pts, col, seed, opts = {}) {
     ensureToothTextures();
     let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
@@ -197,18 +187,15 @@
     tracePoly(c, pts);
     c.clip();
 
-    // Optional paper-tooth base (skip when layering soft crayon patches directly on an already-colored body!)
     if (opts.withBase !== false) {
       c.fillStyle = opts.toothCol || "#fbf4e0";
       c.fillRect(minX - 4, minY - 4, w + 8, h + 8);
     }
 
-    // Continuous waxy crayon fill
     c.globalAlpha = opts.coverage ?? 0.92;
     c.fillStyle = col;
     c.fillRect(minX - 4, minY - 4, w + 8, h + 8);
 
-    // Gentle organic pressure shading (warm top highlight -> soft underside depth)
     if (opts.shade !== false) {
       const cx = minX + w * (0.38 + hash(seed, 3) * 0.24);
       const cy = minY + h * (0.30 + hash(seed, 7) * 0.22);
@@ -221,7 +208,6 @@
       c.fillRect(minX - 4, minY - 4, w + 8, h + 8);
     }
 
-    // Paper-tooth speckle knockouts + dark wax pigment clumps (NO stripes!)
     const patLight = c.createPattern(toothPatCanvas, "repeat");
     const patDark = c.createPattern(darkGrainCanvas, "repeat");
     c.save();
@@ -234,7 +220,6 @@
     c.fillRect(minX - 200, minY - 200, w + 400, h + 400);
     c.restore();
 
-    // Soft crumbly waxy edge so adjacent crayon regions blend warmly
     if (opts.softEdge !== false) {
       tracePoly(c, pts);
       c.strokeStyle = col;
@@ -246,19 +231,37 @@
 
     c.restore();
 
-    // Textured crayon outline ONLY when explicitly requested (lw > 0)
     const lw = opts.lw ?? 0;
     if (lw > 0) {
       strokeWaxCrayon(c, pts, opts.ol || OL, lw, seed, true);
     }
   }
 
-  // Draw a unified die-cut CORRUGATED BROWN CARDBOARD STANDEE for one whole object!
-  // - Single smooth outer silhouette (NO internal stacked cardboard slabs or stitched seams!)
-  // - Thick brown extruded cardboard cut edge with visible corrugated flutes (一格一格)
-  // - Kraft-brown outer cut rim (ZERO white torn-paper borders!)
-  // - Whole genuine crayon drawing inside the front face
-  function makeCardboardSlab(w, h, silhouettePts, opts = {}, drawFrontArtFn = null) {
+  // Dilate an opaque mask uniformly by `padPx` to produce a clean die-cut cardboard silhouette!
+  function dilateMask(srcMask, padPx) {
+    const w = srcMask.width, h = srcMask.height;
+    const out = document.createElement("canvas");
+    out.width = w; out.height = h;
+    const oc = out.getContext("2d");
+    oc.drawImage(srcMask, 0, 0);
+    if (padPx <= 0) return out;
+    const rings = [padPx * 0.55, padPx];
+    for (const r of rings) {
+      const n = r === padPx ? 16 : 8;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * TAU;
+        oc.drawImage(srcMask, Math.cos(a) * r, Math.sin(a) * r);
+      }
+    }
+    // Convert to pure solid black silhouette
+    oc.globalCompositeOperation = "source-in";
+    oc.fillStyle = "#000";
+    oc.fillRect(0, 0, w, h);
+    return out;
+  }
+
+  // Build a unified 3D corrugated brown cardboard standee from ANY silhouette mask + front art drawer!
+  function makeCardboardStandeeFromMask(w, h, innerMask, opts = {}, drawFrontArtFn = null) {
     const cv = document.createElement("canvas");
     cv.width = w; cv.height = h;
     const c = cv.getContext("2d");
@@ -267,43 +270,28 @@
     const thickY = opts.thickY ?? 8;
     const lip = opts.lip ?? 3.5;
 
-    // Helper: draw uniform rounded die-cut silhouette mask (works cleanly even on concave trees/crests!)
-    function paintBoardShape(gc, fillCol) {
-      tracePoly(gc, silhouettePts);
-      gc.fillStyle = fillCol;
-      gc.fill();
-      if (lip > 0) {
-        gc.lineJoin = "round";
-        gc.lineCap = "round";
-        gc.lineWidth = lip * 2;
-        gc.strokeStyle = fillCol;
-        gc.stroke();
-      }
-    }
+    const boardMask = dilateMask(innerMask, lip);
 
-    const boardMask = document.createElement("canvas");
-    boardMask.width = w; boardMask.height = h;
-    paintBoardShape(boardMask.getContext("2d"), "#000");
-
-    // 1. Thick extruded kraft-brown cardboard side wall
+    // 1. Extruded thick brown corrugated cardboard side wall
     const steps = Math.max(9, Math.round(Math.hypot(thickX, thickY)));
-    const stepCvs = [];
-    const colors = ["#4a2c14", "#6e431f", "#8a582e"];
-    for (const col of colors) {
-      const sc = document.createElement("canvas");
-      sc.width = w; sc.height = h;
-      paintBoardShape(sc.getContext("2d"), col);
-      stepCvs.push(sc);
-    }
+    const stepMasks = ["#4a2c14", "#6e431f", "#8a582e"].map((col) => {
+      const m = document.createElement("canvas");
+      m.width = w; m.height = h;
+      const mc = m.getContext("2d");
+      mc.drawImage(boardMask, 0, 0);
+      mc.globalCompositeOperation = "source-in";
+      mc.fillStyle = col;
+      mc.fillRect(0, 0, w, h);
+      return m;
+    });
 
     for (let s = steps; s >= 1; s--) {
       const t = s / steps;
-      const ox = thickX * t, oy = thickY * t;
       const idx = s === steps ? 0 : (t > 0.55 ? 1 : 2);
-      c.drawImage(stepCvs[idx], ox, oy);
+      c.drawImage(stepMasks[idx], thickX * t, thickY * t);
     }
 
-    // 2. Carve VISIBLE CORRUGATED FLUTES (一格一格 shipping-box ribbed cross-section) into the cut edge
+    // 2. Carve VISIBLE CORRUGATED FLUTES (一格一格 shipping-box ribbed cross-section) into the side wall
     const wallMask = document.createElement("canvas");
     wallMask.width = w; wallMask.height = h;
     const wc = wallMask.getContext("2d");
@@ -320,38 +308,36 @@
     ac.fillStyle = "#8c592e";
     ac.fillRect(0, 0, w, h);
 
-    // Compute signed area to orient outward normal cleanly
-    let area2 = 0;
-    for (let i = 0; i < silhouettePts.length; i++) {
-      const a = silhouettePts[i], b = silhouettePts[(i + 1) % silhouettePts.length];
-      area2 += a[0] * b[1] - b[0] * a[1];
-    }
-    const nSign = area2 >= 0 ? -1 : 1;
+    // Scan boundary pixels of boardMask & place crisp 一格一格 corrugated flutes at ~5.5px spacing
+    const bmData = boardMask.getContext("2d").getImageData(0, 0, w, h).data;
+    const cellSz = 5;
+    const cols = Math.ceil(w / cellSz);
+    const seen = new Uint8Array(cols * Math.ceil(h / cellSz));
+    const wallAng = Math.atan2(thickY, thickX);
 
-    // Walk perimeter of silhouettePts & carve crisp 一格一格 corrugated flute pockets!
-    const fluteStep = 5.4;
-    let acc = 0;
-    for (let i = 0; i < silhouettePts.length; i++) {
-      const p0 = silhouettePts[i];
-      const p1 = silhouettePts[(i + 1) % silhouettePts.length];
-      const ex = p1[0] - p0[0], ey = p1[1] - p0[1];
-      const seg = Math.hypot(ex, ey);
-      if (seg < 0.01) continue;
-      const nx = (ey / seg) * nSign, ny = (-ex / seg) * nSign;
-      acc += seg;
-      if (acc >= fluteStep) {
-        acc = 0;
-        const bx = p0[0] + nx * (lip + 0.5) + thickX * 0.50;
-        const by = p0[1] + ny * (lip + 0.5) + thickY * 0.50;
-        // Dark hollow corrugated flute cell (一格一格!)
-        ac.fillStyle = "#311908";
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        if (bmData[(y * w + x) * 4 + 3] < 140) continue;
+        const up = bmData[((y - 1) * w + x) * 4 + 3] < 140;
+        const dn = bmData[((y + 1) * w + x) * 4 + 3] < 140;
+        const lf = bmData[(y * w + (x - 1)) * 4 + 3] < 140;
+        const rt = bmData[(y * w + (x + 1)) * 4 + 3] < 140;
+        if (!up && !dn && !lf && !rt) continue;
+
+        const bIdx = Math.floor(y / cellSz) * cols + Math.floor(x / cellSz);
+        if (seen[bIdx]) continue;
+        seen[bIdx] = 1;
+
+        const mx = x + thickX * 0.50;
+        const my = y + thickY * 0.50;
+        ac.fillStyle = "#2f1707";
         ac.beginPath();
-        ac.ellipse(bx, by, 2.7, 2.3, Math.atan2(thickY, thickX), 0, TAU);
+        ac.ellipse(mx, my, 2.5, 2.1, wallAng, 0, TAU);
         ac.fill();
-        // Warm kraft tan corrugated flute arch beside it
-        ac.fillStyle = "#d9a268";
+
+        ac.fillStyle = "#daa36a";
         ac.beginPath();
-        ac.ellipse(bx - nx * 1.4 + (ex / seg) * 2.2, by - ny * 1.4 + (ey / seg) * 2.2, 1.5, 1.3, 0, 0, TAU);
+        ac.ellipse(mx + 2.0, my - 1.4, 1.4, 1.2, 0, 0, TAU);
         ac.fill();
       }
     }
@@ -360,24 +346,17 @@
     ac.drawImage(wallMask, 0, 0);
     c.drawImage(wallArt, 0, 0);
 
-    // Back outer cut shadow line
-    const backOutline = document.createElement("canvas");
-    backOutline.width = w; backOutline.height = h;
-    const boc = backOutline.getContext("2d");
-    boc.save();
-    boc.translate(thickX, thickY);
-    tracePoly(boc, silhouettePts);
-    boc.lineJoin = "round";
-    boc.lineCap = "round";
-    boc.lineWidth = lip * 2 + 2.2;
-    boc.strokeStyle = "#3a210e";
-    boc.stroke();
-    boc.restore();
-    boc.globalCompositeOperation = "destination-out";
-    boc.drawImage(boardMask, thickX * 0.92, thickY * 0.92);
-    c.drawImage(backOutline, 0, 0);
+    // Crisp dark cut line on back rim of extruded wall
+    const backRim = dilateMask(boardMask, 1.3);
+    const brc = backRim.getContext("2d");
+    brc.globalCompositeOperation = "source-in";
+    brc.fillStyle = "#3a210e";
+    brc.fillRect(0, 0, w, h);
+    brc.globalCompositeOperation = "destination-out";
+    brc.drawImage(boardMask, 0, 0);
+    c.drawImage(backRim, thickX, thickY);
 
-    // 3. Front kraft-brown cardboard face (warm shipping-box kraft, NO white torn paper!)
+    // 3. Front kraft-brown cardboard face (NO white torn paper!)
     const frontBoard = document.createElement("canvas");
     frontBoard.width = w; frontBoard.height = h;
     const fc = frontBoard.getContext("2d");
@@ -391,349 +370,177 @@
     }
     fc.globalCompositeOperation = "destination-in";
     fc.drawImage(boardMask, 0, 0);
+
+    // Subtle dark kraft rim along front cardboard edge
+    const frontRim = dilateMask(boardMask, 1.2);
+    const frc = frontRim.getContext("2d");
+    frc.globalCompositeOperation = "source-in";
+    frc.fillStyle = "#4d2f16";
+    frc.fillRect(0, 0, w, h);
+    c.drawImage(frontRim, 0, 0);
     c.drawImage(frontBoard, 0, 0);
 
-    // Subtle dark kraft rim along front board edge
-    c.save();
-    tracePoly(c, silhouettePts);
-    c.lineJoin = "round";
-    c.lineCap = "round";
-    c.strokeStyle = "#523117";
-    c.lineWidth = lip * 2 + 1.8;
-    c.stroke();
-    c.restore();
-    // Re-fill inner front board cleanly over inner half of rim stroke
-    c.drawImage(frontBoard, 0, 0);
-
-    // 4. Draw the GENUINE CRAYON DRAWING cleanly on the front face inside silhouettePts!
-    if (drawFrontArtFn) {
-      c.save();
-      tracePoly(c, silhouettePts);
-      c.clip();
-      // Warm cream drawing-paper base ONLY inside the character/prop outline (zero white border outside!)
-      c.fillStyle = "#fcf5e3";
-      c.fillRect(0, 0, w, h);
-      drawFrontArtFn(c);
-      c.restore();
-
-      // Single continuous rough crayon outline around the whole character/prop silhouette
-      if (opts.outerOl !== false) {
-        strokeWaxCrayon(c, silhouettePts, opts.ol || OL, opts.outerLw ?? 4.6, opts.seed || 7, true);
-      }
-    }
+    // 4. Glue front art cleanly on top of the cardboard face!
+    if (drawFrontArtFn) drawFrontArtFn(c);
 
     return cv;
   }
 
-  /* ================= Whole Crayon-Drawn Characters & Plants on Die-Cut Cardboard Standees ================= */
+  function makeCardboardSlab(w, h, silhouettePts, opts = {}, drawFrontArtFn = null) {
+    const innerMask = document.createElement("canvas");
+    innerMask.width = w; innerMask.height = h;
+    const mc = innerMask.getContext("2d");
+    tracePoly(mc, silhouettePts);
+    mc.fillStyle = "#000";
+    mc.fill();
+
+    return makeCardboardStandeeFromMask(w, h, innerMask, opts, (c) => {
+      if (drawFrontArtFn) {
+        c.save();
+        tracePoly(c, silhouettePts);
+        c.clip();
+        c.fillStyle = "#fcf5e3";
+        c.fillRect(0, 0, w, h);
+        drawFrontArtFn(c);
+        c.restore();
+        if (opts.outerOl !== false) {
+          strokeWaxCrayon(c, silhouettePts, opts.ol || OL, opts.outerLw ?? 4.2, opts.seed || 7, true);
+        }
+      }
+    });
+  }
+
+  // Turn an ORIGINAL Gen-1 sprite (.webp) into a 3D standing corrugated cardboard cutout figure!
+  function makeSpriteCardboardStandee(img, opts = {}) {
+    const S = 260;
+    const cx = S * 0.5, by = S - 24;
+
+    // 1. Scan opaque bounds of original sprite so it stands flush on the base tab
+    const rawCv = document.createElement("canvas");
+    rawCv.width = img.naturalWidth || img.width;
+    rawCv.height = img.naturalHeight || img.height;
+    const rc = rawCv.getContext("2d");
+    rc.drawImage(img, 0, 0);
+    const rawData = rc.getImageData(0, 0, rawCv.width, rawCv.height).data;
+
+    let minX = rawCv.width, minY = rawCv.height, maxX = -1, maxY = -1;
+    for (let y = 0; y < rawCv.height; y++) {
+      for (let x = 0; x < rawCv.width; x++) {
+        const idx = (y * rawCv.width + x) * 4;
+        const a = rawData[idx + 3];
+        const lum = (rawData[idx] + rawData[idx + 1] + rawData[idx + 2]) / 3;
+        // Strip faint translucent white/gray anti-alias fringe outside the dark crayon outline
+        if (a < 85 && lum > 105) {
+          rawData[idx + 3] = 0;
+          continue;
+        }
+        if (a >= 75) {
+          if (x < minX) minX = x; if (x > maxX) maxX = x;
+          if (y < minY) minY = y; if (y > maxY) maxY = y;
+        }
+      }
+    }
+    rc.putImageData(new ImageData(rawData, rawCv.width, rawCv.height), 0, 0);
+
+    const bw = Math.max(1, maxX - minX + 1);
+    const bh = Math.max(1, maxY - minY + 1);
+    const maxW = opts.maxW ?? 172;
+    const maxH = opts.maxH ?? 186;
+    const scale = Math.min(maxW / bw, maxH / bh);
+    const dw = bw * scale;
+    const dh = bh * scale;
+    const dx = cx - dw * 0.5;
+    const dy = by - dh;
+
+    // 2. Render scaled original Gen-1 sprite onto 260x260 canvas
+    const spriteCv = document.createElement("canvas");
+    spriteCv.width = S; spriteCv.height = S;
+    const sc = spriteCv.getContext("2d");
+    sc.drawImage(rawCv, minX, minY, bw, bh, dx, dy, dw, dh);
+
+    // 3. Build solid alpha silhouette mask directly from the original sprite
+    const innerMask = document.createElement("canvas");
+    innerMask.width = S; innerMask.height = S;
+    const mc = innerMask.getContext("2d");
+    mc.drawImage(spriteCv, 0, 0);
+    mc.globalCompositeOperation = "source-in";
+    mc.fillStyle = "#000";
+    mc.fillRect(0, 0, S, S);
+
+    // 4. Glue original Gen-1 crayon sprite directly onto thick die-cut corrugated cardboard!
+    return makeCardboardStandeeFromMask(S, S, innerMask, {
+      thickX: opts.thickX ?? 11,
+      thickY: opts.thickY ?? 8,
+      lip: opts.lip ?? 3.8
+    }, (c) => {
+      c.drawImage(spriteCv, 0, 0);
+    });
+  }
+
+  /* ================= Standee Library (Gen-1 Sprites + Matching Crayon Props) ================= */
+  let readyCallbacks = [];
+  let isReady = false;
+
+  function whenReady(fn) {
+    if (isReady) fn();
+    else readyCallbacks.push(fn);
+  }
+
   function buildCardboardStandees() {
     const S = 260;
     const cx = S * 0.5, by = S - 24;
     const layers = {};
 
-    // ---------- 1. CHILI MOUSE (椒椒鼠) — Whole Gen-1 crayon drawing on ONE cardboard standee ----------
-    const chiliOuterPts = sampleSmoothLoop([
-      [cx - 10, by - 142],
-      [cx - 14, by - 166], [cx - 22, by - 186], [cx - 2, by - 190], [cx + 8, by - 166], [cx + 12, by - 142],
-      [cx + 46, by - 134], [cx + 72, by - 104], [cx + 78, by - 64], [cx + 68, by - 26],
-      [cx + 40, by - 10], [cx, by - 8], [cx - 42, by - 10],
-      [cx - 72, by - 24], [cx - 80, by - 58], [cx - 70, by - 100], [cx - 44, by - 134]
-    ], 4);
-
-    layers.chili = [{
-      zOff: 0,
-      cv: makeCardboardSlab(S, S, chiliOuterPts, { thickX: 11, thickY: 8, lip: 3.5, seed: 101 }, (c) => {
-        // Whole red pepper body (continuous wax crayon, no internal seams)
-        fillWaxCrayon(c, chiliOuterPts, "#de2b1c", 101, { coverage: 0.93, toothAlpha: 0.54, clumpAlpha: 0.24 });
-
-        // Warm cream belly/face bib sloping gently up on right & curving around green eyes (Gen-1 shape!)
-        const bibPts = sampleSmoothLoop([
-          [cx - 22, by - 12], [cx + 38, by - 10], [cx + 72, by - 28], [cx + 76, by - 62],
-          [cx + 58, by - 96], [cx + 36, by - 102], [cx + 22, by - 82], [cx + 12, by - 78],
-          [cx + 4, by - 98], [cx - 18, by - 96], [cx - 28, by - 72], [cx - 46, by - 46], [cx - 38, by - 20]
-        ], 4);
-        fillWaxCrayon(c, bibPts, "#fcf0d4", 102, { withBase: false, coverage: 0.96, toothAlpha: 0.42, clumpAlpha: 0.14 });
-
-        // Cute tiny red smile dip between eyes (Gen-1 signature!)
-        const noseDipPts = sampleSmoothLoop([
-          [cx - 10, by - 84], [cx + 22, by - 84], [cx + 20, by - 70], [cx + 6, by - 66], [cx - 8, by - 70]
-        ], 3);
-        fillWaxCrayon(c, noseDipPts, "#de2b1c", 103, { withBase: false, coverage: 0.94, toothAlpha: 0.45 });
-
-        // Green pepper stem on top with warm brown collar crease
-        const stemPts = sampleSmoothLoop([
-          [cx - 12, by - 140], [cx - 16, by - 170], [cx - 22, by - 188],
-          [cx - 2, by - 190], [cx + 8, by - 168], [cx + 14, by - 140]
-        ], 3);
-        fillWaxCrayon(c, stemPts, "#2d8e4b", 104, { coverage: 0.92, toothAlpha: 0.50 });
-        strokeWaxCrayon(c, [[cx - 16, by - 140], [cx, by - 136], [cx + 16, by - 140]], "#542a18", 4.0, 105, false);
-
-        // Little Gen-1 zig-zag crease on left hip
-        strokeWaxCrayon(c, [
-          [cx - 64, by - 66], [cx - 50, by - 54], [cx - 42, by - 64], [cx - 32, by - 58]
-        ], "#4a2216", 4.2, 106, false);
-
-        // Green eyes with cream glints (soft crayon circles, NO heavy dark outlines!)
-        fillWaxCrayon(c, makeEllipsePts(cx - 2, by - 82, 12.5, 13.5, 20, 107), "#268f56", 107, { withBase: false, coverage: 0.95, toothAlpha: 0.35 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 42, by - 82, 10.5, 12.5, 20, 108), "#268f56", 108, { withBase: false, coverage: 0.95, toothAlpha: 0.35 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 1, by - 82, 4.8, 5.2, 14, 109), "#fbf5e4", 109, { withBase: false, coverage: 0.98, toothAlpha: 0.15 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 43, by - 82, 4.0, 4.8, 14, 110), "#fbf5e4", 110, { withBase: false, coverage: 0.98, toothAlpha: 0.15 });
-
-        // Soft rosy cheek smudges (NO outline)
-        fillWaxCrayon(c, makeEllipsePts(cx - 22, by - 62, 11.5, 9.5, 16, 111), "#d88a84", 111, { withBase: false, coverage: 0.85, toothAlpha: 0.40 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 56, by - 64, 9.5, 9.0, 16, 112), "#d88a84", 112, { withBase: false, coverage: 0.85, toothAlpha: 0.40 });
-
-        // Stubby little rounded paws at bottom
-        fillWaxCrayon(c, makeEllipsePts(cx - 24, by - 16, 13, 9, 16, 113), "#d89586", 113, { withBase: false, coverage: 0.90, toothAlpha: 0.38 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 44, by - 15, 10, 7, 16, 114), "#d89586", 114, { withBase: false, coverage: 0.90, toothAlpha: 0.38 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 56, by - 19, 10, 6.5, 16, 115), "#d89586", 115, { withBase: false, coverage: 0.90, toothAlpha: 0.38 });
-      })
-    }];
-
-    // ---------- 2. LEMON CHICK (闪电鸡) — Whole Gen-1 crayon drawing on ONE cardboard standee ----------
-    const lemonOuterPts = sampleSmoothLoop([
-      [cx - 6, by - 140], [cx - 20, by - 166], [cx + 2, by - 178], [cx + 22, by - 204],
-      [cx + 16, by - 172], [cx + 32, by - 172], [cx + 10, by - 140],
-      [cx + 46, by - 128], [cx + 68, by - 94], [cx + 78, by - 60], [cx + 70, by - 28],
-      [cx + 38, by - 12], [cx, by - 10], [cx - 42, by - 12],
-      [cx - 72, by - 28], [cx - 76, by - 66], [cx - 62, by - 104], [cx - 38, by - 130]
-    ], 4);
-
-    layers.lemon = [{
-      zOff: 0,
-      cv: makeCardboardSlab(S, S, lemonOuterPts, { thickX: 11, thickY: 8, lip: 3.5, seed: 201 }, (c) => {
-        // Plump bright yellow body in continuous wax crayon
-        fillWaxCrayon(c, lemonOuterPts, "#ffd91c", 201, { coverage: 0.93, toothAlpha: 0.56, clumpAlpha: 0.20 });
-
-        // Blue lightning-bolt crest on top
-        const boltPts = sampleSmoothLoop([
-          [cx - 8, by - 140], [cx - 20, by - 166], [cx + 2, by - 178], [cx + 22, by - 204],
-          [cx + 16, by - 172], [cx + 32, by - 172], [cx + 10, by - 140]
-        ], 3);
-        fillWaxCrayon(c, boltPts, "#23a2ef", 202, { coverage: 0.93, toothAlpha: 0.45, lw: 3.6, ol: "#134e94" });
-
-        // Soft cream belly patch at bottom (no outline, blended crayon edge!)
-        const bellyPts = makeEllipsePts(cx - 4, by - 32, 48, 30, 24, 203, 0.03);
-        fillWaxCrayon(c, bellyPts, "#fff8e0", 203, { withBase: false, coverage: 0.96, toothAlpha: 0.40, clumpAlpha: 0.10 });
-
-        // Cute white eye ovals (no black border!) -> bright blue rings -> dark pupils
-        fillWaxCrayon(c, makeEllipsePts(cx - 28, by - 90, 15, 17, 20, 204), "#fffdf6", 204, { withBase: false, coverage: 0.98, toothAlpha: 0.20 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 18, by - 90, 16, 17, 20, 205), "#fffdf6", 205, { withBase: false, coverage: 0.98, toothAlpha: 0.20 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 27, by - 90, 9.5, 11, 18, 206), "#1f92e6", 206, { withBase: false, coverage: 0.96, toothAlpha: 0.24 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 17, by - 90, 10, 11, 18, 207), "#1f92e6", 207, { withBase: false, coverage: 0.96, toothAlpha: 0.24 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 27, by - 90, 4.8, 5.5, 14, 208), "#153263", 208, { withBase: false, coverage: 0.98, toothAlpha: 0.1 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 17, by - 90, 5.0, 5.5, 14, 209), "#153263", 209, { withBase: false, coverage: 0.98, toothAlpha: 0.1 });
-
-        // Rosy warm-tan cheek blushes (no outline!)
-        fillWaxCrayon(c, makeEllipsePts(cx - 48, by - 66, 11, 8.5, 16, 210), "#e0a042", 210, { withBase: false, coverage: 0.85, toothAlpha: 0.42 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 38, by - 66, 12, 9.0, 16, 211), "#e0a042", 211, { withBase: false, coverage: 0.85, toothAlpha: 0.42 });
-
-        // Cute orange beak with textured crayon line
-        const beakPts = sampleSmoothLoop([[cx - 18, by - 74], [cx - 4, by - 86], [cx + 10, by - 74], [cx - 4, by - 64]], 3);
-        fillWaxCrayon(c, beakPts, "#eeab38", 212, { withBase: false, coverage: 0.95, toothAlpha: 0.35, lw: 3.0 });
-        strokeWaxCrayon(c, [[cx - 14, by - 73], [cx - 4, by - 70], [cx + 6, by - 73]], OL, 2.8, 213, false);
-      })
-    }];
-
-    // ---------- 3. BLUEBERRY OWL (蓝莓枭) — Whole Gen-1 crayon drawing on ONE cardboard standee ----------
-    const owlOuterPts = sampleSmoothLoop([
-      [cx - 64, by - 114], [cx - 64, by - 166], [cx - 32, by - 146],
-      [cx - 14, by - 160], [cx - 2, by - 148], [cx + 12, by - 160], [cx + 28, by - 146],
-      [cx + 64, by - 162], [cx + 64, by - 110],
-      [cx + 76, by - 62], [cx + 68, by - 26], [cx + 38, by - 12], [cx, by - 12],
-      [cx - 42, by - 12], [cx - 72, by - 32], [cx - 76, by - 72]
-    ], 4);
-
-    layers.blueberry = [{
-      zOff: 0,
-      cv: makeCardboardSlab(S, S, owlOuterPts, { thickX: 11, thickY: 8, lip: 3.5, seed: 301 }, (c) => {
-        // Deep blueberry crayon body
-        fillWaxCrayon(c, owlOuterPts, "#18418c", 301, { coverage: 0.94, toothAlpha: 0.50, clumpAlpha: 0.24 });
-
-        // Cream owl face mask (blended softly with crayon tooth, NO heavy outer seam!)
-        const maskPts = sampleSmoothLoop([
-          [cx - 56, by - 96], [cx - 42, by - 128], [cx - 14, by - 126], [cx, by - 110],
-          [cx + 16, by - 126], [cx + 46, by - 126], [cx + 56, by - 94],
-          [cx + 40, by - 62], [cx, by - 56], [cx - 40, by - 62]
-        ], 4);
-        fillWaxCrayon(c, maskPts, "#fbf0da", 302, { withBase: false, coverage: 0.96, toothAlpha: 0.44, clumpAlpha: 0.14 });
-
-        // Soft peach cheek smudges inside mask
-        fillWaxCrayon(c, makeEllipsePts(cx - 42, by - 82, 9, 8, 14, 303), "#eed1ae", 303, { withBase: false, coverage: 0.78 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 42, by - 82, 9, 8, 14, 304), "#eed1ae", 304, { withBase: false, coverage: 0.78 });
-
-        // Owl eyes (blue crayon iris + dark center + textured crayon ring)
-        fillWaxCrayon(c, makeEllipsePts(cx - 24, by - 94, 15.5, 16.5, 20, 305), "#649be0", 305, { withBase: false, coverage: 0.95, toothAlpha: 0.30, lw: 3.2 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 22, by - 94, 15.5, 16.5, 20, 306), "#649be0", 306, { withBase: false, coverage: 0.95, toothAlpha: 0.30, lw: 3.2 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 24, by - 94, 8.5, 9.2, 16, 307), "#1d1a30", 307, { withBase: false, coverage: 0.98, toothAlpha: 0.14 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 22, by - 94, 8.5, 9.2, 16, 308), "#1d1a30", 308, { withBase: false, coverage: 0.98, toothAlpha: 0.14 });
-
-        // Small beak
-        const beakPts = sampleSmoothLoop([[cx - 12, by - 76], [cx - 1, by - 88], [cx + 10, by - 76], [cx - 1, by - 64]], 3);
-        fillWaxCrayon(c, beakPts, "#f0d4ac", 309, { withBase: false, coverage: 0.95, lw: 2.8 });
-        strokeWaxCrayon(c, [[cx - 9, by - 75], [cx - 1, by - 73], [cx + 7, by - 75]], OL, 2.4, 310, false);
-
-        // Five cute sky-blue belly polka dots (NO outlines)
-        [[-30, -40], [-4, -42], [22, -40], [-16, -24], [12, -24]].forEach(([dx, dy], idx) => {
-          fillWaxCrayon(c, makeEllipsePts(cx + dx, by + dy, 8.5, 7.2, 16, 315 + idx), "#6fa8e8", 315 + idx, { withBase: false, coverage: 0.92, toothAlpha: 0.32 });
-        });
-
-        // Subtle tucked wing stroke + tiny feet
-        strokeWaxCrayon(c, [[cx + 42, by - 58], [cx + 56, by - 50], [cx + 68, by - 36]], OL, 3.0, 322, false);
-        fillWaxCrayon(c, makeEllipsePts(cx - 28, by - 13, 10, 6.5, 14, 323), "#f0cfa8", 323, { withBase: false, coverage: 0.94 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 22, by - 13, 10, 6.5, 14, 324), "#f0cfa8", 324, { withBase: false, coverage: 0.94 });
-      })
-    }];
-
-    // ---------- 4. SLIMES (z1 green, z2 blue, z3 orange) — Whole Gen-1 crayon drawings on ONE cardboard standee ----------
-    const makeSlime = (mainCol, shadeCol, spotCol, seed, variant) => {
-      let ctrl;
-      if (variant === "flame") {
-        ctrl = [
-          [cx - 6, by - 132], [cx - 28, by - 156], [cx - 16, by - 178], [cx + 2, by - 196],
-          [cx + 18, by - 176], [cx + 30, by - 156], [cx + 12, by - 130],
-          [cx + 46, by - 116], [cx + 68, by - 68], [cx + 66, by - 22], [cx, by - 10],
-          [cx - 66, by - 22], [cx - 68, by - 68], [cx - 46, by - 116]
-        ];
-      } else {
-        ctrl = [
-          [cx - 4, by - 126], [cx - 12, by - 144], [cx - 34, by - 148], [cx - 24, by - 164], [cx - 2, by - 144],
-          [cx + 22, by - 164], [cx + 32, by - 148], [cx + 10, by - 142], [cx + 6, by - 124],
-          [cx + 46, by - 112], [cx + 68, by - 66], [cx + 66, by - 22], [cx, by - 10],
-          [cx - 66, by - 22], [cx - 68, by - 66], [cx - 46, by - 112]
-        ];
-      }
-      const slimeOuter = sampleSmoothLoop(ctrl, 4);
-
-      return [{
-        zOff: 0,
-        cv: makeCardboardSlab(S, S, slimeOuter, { thickX: 11, thickY: 8, lip: 3.5, seed }, (c) => {
-          fillWaxCrayon(c, slimeOuter, mainCol, seed + 1, { coverage: 0.93, toothAlpha: 0.54, clumpAlpha: 0.22 });
-
-          // Flame or leaf top tint (soft crayon blend)
-          if (variant === "flame") {
-            const innerFlame = sampleSmoothLoop([[cx - 14, by - 136], [cx, by - 172], [cx + 16, by - 136]], 3);
-            fillWaxCrayon(c, innerFlame, spotCol, seed + 2, { withBase: false, coverage: 0.92, toothAlpha: 0.35 });
-          } else {
-            const leafTop = sampleSmoothLoop([
-              [cx - 4, by - 126], [cx - 12, by - 144], [cx - 34, by - 148], [cx - 24, by - 164], [cx - 2, by - 144],
-              [cx + 22, by - 164], [cx + 32, by - 148], [cx + 10, by - 142], [cx + 6, by - 124]
-            ], 3);
-            fillWaxCrayon(c, leafTop, spotCol, seed + 2, { withBase: false, coverage: 0.90, toothAlpha: 0.38 });
-          }
-
-          // Darker wavy bottom ooze band (NO heavy outline!)
-          const oozePts = sampleSmoothLoop([
-            [cx - 66, by - 36], [cx - 40, by - 46], [cx - 16, by - 32], [cx + 10, by - 46],
-            [cx + 36, by - 32], [cx + 66, by - 40], [cx + 64, by - 18], [cx, by - 10], [cx - 64, by - 18]
-          ], 4);
-          fillWaxCrayon(c, oozePts, shadeCol, seed + 4, { withBase: false, coverage: 0.92, toothAlpha: 0.36 });
-
-          // Expressive Gen-1 eyes
-          fillWaxCrayon(c, makeEllipsePts(cx - 22, by - 78, 15, 16, 18, seed + 5), "#fbf6e6", seed + 5, { withBase: false, coverage: 0.96, lw: 3.0 });
-          fillWaxCrayon(c, makeEllipsePts(cx + 22, by - 78, 15, 16, 18, seed + 6), "#fbf6e6", seed + 6, { withBase: false, coverage: 0.96, lw: 3.0 });
-          fillWaxCrayon(c, makeEllipsePts(cx - 21, by - 77, 7, 7.5, 14, seed + 7), variant === "flame" ? "#24182c" : shadeCol, seed + 7, { withBase: false, coverage: 0.98 });
-          fillWaxCrayon(c, makeEllipsePts(cx + 21, by - 77, 7, 7.5, 14, seed + 8), variant === "flame" ? "#24182c" : shadeCol, seed + 8, { withBase: false, coverage: 0.98 });
-
-          // Soft blush cheeks
-          fillWaxCrayon(c, makeEllipsePts(cx - 42, by - 60, 10, 8, 14, seed + 9), "#a68594", seed + 9, { withBase: false, coverage: 0.55 });
-          fillWaxCrayon(c, makeEllipsePts(cx + 42, by - 60, 10, 8, 14, seed + 10), "#a68594", seed + 10, { withBase: false, coverage: 0.55 });
-
-          // Cute toothy grin
-          const mouthPts = sampleSmoothLoop([[cx - 26, by - 52], [cx + 26, by - 52], [cx + 20, by - 32], [cx - 20, by - 32]], 3);
-          fillWaxCrayon(c, mouthPts, "#2c1e34", seed + 11, { withBase: false, coverage: 0.96, lw: 2.6 });
-          fillWaxCrayon(c, makeEllipsePts(cx - 10, by - 46, 5.5, 5, 12, seed + 12), "#fbf5e4", seed + 12, { withBase: false, coverage: 0.98 });
-          fillWaxCrayon(c, makeEllipsePts(cx + 10, by - 46, 5.5, 5, 12, seed + 13), "#fbf5e4", seed + 13, { withBase: false, coverage: 0.98 });
-          fillWaxCrayon(c, makeEllipsePts(cx + 4, by - 34, 11, 5.5, 12, seed + 14), "#b46874", seed + 14, { withBase: false, coverage: 0.85 });
-
-          // Blue slime's iconic X band-aid on right cheek!
-          if (variant === "bandaid") {
-            strokeWaxCrayon(c, [[cx + 42, by - 64], [cx + 58, by - 48]], "#fbf5e4", 8.5, seed + 15, false);
-            strokeWaxCrayon(c, [[cx + 58, by - 64], [cx + 42, by - 48]], "#fbf5e4", 8.5, seed + 16, false);
-            strokeWaxCrayon(c, [[cx + 42, by - 64], [cx + 58, by - 48]], OL, 2.2, seed + 17, false);
-            strokeWaxCrayon(c, [[cx + 58, by - 64], [cx + 42, by - 48]], OL, 2.2, seed + 18, false);
-          }
-        })
-      }];
-    };
-
-    layers.z1 = makeSlime("#82db40", "#4f9f22", "#a8ee68", 401, "leaf");
-    layers.z2 = makeSlime("#5ec2f8", "#2d82c9", "#92dcff", 431, "bandaid");
-    layers.z3 = makeSlime("#ff541f", "#bd2712", "#d89c42", 461, "flame");
-
-    // ---------- 5. NEST CHICK (小鸡窝) — ONE unified crayon-drawn standee ----------
-    const eggOuter = sampleSmoothLoop([
-      [cx - 68, by - 80], [cx - 52, by - 132], [cx, by - 148], [cx + 52, by - 132],
-      [cx + 68, by - 80], [cx + 62, by - 22], [cx, by - 12], [cx - 62, by - 22]
-    ], 4);
-
-    layers.egg = [{
-      zOff: 0,
-      cv: makeCardboardSlab(S, S, eggOuter, { thickX: 11, thickY: 8, lip: 3.5, seed: 501 }, (c) => {
-        fillWaxCrayon(c, eggOuter, "#ffa828", 501, { coverage: 0.93, toothAlpha: 0.52 });
-        const shellPts = sampleSmoothLoop([
-          [cx - 66, by - 60], [cx - 38, by - 42], [cx - 14, by - 66], [cx + 10, by - 40],
-          [cx + 36, by - 66], [cx + 66, by - 48], [cx + 60, by - 18], [cx, by - 12], [cx - 60, by - 18]
-        ], 3);
-        fillWaxCrayon(c, shellPts, "#fff4d8", 502, { withBase: false, coverage: 0.96, lw: 3.0 });
-
-        fillWaxCrayon(c, makeEllipsePts(cx - 20, by - 96, 11.5, 12.5, 16, 503), "#fffdf6", 503, { withBase: false, coverage: 0.98, lw: 2.6 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 20, by - 96, 11.5, 12.5, 16, 504), "#fffdf6", 504, { withBase: false, coverage: 0.98, lw: 2.6 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 19, by - 96, 6, 6.5, 14, 505), "#24183a", 505, { withBase: false, coverage: 0.98 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 19, by - 96, 6, 6.5, 14, 506), "#24183a", 506, { withBase: false, coverage: 0.98 });
-        const beakPts = sampleSmoothLoop([[cx - 11, by - 82], [cx + 11, by - 82], [cx, by - 66]], 3);
-        fillWaxCrayon(c, beakPts, "#ff6e1c", 507, { withBase: false, coverage: 0.95, lw: 2.6 });
-      })
-    }];
-
-    // ---------- 6. TREES — ONE whole crayon-drawn tree on ONE cardboard standee (NOT multi-piece!) ----------
+    // 1. World props (ONE whole Gen-1 orchard-style crayon shape per standee, NO multi-piece!)
+    // Tree (matching Gen-1 orchard.webp scalloped apple tree!)
     const treeOuter = sampleSmoothLoop([
-      [cx - 15, by], [cx - 13, by - 78],
-      [cx - 56, by - 84], [cx - 74, by - 122], [cx - 56, by - 166],
-      [cx, by - 182], [cx + 56, by - 166], [cx + 74, by - 122], [cx + 56, by - 84],
-      [cx + 14, by - 78], [cx + 16, by]
+      [cx - 17, by], [cx - 14, by - 66],
+      [cx - 42, by - 68], [cx - 66, by - 92], [cx - 72, by - 122], [cx - 58, by - 154],
+      [cx - 28, by - 174], [cx, by - 180], [cx + 28, by - 174],
+      [cx + 58, by - 154], [cx + 72, by - 122], [cx + 66, by - 92], [cx + 42, by - 68],
+      [cx + 15, by - 66], [cx + 18, by]
     ], 4);
 
     layers.tree = [{
       zOff: 0,
-      cv: makeCardboardSlab(S, S, treeOuter, { thickX: 11, thickY: 8, lip: 3.5, seed: 601 }, (c) => {
-        // Warm crayon brown trunk (continuous fill, blends softly under canopy)
-        const trunkPts = sampleSmoothLoop([[cx - 16, by], [cx - 13, by - 86], [cx + 14, by - 86], [cx + 16, by]], 3);
-        fillWaxCrayon(c, trunkPts, "#9c6438", 601, { coverage: 0.94, toothAlpha: 0.54 });
-        strokeWaxCrayon(c, [[cx - 4, by - 14], [cx - 3, by - 58]], "#5e361a", 2.4, 602, false);
-        strokeWaxCrayon(c, [[cx + 5, by - 26], [cx + 6, by - 68]], "#5e361a", 2.2, 603, false);
+      cv: makeCardboardSlab(S, S, treeOuter, { thickX: 11, thickY: 8, lip: 3.8, seed: 601 }, (c) => {
+        const trunkPts = sampleSmoothLoop([[cx - 19, by], [cx - 14, by - 76], [cx + 15, by - 76], [cx + 20, by]], 3);
+        fillWaxCrayon(c, trunkPts, "#8c5630", 601, { coverage: 0.94, toothAlpha: 0.52 });
+        strokeWaxCrayon(c, [[cx - 5, by - 10], [cx - 4, by - 54]], "#4f2b14", 2.6, 602, false);
+        strokeWaxCrayon(c, [[cx + 6, by - 18], [cx + 6, by - 58]], "#4f2b14", 2.4, 603, false);
 
-        // Whole puffy green crayon canopy (single unified shape, darker lower shade + lighter crown + red apples, NO stacked slab cuts!)
         const crownPts = sampleSmoothLoop([
-          [cx - 56, by - 84], [cx - 74, by - 122], [cx - 56, by - 166],
-          [cx, by - 182], [cx + 56, by - 166], [cx + 74, by - 122], [cx + 56, by - 84], [cx, by - 76]
+          [cx - 42, by - 68], [cx - 66, by - 92], [cx - 72, by - 122], [cx - 58, by - 154],
+          [cx - 28, by - 174], [cx, by - 180], [cx + 28, by - 174],
+          [cx + 58, by - 154], [cx + 72, by - 122], [cx + 66, by - 92], [cx + 42, by - 68], [cx, by - 62]
         ], 4);
-        fillWaxCrayon(c, crownPts, "#68c442", 604, { withBase: false, coverage: 0.94, toothAlpha: 0.56, clumpAlpha: 0.22 });
-        // Soft sunlit top-left wax highlight (no outline!)
-        fillWaxCrayon(c, makeEllipsePts(cx - 10, by - 142, 46, 30, 24, 605), "#8be25c", 605, { withBase: false, coverage: 0.65, toothAlpha: 0.45 });
-        // Soft canopy bottom curve stroke so trunk & canopy separate naturally like a crayon sketch
-        strokeWaxCrayon(c, [[cx - 54, by - 84], [cx, by - 76], [cx + 54, by - 84]], "#2d4c24", 3.4, 606, false);
+        fillWaxCrayon(c, crownPts, "#59ad3e", 604, { withBase: false, coverage: 0.94, toothAlpha: 0.56, clumpAlpha: 0.22 });
+        fillWaxCrayon(c, makeEllipsePts(cx - 12, by - 138, 46, 30, 24, 605), "#7fd456", 605, { withBase: false, coverage: 0.65, toothAlpha: 0.45 });
+        strokeWaxCrayon(c, [[cx - 44, by - 72], [cx, by - 62], [cx + 44, by - 72]], "#274520", 3.6, 606, false);
 
-        // Cute crayon apples (soft dark crayon outline)
-        fillWaxCrayon(c, makeEllipsePts(cx - 26, by - 136, 10, 10.5, 16, 607), "#eb4434", 607, { withBase: false, coverage: 0.95, lw: 2.4 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 22, by - 124, 9.5, 10, 16, 608), "#eb4434", 608, { withBase: false, coverage: 0.95, lw: 2.4 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 2, by - 104, 9, 9.5, 16, 609), "#eb4434", 609, { withBase: false, coverage: 0.95, lw: 2.4 });
+        // Gen-1 orchard-style bright red apple with tiny green leaf!
+        fillWaxCrayon(c, makeEllipsePts(cx - 2, by - 122, 16, 15, 18, 607), "#e52d22", 607, { withBase: false, coverage: 0.96, lw: 3.0 });
+        strokeWaxCrayon(c, [[cx - 2, by - 137], [cx, by - 147]], "#3d2214", 2.8, 608, false);
+        fillWaxCrayon(c, sampleSmoothLoop([[cx, by - 142], [cx + 12, by - 150], [cx + 10, by - 138]], 2), "#58ba40", 609, { withBase: false, coverage: 0.95, lw: 2.0 });
       })
     }];
 
-    // ---------- 7. BUSH — ONE whole crayon-drawn bush on ONE cardboard standee ----------
-    const bushOuter = makeEllipsePts(cx, by - 38, 64, 38, 30, 701, 0.08);
+    // Bush (whole Gen-1 crayon bush)
+    const bushOuter = sampleSmoothLoop([
+      [cx - 60, by - 12], [cx - 66, by - 36], [cx - 44, by - 66], [cx - 12, by - 74],
+      [cx + 16, by - 74], [cx + 48, by - 64], [cx + 66, by - 34], [cx + 58, by - 12], [cx, by - 6]
+    ], 4);
     layers.bush = [{
       zOff: 0,
-      cv: makeCardboardSlab(S, S, bushOuter, { thickX: 10, thickY: 7, lip: 3.5, seed: 701 }, (c) => {
-        fillWaxCrayon(c, bushOuter, "#62bd3e", 701, { coverage: 0.93, toothAlpha: 0.56 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 8, by - 46, 44, 24, 22, 702), "#8ae058", 702, { withBase: false, coverage: 0.65, toothAlpha: 0.44 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 20, by - 44, 8.5, 8, 14, 703), "#ff88ba", 703, { withBase: false, coverage: 0.95, lw: 2.2 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 18, by - 34, 8, 8, 14, 704), "#ffe054", 704, { withBase: false, coverage: 0.95, lw: 2.2 });
+      cv: makeCardboardSlab(S, S, bushOuter, { thickX: 10, thickY: 7, lip: 3.8, seed: 701 }, (c) => {
+        fillWaxCrayon(c, bushOuter, "#52a838", 701, { coverage: 0.93, toothAlpha: 0.56 });
+        fillWaxCrayon(c, makeEllipsePts(cx - 8, by - 46, 44, 22, 22, 702), "#7ad452", 702, { withBase: false, coverage: 0.65, toothAlpha: 0.44 });
+        fillWaxCrayon(c, makeEllipsePts(cx - 20, by - 42, 8.5, 8, 14, 703), "#ff88ba", 703, { withBase: false, coverage: 0.95, lw: 2.2 });
+        fillWaxCrayon(c, makeEllipsePts(cx + 18, by - 32, 8, 8, 14, 704), "#ffe054", 704, { withBase: false, coverage: 0.95, lw: 2.2 });
       })
     }];
 
-    // ---------- 8. ROCK, SIGNPOST, FENCE — ONE whole cardboard standee each ----------
+    // Rock, Signpost, Fence (whole single-piece standees)
     const rockOuter = sampleSmoothLoop([[cx - 56, by], [cx - 42, by - 56], [cx + 10, by - 66], [cx + 54, by - 26], [cx + 46, by + 2]], 4);
     layers.rock = [{
       zOff: 0,
@@ -781,11 +588,37 @@
       })
     }];
 
+    // 2. ORIGINAL GEN-1 CHARACTER SPRITES glued onto corrugated cardboard standees!
+    const spriteSpecs = [
+      ["chili",     "assets/pets/chili-1.webp",     { maxW: 174, maxH: 186 }],
+      ["lemon",     "assets/pets/lemon-1.webp",     { maxW: 168, maxH: 192 }],
+      ["blueberry", "assets/pets/blueberry-1.webp", { maxW: 168, maxH: 184 }],
+      ["z1",        "assets/enemies/z-1.webp",      { maxW: 158, maxH: 182 }],
+      ["z2",        "assets/enemies/z-2.webp",      { maxW: 158, maxH: 182 }],
+      ["z3",        "assets/enemies/z-3.webp",      { maxW: 162, maxH: 194 }],
+      ["egg",       "assets/fx/hen-egg.webp",       { maxW: 164, maxH: 178 }]
+    ];
+
+    Promise.all(spriteSpecs.map(([key, src, opts]) => new Promise((resolve) => {
+      const im = new Image();
+      im.onload = () => {
+        layers[key] = [{ zOff: 0, cv: makeSpriteCardboardStandee(im, opts) }];
+        resolve();
+      };
+      im.onerror = () => resolve();
+      im.src = src;
+    }))).then(() => {
+      isReady = true;
+      for (const fn of readyCallbacks) fn();
+      readyCallbacks = [];
+    });
+
     return layers;
   }
 
   window.PaperCraft = {
     hash, jit, sampleSmoothLoop, makeEllipsePts, tracePoly,
-    strokeWaxCrayon, fillWaxCrayon, makeCardboardSlab, buildCardboardStandees
+    strokeWaxCrayon, fillWaxCrayon, makeCardboardSlab,
+    buildCardboardStandees, whenReady
   };
 })();
