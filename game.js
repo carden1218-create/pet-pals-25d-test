@@ -7,7 +7,7 @@
   const PET_COST = 50;
 
   const {
-    hash, jit, sampleSmoothLoop, makeEllipsePts, tracePoly, fillWaxCrayon, buildCardboardStandees, whenReady
+    hash, jit, sampleSmoothLoop, makeEllipsePts, tracePoly, strokeWaxCrayon, fillWaxCrayon, buildCardboardStandees, whenReady, drawCrumpledPaperOverlay
   } = window.PaperCraft;
 
   const PATH = [
@@ -19,36 +19,39 @@
 
   const HERO_DEFS = {
     chili: {
-      img: "chili", name: "椒椒鼠", moveSpd: 3.1, range: 2.35, atkRate: 0.50, dmg: 30,
-      projCol: "#ff5321", coreCol: "#ffe24a", burstCol: "#ffe24a", words: ["POW!", "BOOM!", "轰!"],
+      img: "chili", name: "椒椒鼠", fxKind: "fire", moveSpd: 3.1, range: 2.35, atkRate: 0.50, dmg: 30,
+      projCol: "#ff4b1f", coreCol: "#ffe24a", burstCol: "#ff6d28", wordOl: "#6b1808",
+      words: ["POW!", "BOOM!", "轰!", "烧!"],
       burnDur: 2.6, slowDur: 0, splash: 0
     },
     lemon: {
-      img: "lemon", name: "闪电鸡", moveSpd: 3.55, range: 2.55, atkRate: 0.34, dmg: 22,
-      projCol: "#29a8f5", coreCol: "#fff464", burstCol: "#6ad8ff", words: ["ZAP!", "啪!", "闪!"],
-      burnDur: 0, slowDur: 0, splash: 0
+      img: "lemon", name: "闪电鸡", fxKind: "lightning", moveSpd: 3.55, range: 2.55, atkRate: 0.36, dmg: 22,
+      projCol: "#269ef5", coreCol: "#fff454", burstCol: "#ffe944", wordOl: "#13428c",
+      words: ["ZAP!", "啪!", "闪!"],
+      burnDur: 0, slowDur: 0, splash: 0, chainRange: 2.15
     },
     blueberry: {
-      img: "blueberry", name: "蓝莓枭", moveSpd: 2.95, range: 2.45, atkRate: 0.62, dmg: 28,
-      projCol: "#3c6ef0", coreCol: "#d8f4ff", burstCol: "#8fe6ff", words: ["SPLASH!", "冰!", "啪!"],
-      burnDur: 0, slowDur: 2.2, splash: 1.15
+      img: "blueberry", name: "蓝莓枭", fxKind: "frost", moveSpd: 2.95, range: 2.45, atkRate: 0.62, dmg: 28,
+      projCol: "#3c7cf5", coreCol: "#e4f7ff", burstCol: "#72d8ff", wordOl: "#153d88",
+      words: ["SPLASH!", "冰!", "冻!"],
+      burnDur: 0, slowDur: 2.4, splash: 1.25
     }
   };
 
   const SCENIC_PROPS = [
-    { kind: "tree",  gx: 0.35, gy: -0.02, scale: 0.84, seed: 11 },
-    { kind: "tree",  gx: 3.95, gy: -0.04, scale: 0.80, seed: 22 },
-    { kind: "tree",  gx: 6.68, gy: -0.02, scale: 0.82, seed: 29 },
-    { kind: "bush",  gx: 2.15, gy: -0.06, scale: 0.85, seed: 33 },
-    { kind: "bush",  gx: 5.35, gy: -0.05, scale: 0.82, seed: 38 },
-    { kind: "rock",  gx: -0.24, gy: 2.75, scale: 0.90, seed: 44 },
-    { kind: "tree",  gx: 7.26, gy: 1.55,  scale: 0.90, seed: 55 },
-    { kind: "bush",  gx: 2.35, gy: 5.25,  scale: 0.90, seed: 66 },
-    { kind: "rock",  gx: 4.95, gy: 5.22,  scale: 0.84, seed: 69 },
+    { kind: "tree",  gx: 0.35, gy: -0.06, scale: 0.84, seed: 11 },
+    { kind: "tree",  gx: 3.95, gy: -0.08, scale: 0.80, seed: 22 },
+    { kind: "tree",  gx: 6.65, gy: -0.05, scale: 0.82, seed: 29 },
+    { kind: "bush",  gx: 2.15, gy: -0.08, scale: 0.85, seed: 33 },
+    { kind: "bush",  gx: 5.35, gy: -0.06, scale: 0.82, seed: 38 },
+    { kind: "rock",  gx: -0.20, gy: 2.75, scale: 0.88, seed: 44 },
+    { kind: "tree",  gx: 7.18, gy: 1.55,  scale: 0.88, seed: 55 },
+    { kind: "bush",  gx: 2.35, gy: 5.12,  scale: 0.88, seed: 66 },
+    { kind: "rock",  gx: 4.95, gy: 5.12,  scale: 0.84, seed: 69 },
     { kind: "sign",  gx: 0.28, gy: 0.82,  scale: 0.84, seed: 77 },
-    { kind: "fence", gx: 0.85, gy: 5.10,  scale: 0.96, seed: 81 },
-    { kind: "fence", gx: 3.65, gy: 5.10,  scale: 0.96, seed: 82 },
-    { kind: "fence", gx: 6.15, gy: 5.10,  scale: 0.96, seed: 83 }
+    { kind: "fence", gx: 0.88, gy: 5.05,  scale: 0.94, seed: 81 },
+    { kind: "fence", gx: 3.65, gy: 5.05,  scale: 0.94, seed: 82 },
+    { kind: "fence", gx: 6.12, gy: 5.05,  scale: 0.94, seed: 83 }
   ];
 
   const WAVES = [
@@ -110,10 +113,10 @@
     canvas.height = Math.round(H * DPR);
 
     const portrait = W < H;
-    const topY = portrait ? H * 0.25 : H * 0.20;
-    const botY = portrait ? H * 0.77 : H * 0.90;
-    const halfWBot = portrait ? W * 0.48 : W * 0.465;
-    const halfWTop = halfWBot * (portrait ? 0.88 : 0.83);
+    const topY = portrait ? H * 0.23 : H * 0.19;
+    const botY = portrait ? H * 0.69 : H * 0.81;
+    const halfWBot = portrait ? W * 0.445 : W * 0.435;
+    const halfWTop = halfWBot * (portrait ? 0.87 : 0.82);
     const unit = (halfWBot * 2) / COLS;
 
     cam = {
@@ -155,62 +158,283 @@
     return [proj(x0, y0, gz), proj(x1, y0, gz), proj(x1, y1, gz), proj(x0, y1, gz)];
   }
 
-  function drawFlatFloor(c) {
-    // One continuous soft waxy crayon meadow across the whole flat screen (NO parallel marker stripes!)
-    fillWaxCrayon(c, [[0, 0], [W, 0], [W, H], [0, H]], "#d8ebb4", 12, {
-      toothCol: "#faf5e4", coverage: 0.78, toothAlpha: 0.62, clumpAlpha: 0.16, lw: 0, softEdge: false
+  // Draw an irregular raised hill plateau with stacked brown corrugated cardboard layers & green crayon top!
+  function drawCardboardHillSlab(c, pts, layerH, numLayers, seed, topFillFn) {
+    const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length;
+    const cy = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+
+    const expandPts = (src, px, sSeed) => src.map(([x, y], i) => {
+      const dx = x - cx, dy = y - cy;
+      const d = Math.max(1, Math.hypot(dx, dy));
+      const j = (hash(i * 11 + sSeed, sSeed * 7) - 0.5) * 8;
+      return [x + (dx / d) * (px + j), y + (dy / d) * (px * 0.55 + j * 0.45)];
     });
 
-    for (let ty = 0; ty < ROWS; ty++) {
-      for (let tx = 0; tx < COLS; tx++) {
-        const isPath = PATH_SET.has(tx + "," + ty);
-        const corners = tileCorners(tx, ty, 0, 0);
-        if (isPath) {
-          fillWaxCrayon(c, corners, "#ecd5a1", 300 + tx * 11 + ty, {
-            toothCol: "#faf4e2", coverage: 0.86, toothAlpha: 0.58, clumpAlpha: 0.22,
-            lw: 2.0, ol: "rgba(110, 74, 38, 0.58)"
-          });
-          // Soft crayon pebbles on path
-          for (let k = 0; k < 2; k++) {
-            const gx = tx + 0.24 + hash(tx * 7 + k, ty * 13) * 0.52;
-            const gy = ty + 0.24 + hash(tx * 17, ty * 5 + k) * 0.52;
-            const [px, py, pp] = proj(gx, gy, 0);
-            const r = cam.unit * (0.055 + k * 0.015) * pp;
-            fillWaxCrayon(c, makeEllipsePts(px, py, r, r * 0.65, 12, 400 + tx + k), k ? "#f5ebd4" : "#c79e65", 400 + tx + k, {
-              lw: 1.4, ol: "rgba(92, 62, 34, 0.55)", softEdge: false
-            });
-          }
-        } else {
-          const even = (tx + ty) % 2 === 0;
-          fillWaxCrayon(c, corners, even ? "#bfe386" : "#b0d972", 500 + tx * 13 + ty, {
-            toothCol: "#f9f5e4", coverage: 0.82, toothAlpha: 0.60, clumpAlpha: 0.20,
-            lw: 1.5, ol: "rgba(76, 118, 46, 0.36)"
-          });
-          const inner = tileCorners(tx, ty, 0.13, 0);
-          c.save();
-          c.strokeStyle = "rgba(255, 252, 240, 0.65)";
-          c.lineWidth = 1.5;
-          c.setLineDash([5, 5]);
-          tracePoly(c, inner);
-          c.stroke();
-          c.restore();
+    // Soft cast shadow on tabletop paper below the stacked cardboard hill
+    c.save();
+    c.translate(10, layerH * numLayers + 10);
+    tracePoly(c, expandPts(pts, 12, seed + 1));
+    c.fillStyle = "rgba(56, 38, 20, 0.19)";
+    c.fill();
+    c.restore();
 
-          const rnd = hash(tx + 5, ty + 11);
-          if (rnd > 0.52) {
-            const [gx, gy, pp] = proj(tx + 0.22 + rnd * 0.15, ty + 0.80, 0);
-            c.save();
-            c.strokeStyle = "rgba(62, 120, 38, 0.72)";
-            c.lineWidth = 2.0;
-            c.lineCap = "round";
-            c.beginPath();
-            c.moveTo(gx, gy); c.lineTo(gx - 3 * pp, gy - 6 * pp);
-            c.moveTo(gx + 2 * pp, gy); c.lineTo(gx + 4 * pp, gy - 7 * pp);
-            c.stroke();
-            c.restore();
+    // Draw stacked corrugated cardboard hill strata from bottom layer -> top layer!
+    for (let L = numLayers - 1; L >= 0; L--) {
+      const yOff = L * layerH;
+      const layerPts = L === 0 ? pts : expandPts(pts, L * 9, seed + L * 19);
+
+      // Vertical extruded side wall of this cardboard sheet
+      const steps = Math.max(8, Math.round(layerH));
+      for (let s = steps; s >= 1; s--) {
+        const yy = yOff + s;
+        c.save();
+        c.translate(0, yy);
+        tracePoly(c, layerPts);
+        c.fillStyle = s === steps ? "#42240e" : (s > steps * 0.5 ? "#7a4a22" : "#965e32");
+        c.fill();
+        if (s === steps) {
+          c.strokeStyle = "#361c0a";
+          c.lineWidth = 2.0;
+          c.stroke();
+        }
+        c.restore();
+      }
+
+      // Carve visible 一格一格 corrugated flute cells along the exposed front & side cardboard walls!
+      c.save();
+      const wallMask = document.createElement("canvas");
+      wallMask.width = c.canvas.width;
+      wallMask.height = c.canvas.height;
+      const wc = wallMask.getContext("2d");
+      wc.scale(DPR, DPR);
+      for (let s = steps; s >= 1; s--) {
+        wc.save();
+        wc.translate(0, yOff + s);
+        tracePoly(wc, layerPts);
+        wc.fillStyle = "#000";
+        wc.fill();
+        wc.restore();
+      }
+      wc.globalCompositeOperation = "destination-out";
+      wc.save();
+      wc.translate(0, yOff);
+      tracePoly(wc, layerPts);
+      wc.fillStyle = "#000";
+      wc.fill();
+      wc.restore();
+
+      const fluteArt = document.createElement("canvas");
+      fluteArt.width = c.canvas.width;
+      fluteArt.height = c.canvas.height;
+      const fc = fluteArt.getContext("2d");
+      fc.scale(DPR, DPR);
+
+      // Draw corrugated dark hollows & tan arches along the exposed front/side perimeter
+      const fluteStep = 7.5;
+      let acc = 0;
+      for (let i = 0; i < layerPts.length; i++) {
+        const p0 = layerPts[i], p1 = layerPts[(i + 1) % layerPts.length];
+        const seg = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+        acc += seg;
+        if (acc >= fluteStep) {
+          acc = 0;
+          const fx = p0[0], fy = p0[1] + yOff + layerH * 0.52;
+          fc.fillStyle = "#2c1506";
+          fc.beginPath();
+          fc.ellipse(fx, fy, 2.7, Math.max(2.2, layerH * 0.30), 0, 0, TAU);
+          fc.fill();
+          fc.fillStyle = "#d9a066";
+          fc.beginPath();
+          fc.ellipse(fx + 3.6, fy - 0.6, 1.8, Math.max(1.6, layerH * 0.22), 0, 0, TAU);
+          fc.fill();
+        }
+      }
+      fc.globalCompositeOperation = "destination-in";
+      fc.setTransform(1, 0, 0, 1, 0, 0);
+      fc.drawImage(wallMask, 0, 0);
+
+      c.save();
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.drawImage(fluteArt, 0, 0);
+      c.restore();
+      c.restore();
+
+      // Top face of this cardboard sheet: lower strata show exposed kraft-brown cardboard ledge, top stratum shows GREEN crayon!
+      c.save();
+      c.translate(0, yOff);
+      if (L > 0) {
+        tracePoly(c, layerPts);
+        c.fillStyle = L === 1 ? "#c68e56" : "#b57c45";
+        c.fill();
+        c.strokeStyle = "#4d2c14";
+        c.lineWidth = 2.0;
+        c.stroke();
+      } else {
+        if (topFillFn) {
+          topFillFn(layerPts);
+        } else {
+          fillWaxCrayon(c, layerPts, "#aad868", seed + 30, {
+            toothCol: "#faf3dc", coverage: 0.88, toothAlpha: 0.74, clumpAlpha: 0.32, lw: 3.4, ol: "#3b5622"
+          });
+        }
+      }
+      c.restore();
+    }
+  }
+
+  function drawFlatFloor(c) {
+    // 1. Warm CRUMPLED PAPER tabletop backdrop (visible creases, wrinkles, light/shadow folds!)
+    fillWaxCrayon(c, [[0, 0], [W, 0], [W, H], [0, H]], "#efe8d0", 12, {
+      toothCol: "#fcf8eb", coverage: 0.48, toothAlpha: 0.72, clumpAlpha: 0.14, lw: 0, softEdge: false
+    });
+    drawCrumpledPaperOverlay(c, W, H, 808, { cell: 72, strength: 1.15, coloredSurface: false });
+
+    const layerH = Math.max(9, Math.min(15, cam.unit * 0.115));
+
+    // 2. Back grassy cardboard hillocks rising behind the top edge (like rolling little hills!)
+    const hillockSpecs = [
+      { gx0: -0.25, gx1: 2.35, gyTop: -0.46, gyBot: 0.20, layers: 2, seed: 41 },
+      { gx0: 3.35,  gx1: 7.25, gyTop: -0.44, gyBot: 0.20, layers: 2, seed: 53 }
+    ];
+    for (const hk of hillockSpecs) {
+      const mPts = sampleSmoothLoop([
+        proj(hk.gx0, hk.gyBot, 0),
+        proj(hk.gx0 + 0.12, (hk.gyTop + hk.gyBot) * 0.5, 0),
+        proj((hk.gx0 + hk.gx1) * 0.5, hk.gyTop, 0),
+        proj(hk.gx1 - 0.12, (hk.gyTop + hk.gyBot) * 0.5, 0),
+        proj(hk.gx1, hk.gyBot, 0),
+        proj((hk.gx0 + hk.gx1) * 0.5, hk.gyBot + 0.15, 0)
+      ], 4);
+      drawCardboardHillSlab(c, mPts, layerH * 0.9, hk.layers, hk.seed, (pts) => {
+        fillWaxCrayon(c, pts, "#9fd25c", hk.seed, {
+          toothCol: "#faf4de", coverage: 0.88, toothAlpha: 0.76, clumpAlpha: 0.32, lw: 3.2, ol: "#3b5a22"
+        });
+        c.save(); tracePoly(c, pts); c.clip();
+        drawCrumpledPaperOverlay(c, W, H, 901 + hk.seed, { cell: 64, strength: 0.78, coloredSurface: true });
+        c.restore();
+      });
+    }
+
+    // 3. Main irregular, scalloped raised cardboard hill plateau holding the 7x5 battlefield!
+    const hillCtrl = [
+      proj(-0.28, -0.10, 0),
+      proj(1.10, -0.26, 0),
+      proj(2.40, -0.14, 0),
+      proj(3.95, -0.28, 0),
+      proj(5.45, -0.12, 0),
+      proj(6.95, -0.22, 0),
+      proj(7.38,  0.42, 0),
+      proj(7.46,  1.65, 0),
+      proj(7.24,  2.85, 0),
+      proj(7.34,  4.25, 0),
+      proj(6.98,  5.26, 0),
+      proj(5.60,  5.18, 0),
+      proj(4.85,  5.36, 0),
+      proj(3.55,  5.16, 0),
+      proj(2.35,  5.38, 0),
+      proj(0.95,  5.18, 0),
+      proj(-0.22, 5.20, 0),
+      proj(-0.34, 3.85, 0),
+      proj(-0.46, 2.70, 0),
+      proj(-0.26, 1.35, 0)
+    ];
+    const mainHillPts = sampleSmoothLoop(hillCtrl, 4);
+
+    drawCardboardHillSlab(c, mainHillPts, layerH, 3, 25, (pts) => {
+      // Top green wax-crayon meadow inside the raised cardboard hill!
+      fillWaxCrayon(c, pts, "#b4df70", 71, {
+        toothCol: "#fbf5df", coverage: 0.88, toothAlpha: 0.76, clumpAlpha: 0.30,
+        lw: 3.8, ol: "#3c5824", bleed: true, bleedW: 4.5
+      });
+
+      c.save();
+      tracePoly(c, pts);
+      c.clip();
+
+      // Organic crayon meadow colour clouds across the hill top
+      for (let i = 0; i < 9; i++) {
+        const gx = 0.4 + hash(i * 7, 13) * 6.2;
+        const gy = 0.4 + hash(i * 11, 29) * 4.2;
+        const [px, py, pp] = proj(gx, gy, 0);
+        const rx = cam.unit * (0.85 + hash(i, 41) * 0.7) * pp;
+        fillWaxCrayon(c, makeEllipsePts(px, py, rx, rx * 0.55, 16, 80 + i), i % 2 ? "#c7ea84" : "#99cb56", 80 + i, {
+          withBase: false, coverage: 0.34, toothAlpha: 0.55, clumpAlpha: 0.18
+        });
+      }
+
+      // Grass tiles & S-curve path tiles in heavy uneven real crayon!
+      for (let ty = 0; ty < ROWS; ty++) {
+        for (let tx = 0; tx < COLS; tx++) {
+          const isPath = PATH_SET.has(tx + "," + ty);
+          const rawCorners = tileCorners(tx, ty, 0, 0);
+          // Slightly wobbly organic crayon tile corners
+          const corners = rawCorners.map(([x, y], idx) => [
+            x + jit(tx * 13 + ty * 7 + idx, 91) * 3.5,
+            y + jit(tx * 19 + ty * 3 + idx, 97) * 3.0
+          ]);
+
+          if (isPath) {
+            const pathCols = ["#ecd090", "#e6c684", "#f0d69b"];
+            const pCol = pathCols[(tx + ty) % pathCols.length];
+            fillWaxCrayon(c, corners, pCol, 300 + tx * 11 + ty, {
+              toothCol: "#fbf4df", coverage: 0.88, toothAlpha: 0.74, clumpAlpha: 0.32,
+              bleed: true, bleedAlpha: 0.30, bleedW: 5.5,
+              lw: 2.6, ol: "rgba(116, 76, 36, 0.72)"
+            });
+
+            // Hand-drawn crayon pebbles on path
+            for (let k = 0; k < 2; k++) {
+              const gx = tx + 0.22 + hash(tx * 7 + k, ty * 13) * 0.56;
+              const gy = ty + 0.24 + hash(tx * 17, ty * 5 + k) * 0.52;
+              const [px, py, pp] = proj(gx, gy, 0);
+              const r = cam.unit * (0.058 + k * 0.016) * pp;
+              fillWaxCrayon(c, makeEllipsePts(px, py, r, r * 0.66, 12, 400 + tx + k), k ? "#f5ead2" : "#bd8f52", 400 + tx + k, {
+                toothAlpha: 0.50, lw: 2.0, ol: "rgba(86, 54, 26, 0.72)", softEdge: false
+              });
+            }
+          } else {
+            const gCols = ["#bde27c", "#add86a", "#c4e684", "#a4d060"];
+            const gCol = gCols[(tx * 3 + ty) % gCols.length];
+            fillWaxCrayon(c, corners, gCol, 500 + tx * 13 + ty, {
+              withBase: false, coverage: 0.74, toothAlpha: 0.72, clumpAlpha: 0.28,
+              bleed: true, bleedAlpha: 0.22, bleedW: 4.5,
+              lw: 1.8, ol: "rgba(68, 108, 36, 0.42)"
+            });
+
+            // Soft sketchy crayon plant-slot corner ticks (replacing sterile dashed boxes!)
+            const inner = tileCorners(tx, ty, 0.14, 0);
+            for (let ci = 0; ci < 4; ci++) {
+              const pA = inner[ci], pB = inner[(ci + 1) % 4], pP = inner[(ci + 3) % 4];
+              const m1 = [lerp(pA[0], pB[0], 0.22), lerp(pA[1], pB[1], 0.22)];
+              const m2 = [lerp(pA[0], pP[0], 0.22), lerp(pA[1], pP[1], 0.22)];
+              strokeWaxCrayon(c, [m2, pA, m1], "rgba(255, 250, 228, 0.78)", 2.2, 610 + tx * 11 + ty * 5 + ci, false);
+            }
+
+            // Crayon grass tufts & tiny wildflowers
+            const rnd = hash(tx + 5, ty + 11);
+            if (rnd > 0.36) {
+              const [gx, gy, pp] = proj(tx + 0.20 + rnd * 0.48, ty + 0.76, 0);
+              strokeWaxCrayon(c, [
+                [gx - 4 * pp, gy - 7 * pp], [gx, gy], [gx + 3 * pp, gy - 8 * pp]
+              ], "rgba(56, 112, 32, 0.85)", 2.6, 700 + tx + ty, false);
+              strokeWaxCrayon(c, [[gx + 2 * pp, gy], [gx + 7 * pp, gy - 5 * pp]], "rgba(56, 112, 32, 0.80)", 2.2, 730 + tx + ty, false);
+            }
+            if (rnd > 0.74) {
+              const [fx, fy, pp] = proj(tx + 0.68, ty + 0.30, 0);
+              const fCol = (tx + ty) % 2 ? "#ff8eba" : "#ffe658";
+              fillWaxCrayon(c, makeEllipsePts(fx, fy, 4.5 * pp, 3.6 * pp, 10, 800 + tx), fCol, 800 + tx, {
+                toothAlpha: 0.30, lw: 1.6, ol: "#4a2c24", softEdge: false
+              });
+            }
           }
         }
       }
-    }
+
+      // Crumpled paper folds & crayon skipping over creases on top of the hill meadow/path!
+      drawCrumpledPaperOverlay(c, W, H, 955, { cell: 66, strength: 0.72, coloredSurface: true });
+
+      c.restore();
+    });
   }
 
   function ensureBgCache() {
@@ -227,6 +451,9 @@
   /* ================= Game State ================= */
   let simTime = 0;
   let speedMul = 1;
+  let shakeT = 0;
+  let shakeMag = 0;
+  function triggerShake(mag, dur) { if (mag >= shakeMag || shakeT <= 0) { shakeMag = mag; shakeT = dur; } }
   let hoverTile = null;
   let tapMode = "plant";
   let chosenHeroKey = "chili";
@@ -308,38 +535,89 @@
     const a = PATH[i], b = PATH[i + 1];
     return [lerp(a[0] + 0.5, b[0] + 0.5, f), lerp(a[1] + 0.5, b[1] + 0.5, f)];
   }
-  /* ================= Cardboard Cutout FX ================= */
+  /* ================= Hero Signature Cardboard + Crayon FX ================= */
   function addFx(obj) { game.fx.push(obj); }
 
-  function spawnCastDoodle(gx, gy, gz, dx, dy, col) {
-    addFx({ k: "cast", gx, gy, gz, dx, dy, col: col || "#ffe24a", life: 0.25, max: 0.25, seed: Math.floor(Math.random() * 9999) });
+  function spawnCastDoodle(gx, gy, gz, dx, dy, col, fxKind = "fire") {
+    addFx({ k: "cast", fxKind, gx, gy, gz, dx, dy, col: col || "#ffe24a", life: 0.24, max: 0.24, seed: Math.floor(Math.random() * 9999) });
   }
 
-  function spawnImpactDoodle(gx, gy, gz, isKill, burstCol, words) {
-    const list = words || ["POW!", "BOOM!", "轰!"];
-    const word = list[Math.floor(Math.random() * list.length)];
+  function spawnImpactDoodle(gx, gy, gz, isKill, opt = {}) {
+    const words = opt.words || ["POW!", "BOOM!", "轰!"];
+    const word = words[Math.floor(Math.random() * words.length)];
+    const fxKind = opt.fxKind || "fire";
+    const burstCol = opt.burstCol || "#ffe24a";
+
+    // Subtle crisp screen shake on hit / kill!
+    triggerShake(isKill ? 4.8 : 2.8, isKill ? 0.16 : 0.10);
+
+    // Offset upward so the burst feels huge & explosive without hiding the slime!
     addFx({
-      k: "hit", gx, gy, gz, word, big: !!isKill, burstCol: burstCol || "#ffe24a",
-      life: 0.46, max: 0.46, seed: Math.floor(Math.random() * 9999)
+      k: "hit", fxKind, gx: gx + (Math.random() - 0.5) * 0.14, gy: gy - 0.14, gz: gz + 0.44,
+      word, big: !!isKill, burstCol, wordOl: opt.wordOl || OL,
+      life: 0.48, max: 0.48, seed: Math.floor(Math.random() * 9999)
     });
-    const count = isKill ? 7 : 4;
-    for (let i = 0; i < count; i++) {
-      const a = (i / count) * TAU + Math.random() * 0.35;
-      const spd = 1.15 + Math.random() * 0.95;
+
+    // Expanding shockwave ring on the ground!
+    if (fxKind === "frost") {
       addFx({
-        k: "cardChip",
-        gx: gx + Math.cos(a) * 0.22, gy: gy + Math.sin(a) * 0.22, gz: gz + 0.12,
-        vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, vz: 1.65 + Math.random() * 1.0,
-        rot: Math.random() * TAU, vrot: (Math.random() - 0.5) * 9,
-        life: 0.44 + Math.random() * 0.14, max: 0.58,
-        col: i % 3 === 0 ? "#c48d56" : (i % 2 ? (burstCol || "#ffe24a") : "#ff5a26"),
-        seed: Math.floor(Math.random() * 9999)
+        k: "frostRing", gx, gy, gz: 0.04, r: (opt.splash || 1.15) * (isKill ? 1.15 : 1.0),
+        life: 0.46, max: 0.46, seed: Math.floor(Math.random() * 9999)
+      });
+    } else {
+      addFx({
+        k: "shockRing", fxKind, gx, gy, gz: 0.04,
+        r: isKill ? 1.05 : 0.78, col: fxKind === "lightning" ? "#42b8ff" : "#ff5e22",
+        innerCol: fxKind === "lightning" ? "#fff04c" : "#ffd646",
+        life: 0.34, max: 0.34, seed: Math.floor(Math.random() * 9999)
+      });
+    }
+
+    const count = isKill ? 9 : 5;
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * TAU + Math.random() * 0.32;
+      const spd = 1.35 + Math.random() * 1.15;
+      const chipCol = fxKind === "frost"
+        ? (i % 2 ? "#7cd8ff" : "#e8f8ff")
+        : fxKind === "lightning"
+          ? (i % 2 ? "#ffe83c" : "#34a2ff")
+          : (i % 3 === 0 ? "#c48d56" : (i % 2 ? "#ffe24a" : "#ff4818"));
+      addFx({
+        k: "cardChip", fxKind,
+        gx: gx + Math.cos(a) * 0.22, gy: gy + Math.sin(a) * 0.22, gz: gz + 0.22,
+        vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, vz: 1.85 + Math.random() * 1.1,
+        rot: Math.random() * TAU, vrot: (Math.random() - 0.5) * 11,
+        life: 0.42 + Math.random() * 0.14, max: 0.56,
+        col: chipCol, seed: Math.floor(Math.random() * 9999)
+      });
+    }
+  }
+
+  function spawnStepFx(gx, gy, vx, vy, kind, col) {
+    const spd = Math.hypot(vx, vy) || 1;
+    const ux = vx / spd, uy = vy / spd;
+    if (kind === "slime") {
+      addFx({ k: "slimePrint", gx, gy, gz: 0.01, col: col || "#76d038", life: 0.95, max: 0.95, seed: Math.floor(Math.random() * 9999) });
+      for (let k = -1; k <= 1; k += 2) {
+        addFx({
+          k: "stepScrap", gx: gx - ux * 0.12, gy: gy - uy * 0.10, gz: 0.08,
+          vx: -ux * 0.55 + k * 0.42, vy: -uy * 0.45 + (Math.random() - 0.5) * 0.3, vz: 0.95,
+          col: col || "#76d038", life: 0.30, max: 0.30, seed: Math.floor(Math.random() * 9999)
+        });
+      }
+    } else {
+      addFx({ k: "footprint", gx, gy, gz: 0.01, ang: Math.atan2(uy, ux), life: 0.85, max: 0.85, seed: Math.floor(Math.random() * 9999) });
+      spawnDustPuff(gx - ux * 0.20, gy - uy * 0.12, true);
+      addFx({
+        k: "stepScrap", gx: gx - ux * 0.16, gy: gy - uy * 0.10, gz: 0.08,
+        vx: -ux * 0.75 + (Math.random() - 0.5) * 0.5, vy: -uy * 0.55, vz: 1.05,
+        col: "#c8915a", life: 0.32, max: 0.32, seed: Math.floor(Math.random() * 9999)
       });
     }
   }
 
   function spawnDeathPuff(gx, gy, tint, reward) {
-    addFx({ k: "puff", gx, gy, gz: 0.36, tint: tint || "#86de44", life: 0.56, max: 0.56, seed: Math.floor(Math.random() * 9999) });
+    addFx({ k: "puff", gx, gy, gz: 0.36, tint: tint || "#86de44", life: 0.54, max: 0.54, seed: Math.floor(Math.random() * 9999) });
     if (reward) {
       addFx({ k: "pop", gx: gx + 0.24, gy, gz: 1.25, text: "+" + reward + "🪙", col: "#ffd83a", life: 0.72, max: 0.72, seed: Math.floor(Math.random() * 9999) });
     }
@@ -396,9 +674,9 @@
       hero.gz = Math.abs(curSin) * 0.28;
       hero.waddle = Math.sin(hero.walkPhase) * 0.10;
       hero.dustTimer -= dt;
-      if ((prevSin * curSin <= 0 || hero.dustTimer <= 0) && spd > 0.6) {
-        hero.dustTimer = 0.18;
-        spawnDustPuff(hero.gx - (hero.vx / spd) * 0.22, hero.gy + 0.05, true);
+      if ((prevSin * curSin <= 0 || hero.dustTimer <= 0) && spd > 0.5) {
+        hero.dustTimer = 0.17;
+        spawnStepFx(hero.gx, hero.gy + 0.04, hero.vx, hero.vy, "hero");
       }
     } else {
       hero.gz = lerp(hero.gz, 0, 1 - Math.exp(-16 * dt));
@@ -411,19 +689,57 @@
     const [tsx] = proj(target.gx, target.gy, 0);
     attacker.facing = tsx >= psx ? 1 : -1;
 
-    const startZ = attacker.gz + 0.52;
+    const startZ = attacker.gz + 0.54;
     const dx = target.gx - attacker.gx, dy = target.gy - attacker.gy;
     const dist = Math.max(0.1, Math.hypot(dx, dy));
     const ux = dx / dist, uy = dy / dist;
     const mx = attacker.gx + ux * 0.42, my = attacker.gy + uy * 0.42;
+    const fxKind = opt.fxKind || "fire";
 
-    spawnCastDoodle(mx, my, startZ, dx, dy, opt.coreCol);
+    spawnCastDoodle(mx, my, startZ, dx, dy, opt.coreCol, fxKind);
+
+    if (fxKind === "lightning") {
+      // Lemon Chick: Instant jagged zig-zag wax-crayon lightning bolt + brief chain to 2nd slime!
+      const tz = target.gz + 0.44;
+      addFx({
+        k: "bolt", sx: mx, sy: my, sz: startZ, tx: target.gx, ty: target.gy, tz,
+        col: "#ffe938", edgeCol: "#1f8cf2", life: 0.34, max: 0.34, thin: false,
+        seed: Math.floor(Math.random() * 9999)
+      });
+      damageEnemy(target, opt.dmg, false);
+      let anyKill = target.hp <= 0;
+
+      // Chain lightning to nearby 2nd slime
+      const chainR = opt.chainRange || 2.15;
+      let chainTgt = null, bestD = 1e9;
+      for (const e of game.enemies) {
+        if (e !== target && e.hp > 0) {
+          const cd = Math.hypot(e.gx - target.gx, e.gy - target.gy);
+          if (cd <= chainR && cd < bestD) { bestD = cd; chainTgt = e; }
+        }
+      }
+      if (chainTgt) {
+        addFx({
+          k: "bolt", sx: target.gx, sy: target.gy, sz: tz,
+          tx: chainTgt.gx, ty: chainTgt.gy, tz: chainTgt.gz + 0.40,
+          col: "#fff468", edgeCol: "#29a8f5", life: 0.30, max: 0.30, thin: true,
+          seed: Math.floor(Math.random() * 9999)
+        });
+        damageEnemy(chainTgt, Math.round(opt.dmg * 0.45), false);
+        if (chainTgt.hp <= 0) anyKill = true;
+      }
+
+      spawnImpactDoodle(target.gx, target.gy, tz, anyKill, opt);
+      return;
+    }
+
     game.shots.push({
       sx: mx, sy: my, sz: startZ,
       gx: mx, gy: my, gz: startZ,
       target, tx: target.gx, ty: target.gy, tz: 0.40,
       t: 0, dur: clamp(dist * 0.13, 0.17, 0.32),
-      dmg: opt.dmg, projCol: opt.projCol, coreCol: opt.coreCol, burstCol: opt.burstCol, words: opt.words,
+      fxKind, dmg: opt.dmg, projCol: opt.projCol, coreCol: opt.coreCol,
+      burstCol: opt.burstCol, wordOl: opt.wordOl, words: opt.words,
       burnDur: opt.burnDur || 0, slowDur: opt.slowDur || 0, splash: opt.splash || 0,
       trail: [], seed: Math.floor(Math.random() * 9999)
     });
@@ -440,6 +756,7 @@
   }
 
   function step(dt) {
+    if (shakeT > 0) shakeT = Math.max(0, shakeT - dt);
     if (!game || !game.started || game.over) return;
 
     const wave = WAVES[game.waveIdx];
@@ -491,8 +808,8 @@
         if (target) {
           tw.atkCd = tw.atkRate; tw.recoil = 1;
           fireShot(tw, target, {
-            dmg: tw.dmg, projCol: "#ff5321", coreCol: "#ffe24a", burstCol: "#ffe24a",
-            words: ["POW!", "BOOM!", "轰!"], burnDur: 2.4, slowDur: 0, splash: 0
+            fxKind: "fire", dmg: tw.dmg, projCol: "#ff4b1f", coreCol: "#ffe24a", burstCol: "#ff6d28",
+            wordOl: "#6b1808", words: ["POW!", "BOOM!", "轰!", "烧!"], burnDur: 2.4, slowDur: 0, splash: 0
           });
         }
       }
@@ -532,7 +849,7 @@
             }
           }
         }
-        spawnImpactDoodle(s.gx, s.gy, s.gz + 0.14, anyKill, s.burstCol, s.words);
+        spawnImpactDoodle(s.gx, s.gy, s.gz + 0.14, anyKill, s);
         game.shots.splice(i, 1);
       }
     }
@@ -552,14 +869,20 @@
         game.enemies.splice(i, 1); continue;
       }
 
-      const prevGx = e.gx;
+      const prevGx = e.gx, prevGy = e.gy;
+      const prevHopIdx = Math.floor(e.hopPhase / Math.PI);
       const spdMul = e.slowT > 0 ? 0.52 : 1.0;
       e.dist += e.speed * spdMul * dt;
       e.hopPhase += dt * 9.5 * spdMul;
       const [nx, ny] = pathPos(e.dist);
       e.gx = nx; e.gy = ny;
       if (Math.abs(nx - prevGx) > 0.002) e.facing = nx >= prevGx ? 1 : -1;
-      e.gz = Math.abs(Math.sin(e.hopPhase)) * 0.20;
+      e.gz = Math.abs(Math.sin(e.hopPhase)) * 0.22;
+      e.landSq = Math.max(0, (e.landSq || 0) - dt * 4.5);
+      if (Math.floor(e.hopPhase / Math.PI) !== prevHopIdx) {
+        e.landSq = 0.24;
+        spawnStepFx(e.gx, e.gy, nx - prevGx, ny - prevGy, "slime", e.tint);
+      }
 
       if (e.dist >= maxDist) {
         game.lives = 0; syncHud();
@@ -572,10 +895,11 @@
     for (let i = game.fx.length - 1; i >= 0; i--) {
       const f = game.fx[i];
       f.life -= dt;
-      if (f.k === "cardChip") {
+      if (f.k === "cardChip" || f.k === "stepScrap") {
         f.gx += f.vx * dt; f.gy += f.vy * dt;
         f.gz = Math.max(0, f.gz + f.vz * dt);
-        f.vz -= 4.2 * dt; f.rot += f.vrot * dt;
+        f.vz -= 4.5 * dt;
+        if (f.k === "cardChip") f.rot += f.vrot * dt;
       } else if (f.k === "pop") f.gz += 0.72 * dt;
       if (f.life <= 0) game.fx.splice(i, 1);
     }
@@ -750,7 +1074,9 @@
     const bg = ensureBgCache();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(bg, 0, 0);
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    const shkX = shakeT > 0 ? (Math.random() - 0.5) * 2 * shakeMag * (shakeT / 0.16) : 0;
+    const shkY = shakeT > 0 ? (Math.random() - 0.5) * 2 * shakeMag * (shakeT / 0.16) : 0;
+    ctx.setTransform(DPR, 0, 0, DPR, shkX * DPR, shkY * DPR);
 
     // Path chevrons
     ctx.save();
@@ -827,27 +1153,45 @@
       });
     }
 
-    // Spawn Burrow
+    // Spawn Burrow (heavy real-crayon earthen mound)
     const [btx, bty] = PATH[0];
     drawList.push({
       depth: bty + 0.45,
       draw: () => {
         const [bx, by, pp] = proj(btx + 0.5, bty + 0.5, 0);
-        const rx = cam.unit * 0.36 * pp, ry = cam.unit * 0.18 * pp;
-        fillWaxCrayon(ctx, makeEllipsePts(bx, by, rx, ry, 20, 310), "#7e5536", 310, { lw: 2.4 });
-        fillWaxCrayon(ctx, makeEllipsePts(bx, by + 2, rx * 0.65, ry * 0.6, 16, 312), "#241624", 312, { lw: 1.8 });
+        const rx = cam.unit * 0.38 * pp, ry = cam.unit * 0.19 * pp;
+        fillWaxCrayon(ctx, makeEllipsePts(bx, by, rx, ry, 20, 310, 0.06), "#885a36", 310, {
+          toothAlpha: 0.70, clumpAlpha: 0.32, bleed: true, bleedW: 4, lw: 3.0, ol: "#3d2212"
+        });
+        fillWaxCrayon(ctx, makeEllipsePts(bx, by + 2, rx * 0.65, ry * 0.6, 16, 312, 0.05), "#261824", 312, {
+          withBase: false, toothAlpha: 0.30, lw: 2.2
+        });
       }
     });
 
-    // Nest Standee
+    // Nest Standee (hand-drawn golden crayon straw nest with straw wisps!)
     const [htx, hty] = PATH[PATH.length - 1];
     drawList.push({
       depth: hty + 0.58,
       draw: () => {
         const [hx, hy, pp] = proj(htx + 0.5, hty + 0.5, 0);
-        const nw = cam.unit * 0.44 * pp, nh = cam.unit * 0.19 * pp;
+        const nw = cam.unit * 0.48 * pp, nh = cam.unit * 0.21 * pp;
         drawCardboardBaseAndShadow(ctx, hx, hy, nw * 1.9, 0, 410, false, false);
-        fillWaxCrayon(ctx, makeEllipsePts(hx, hy, nw, nh, 22, 410), "#e4b656", 410, { lw: 2.6 });
+        fillWaxCrayon(ctx, makeEllipsePts(hx, hy, nw, nh, 22, 410, 0.06), "#e8b94e", 410, {
+          toothAlpha: 0.72, clumpAlpha: 0.32, bleed: true, bleedW: 5, lw: 3.0, ol: "#694118"
+        });
+        // Radial crayon straw wisps around the nest!
+        ctx.save();
+        ctx.strokeStyle = "#b57628";
+        ctx.lineWidth = Math.max(1.8, 2.2 * pp);
+        ctx.lineCap = "round";
+        for (let sw = 0; sw < 14; sw++) {
+          const a = (sw / 14) * TAU + jit(sw, 41) * 0.2;
+          const x0 = hx + Math.cos(a) * nw * 0.75, y0 = hy + Math.sin(a) * nh * 0.75;
+          const x1 = hx + Math.cos(a + 0.14) * nw * 1.15, y1 = hy + Math.sin(a + 0.14) * nh * 1.15;
+          ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+        }
+        ctx.restore();
         const bob = Math.sin(simTime * 3.5) * 2.5 * pp;
         const hPx = cam.unit * (cam.portrait ? 1.05 : 0.90) * pp;
         drawLayeredStandee(ctx, "egg", hx, hy + bob, hPx, 1, Math.sin(simTime * 3.5) * 0.05, 0, 0, 0);
@@ -903,9 +1247,24 @@
           const hPx = cam.unit * (cam.portrait ? 1.08 : 0.88) * e.size * pp;
           drawCardboardBaseAndShadow(ctx, gx0, gy0, hPx * 0.85 * pp0 / pp, e.gz, 760, true, false);
 
-          if (e.burnT > 0) drawCardboardFlame(ctx, sx - hPx * 0.28, sy - hPx * 0.44, hPx * 0.44, e.burnSeed + 1, boil);
-          const hopSq = (e.gz < 0.04 ? 0.16 : -0.11) + e.hitFlash * 0.22;
-          drawLayeredStandee(ctx, e.img, sx, sy, hPx, e.facing, hopSq, e.hitFlash, 0, 0);
+          if (e.burnT > 0) drawCardboardFlame(ctx, sx - hPx * 0.32, sy - hPx * 0.44, hPx * 0.36, e.burnSeed + 1, boil);
+          const hopSq = (e.gz < 0.04 ? 0.16 : -0.11) + (e.landSq || 0) + e.hitFlash * 0.22;
+          const slimeTilt = Math.sin(e.hopPhase * 0.5) * 0.075;
+          ctx.save();
+          if (e.slowT > 0) ctx.filter = "sepia(0.35) hue-rotate(165deg) saturate(1.9) brightness(1.06)";
+          drawLayeredStandee(ctx, e.img, sx, sy, hPx, e.facing, hopSq, e.hitFlash, slimeTilt, 0);
+          ctx.restore();
+
+          if (e.slowT > 0) {
+            // Cute wax-crayon ice crystals around slowed slime!
+            for (let ic = -1; ic <= 1; ic += 2) {
+              const ix = sx + ic * hPx * 0.38, iy = sy - hPx * 0.14;
+              const cs = hPx * 0.14;
+              drawCardboardCutoutChip(ctx, [
+                [ix, iy - cs * 1.4], [ix + cs * 0.55, iy], [ix, iy + cs * 0.45], [ix - cs * 0.55, iy]
+              ], "#8ae4ff", e.burnSeed + ic, { thickX: 2.5, thickY: 2.0, lw: 1.6 });
+            }
+          }
 
           if (e.boss) {
             const cy = sy - hPx - 8 * pp, cw = hPx * 0.22;
@@ -915,7 +1274,7 @@
             ], "#ffe047", 605, { thickX: 4, thickY: 3, lw: 2.2 });
           }
 
-          if (e.burnT > 0) drawCardboardFlame(ctx, sx + hPx * 0.26, sy - hPx * 0.18, hPx * 0.48, e.burnSeed + 5, boil);
+          if (e.burnT > 0) drawCardboardFlame(ctx, sx + hPx * 0.30, sy - hPx * 0.18, hPx * 0.40, e.burnSeed + 5, boil);
 
           const bw = Math.max(36, cam.unit * 0.56 * e.size * pp);
           const bh = Math.max(6.5, cam.unit * 0.08 * pp);
@@ -934,47 +1293,67 @@
       });
     }
 
-    // Cardboard Cutout Projectiles
+    // Distinct Hero Cardboard + Crayon Projectiles (Fireball for Chili, Frost Crystal for Blueberry)
     for (const s of game.shots) {
       drawList.push({
         depth: s.gy + 0.2,
         draw: () => {
           const [gx0, gy0, pp0] = proj(s.gx, s.gy, 0);
-          drawCardboardBaseAndShadow(ctx, gx0, gy0, cam.unit * 0.32 * pp0, s.gz, 780, false, false);
+          drawCardboardBaseAndShadow(ctx, gx0, gy0, cam.unit * 0.30 * pp0, s.gz, 780, false, false);
 
+          // Trail: fiery crayon embers for Chili, icy diamond shards for Blueberry
           for (let ti = 0; ti < s.trail.length; ti++) {
             const tr = s.trail[ti];
             const [tx, ty, tpp] = proj(tr.gx, tr.gy, tr.gz);
-            const sz = Math.max(5.5, cam.unit * 0.12 * tpp * (0.65 + ti * 0.07));
-            drawCardboardCutoutChip(ctx, [
-              [tx - sz, ty - sz * 0.5], [tx + sz * 0.8, ty - sz * 0.7],
-              [tx + sz, ty + sz * 0.6], [tx - sz * 0.7, ty + sz * 0.8]
-            ], ti % 2 ? s.projCol : "#c48d56", s.seed + ti, { thickX: 2.5, thickY: 2.0, lw: 1.6 });
+            const sz = Math.max(5, cam.unit * 0.11 * tpp * (0.60 + ti * 0.08));
+            if (s.fxKind === "frost") {
+              drawCardboardCutoutChip(ctx, [
+                [tx, ty - sz], [tx + sz * 0.65, ty], [tx, ty + sz], [tx - sz * 0.65, ty]
+              ], ti % 2 ? "#7cd8ff" : "#e8f9ff", s.seed + ti, { thickX: 2.2, thickY: 1.8, lw: 1.4 });
+            } else {
+              drawCardboardFlame(ctx, tx, ty + sz * 0.2, sz * 1.4, s.seed + ti, boil, ti % 2 ? "#ff4e1e" : "#ffa828", "#fff080");
+            }
           }
 
           const [sx, sy, pp] = proj(s.gx, s.gy, s.gz);
           const [nx, ny] = proj(s.tx, s.ty, s.tz);
           const ang = Math.atan2(ny - sy, nx - sx);
-          const pr = Math.max(14, cam.unit * 0.28 * pp);
+          const pr = Math.max(13, cam.unit * 0.26 * pp);
           ctx.save();
           ctx.translate(sx, sy);
-          ctx.rotate(ang);
-          drawCardboardCutoutChip(ctx, [
-            [pr * 1.15, 0], [pr * 0.28, -pr * 0.74], [-pr * 0.55, -pr * 0.55],
-            [-pr * 1.45, -pr * 0.10], [-pr * 0.55, pr * 0.55], [pr * 0.28, pr * 0.74]
-          ], s.projCol, s.seed, { thickX: 4.5, thickY: 3.5, lw: 2.2 });
-          fillWaxCrayon(ctx, [
-            [pr * 0.65, 0], [pr * 0.10, -pr * 0.35], [-pr * 0.68, 0], [pr * 0.10, pr * 0.35]
-          ], s.coreCol, s.seed + 5, { lw: 1.5 });
+
+          if (s.fxKind === "frost") {
+            // Blueberry Owl: Spinning 6-point icy snowflake/frost orb cardboard cutout!
+            ctx.rotate(simTime * 7 + s.seed);
+            const starPts = [];
+            for (let k = 0; k < 12; k++) {
+              const a = (k / 12) * TAU;
+              const rr = k % 2 === 0 ? pr * 1.05 : pr * 0.45;
+              starPts.push([Math.cos(a) * rr, Math.sin(a) * rr]);
+            }
+            drawCardboardCutoutChip(ctx, starPts, "#4898ff", s.seed, { thickX: 4, thickY: 3, lw: 2.0 });
+            fillWaxCrayon(ctx, makeEllipsePts(0, 0, pr * 0.42, pr * 0.42, 12, s.seed + 3), "#e8f8ff", s.seed + 3, { lw: 1.5 });
+          } else {
+            // Chili Mouse: Arcing teardrop fireball cardboard cutout!
+            ctx.rotate(ang);
+            drawCardboardCutoutChip(ctx, [
+              [pr * 1.05, 0], [pr * 0.40, -pr * 0.72], [-pr * 0.65, -pr * 0.56],
+              [-pr * 1.50, -pr * 0.14], [-pr * 1.05, 0], [-pr * 1.50, pr * 0.18],
+              [-pr * 0.65, pr * 0.56], [pr * 0.40, pr * 0.72]
+            ], "#ff481a", s.seed, { thickX: 4.5, thickY: 3.5, lw: 2.2 });
+            fillWaxCrayon(ctx, [
+              [pr * 0.55, 0], [pr * 0.05, -pr * 0.36], [-pr * 0.75, 0], [pr * 0.05, pr * 0.36]
+            ], "#ffe94e", s.seed + 5, { lw: 1.4 });
+          }
           ctx.restore();
         }
       });
     }
 
-    // Die-Cut Cardboard Explosion & Chip FX
+    // Die-Cut Cardboard Explosion, Lightning Bolt, Frost Ring & Chip FX
     for (const f of game.fx) {
       drawList.push({
-        depth: f.gy + (f.k === "pop" ? 0.6 : 0.38),
+        depth: f.gy + (f.k === "pop" ? 0.6 : (f.k === "frostRing" || f.k === "shockRing" || f.k === "footprint" || f.k === "slimePrint") ? -0.25 : 0.38),
         draw: () => {
           const prog = 1 - clamp(f.life / f.max, 0, 1);
           const alpha = prog < 0.74 ? 1 : clamp((1 - prog) / 0.26, 0, 1);
@@ -983,57 +1362,143 @@
           ctx.globalAlpha = alpha;
 
           if (f.k === "cast") {
-            drawCardboardFlame(ctx, sx, sy, cam.unit * (0.24 + prog * 0.22) * pp, f.seed, boil, f.col, "#fffdf6");
+            const cs = cam.unit * (0.22 + prog * 0.18) * pp;
+            if (f.fxKind === "lightning") {
+              // Electric spark star
+              const spPts = [];
+              for (let i = 0; i < 8; i++) {
+                const a = (i / 8) * TAU + f.seed;
+                const rr = i % 2 === 0 ? cs * 1.1 : cs * 0.36;
+                spPts.push([sx + Math.cos(a) * rr, sy + Math.sin(a) * rr]);
+              }
+              drawCardboardCutoutChip(ctx, spPts, "#ffe938", f.seed, { thickX: 3, thickY: 2, lw: 1.6 });
+            } else if (f.fxKind === "frost") {
+              drawCardboardCutoutChip(ctx, makeEllipsePts(sx, sy, cs * 0.85, cs * 0.85, 12, f.seed), "#8ee4ff", f.seed, { thickX: 3, thickY: 2, lw: 1.6 });
+            } else {
+              drawCardboardFlame(ctx, sx, sy, cs, f.seed, boil, "#ff501e", "#fff480");
+            }
+          } else if (f.k === "bolt") {
+            // Lemon Chick jagged zig-zag wax-crayon lightning bolt + secondary crackle branches!
+            const [ax, ay] = proj(f.sx, f.sy, f.sz);
+            const [bx, by] = proj(f.tx, f.ty, f.tz);
+            const segs = 7;
+            const pts = [[ax, ay]];
+            const dx = bx - ax, dy = by - ay;
+            const len = Math.max(1, Math.hypot(dx, dy));
+            const nx = -dy / len, ny = dx / len;
+            const amp = (f.thin ? 14 : 24) * (1 - prog * 0.35);
+            for (let i = 1; i < segs; i++) {
+              const t = i / segs;
+              const side = (i % 2 === 0 ? 1 : -1) * (0.7 + hash(i, f.seed) * 0.65);
+              pts.push([lerp(ax, bx, t) + nx * side * amp, lerp(ay, by, t) + ny * side * amp]);
+            }
+            pts.push([bx, by]);
+
+            ctx.lineJoin = "round"; ctx.lineCap = "round";
+            tracePoly(ctx, pts, false);
+            ctx.strokeStyle = "#3a2414"; ctx.lineWidth = (f.thin ? 10 : 15) * pp; ctx.stroke();
+            tracePoly(ctx, pts, false);
+            ctx.strokeStyle = f.edgeCol || "#1f8cf2"; ctx.lineWidth = (f.thin ? 7 : 11.5) * pp; ctx.stroke();
+            tracePoly(ctx, pts, false);
+            ctx.strokeStyle = f.col || "#ffe938"; ctx.lineWidth = (f.thin ? 4.2 : 6.8) * pp; ctx.stroke();
+            tracePoly(ctx, pts, false);
+            ctx.strokeStyle = "#fffef2"; ctx.lineWidth = (f.thin ? 1.8 : 3.0) * pp; ctx.stroke();
+
+            // Crackle static sub-arcs branching off main bolt
+            for (let b = 2; b < pts.length - 1; b += 2) {
+              const bp = pts[b];
+              const bSide = b % 4 === 0 ? 1 : -1;
+              const bEnd = [bp[0] + nx * bSide * 22 * pp + (dx / len) * 14 * pp, bp[1] + ny * bSide * 22 * pp + (dy / len) * 14 * pp];
+              ctx.beginPath(); ctx.moveTo(bp[0], bp[1]); ctx.lineTo(bEnd[0], bEnd[1]);
+              ctx.strokeStyle = "#1f8cf2"; ctx.lineWidth = 4.5 * pp; ctx.stroke();
+              ctx.strokeStyle = "#fff666"; ctx.lineWidth = 2.2 * pp; ctx.stroke();
+            }
+          } else if (f.k === "shockRing") {
+            const rr = cam.unit * f.r * (0.35 + prog * 0.85) * pp;
+            ctx.save();
+            ctx.strokeStyle = f.col || "#ff5e22";
+            ctx.lineWidth = Math.max(3.5, 6.5 * pp * (1 - prog * 0.55));
+            ctx.beginPath(); ctx.ellipse(sx, sy, rr, rr * 0.46, 0, 0, TAU); ctx.stroke();
+            ctx.strokeStyle = f.innerCol || "#ffd646";
+            ctx.lineWidth = Math.max(2.0, 3.0 * pp * (1 - prog * 0.55));
+            ctx.beginPath(); ctx.ellipse(sx, sy, rr * 0.72, rr * 0.33, 0, 0, TAU); ctx.stroke();
+            ctx.restore();
+          } else if (f.k === "frostRing") {
+            // Blueberry Owl expanding icy frost splash ring + radial crystal spikes!
+            const rr = cam.unit * f.r * (0.45 + prog * 0.75) * pp;
+            ctx.save();
+            ctx.strokeStyle = "#48b6ff";
+            ctx.lineWidth = Math.max(3.5, 5.5 * pp * (1 - prog * 0.5));
+            ctx.beginPath(); ctx.ellipse(sx, sy, rr, rr * 0.48, 0, 0, TAU); ctx.stroke();
+            ctx.fillStyle = "rgba(130, 224, 255, 0.28)"; ctx.fill();
+            for (let sp = 0; sp < 6; sp++) {
+              const a = (sp / 6) * TAU + f.seed;
+              const ix = sx + Math.cos(a) * rr * 0.92, iy = sy + Math.sin(a) * rr * 0.44;
+              drawCardboardCutoutChip(ctx, [
+                [ix, iy - 12 * pp], [ix + 5 * pp, iy], [ix, iy + 4 * pp], [ix - 5 * pp, iy]
+              ], "#9be8ff", f.seed + sp, { thickX: 2.2, thickY: 1.8, lw: 1.4 });
+            }
+            ctx.restore();
           } else if (f.k === "hit") {
+            // Explosive upward-offset starburst so the slime below stays clearly readable!
             const popScale = easeOutBack(Math.min(1, prog * 2.5));
-            const rOut = cam.unit * (f.big ? 0.80 : 0.66) * popScale * pp;
-            const rIn = rOut * 0.48;
-            const spikes = 7;
+            const rOut = cam.unit * (f.big ? 0.62 : 0.48) * popScale * pp;
+            const rIn = rOut * 0.44;
+            const spikes = f.fxKind === "frost" ? 6 : (f.fxKind === "lightning" ? 8 : 7);
             const outerPts = [], midPts = [];
             for (let i = 0; i < spikes * 2; i++) {
               const a = (i / (spikes * 2)) * TAU + f.seed;
               const rr = (i % 2 === 0 ? rOut : rIn) * (0.90 + hash(i, f.seed) * 0.16);
-              outerPts.push([sx + Math.cos(a) * rr, sy + Math.sin(a) * rr * 0.85]);
+              outerPts.push([sx + Math.cos(a) * rr, sy + Math.sin(a) * rr * 0.82]);
               midPts.push([sx + Math.cos(a + 0.18) * rr * 0.56, sy + Math.sin(a + 0.18) * rr * 0.48]);
             }
-            // Back thick brown-edged cardboard starburst -> Front orange/red cardboard starburst!
-            drawCardboardCutoutChip(ctx, outerPts, f.burstCol || "#ffe24a", f.seed, { thickX: 6, thickY: 5, lw: 2.4 });
-            ctx.save();
-            ctx.shadowColor = "rgba(44, 24, 10, 0.40)";
-            ctx.shadowOffsetX = 3.5; ctx.shadowOffsetY = 4.5; ctx.shadowBlur = 3;
-            drawCardboardCutoutChip(ctx, midPts, "#ff6424", f.seed + 3, { thickX: 4, thickY: 3, lw: 1.8 });
-            ctx.restore();
+            drawCardboardCutoutChip(ctx, outerPts, f.burstCol || "#ffe24a", f.seed, { thickX: 5, thickY: 4, lw: 2.2 });
+            const midCol = f.fxKind === "frost" ? "#2672e8" : (f.fxKind === "lightning" ? "#2498ff" : "#ff4218");
+            drawCardboardCutoutChip(ctx, midPts, midCol, f.seed + 3, { thickX: 3.5, thickY: 2.5, lw: 1.8 });
 
             ctx.save();
-            ctx.translate(sx, sy - rOut * 0.26);
-            ctx.rotate((hash(f.seed, 2) - 0.5) * 0.26);
-            const fs = Math.round(Math.max(18, cam.unit * (f.big ? 0.36 : 0.32) * popScale * pp));
+            ctx.translate(sx, sy - rOut * 0.25);
+            ctx.rotate((hash(f.seed, 2) - 0.5) * 0.24);
+            const fs = Math.round(Math.max(17, cam.unit * (f.big ? 0.30 : 0.25) * popScale * pp));
             ctx.font = `900 ${fs}px "Fredoka", "PingFang SC", sans-serif`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.lineJoin = "round";
-            ctx.strokeStyle = OL;
-            ctx.lineWidth = Math.max(4.5, fs * 0.18);
+            ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+            ctx.strokeStyle = f.wordOl || OL; ctx.lineWidth = Math.max(4.5, fs * 0.18);
             ctx.strokeText(f.word, 0, 0);
-            ctx.fillStyle = "#fffcf4";
-            ctx.fillText(f.word, 0, 0);
+            ctx.fillStyle = "#fffcf4"; ctx.fillText(f.word, 0, 0);
             ctx.restore();
           } else if (f.k === "cardChip") {
-            const sz = Math.max(7, cam.unit * 0.13 * pp);
-            ctx.save();
-            ctx.translate(sx, sy);
-            ctx.rotate(f.rot);
-            drawCardboardCutoutChip(ctx, [[-sz, -sz * 0.55], [sz, -sz * 0.3], [sz * 0.7, sz * 0.75], [-sz * 0.8, sz * 0.5]], f.col, f.seed, { thickX: 3.5, thickY: 2.5, lw: 1.6 });
+            const sz = Math.max(6.5, cam.unit * 0.11 * pp);
+            ctx.save(); ctx.translate(sx, sy); ctx.rotate(f.rot);
+            const chipPts = f.fxKind === "frost"
+              ? [[0, -sz * 1.15], [sz * 0.7, 0], [0, sz * 1.15], [-sz * 0.7, 0]]
+              : [[-sz, -sz * 0.55], [sz, -sz * 0.3], [sz * 0.7, sz * 0.75], [-sz * 0.8, sz * 0.5]];
+            drawCardboardCutoutChip(ctx, chipPts, f.col, f.seed, { thickX: 3.2, thickY: 2.4, lw: 1.5 });
             ctx.restore();
           } else if (f.k === "puff") {
-            const spread = cam.unit * (0.28 + prog * 0.46) * pp;
-            const rBase = cam.unit * 0.24 * (1 - prog * 0.22) * pp;
+            const spread = cam.unit * (0.34 + prog * 0.58) * pp;
+            const rBase = cam.unit * 0.16 * (1 - prog * 0.25) * pp;
             for (let p = 0; p < 6; p++) {
               const a = (p / 6) * TAU + f.seed;
-              const px = sx + Math.cos(a) * spread * 0.72;
-              const py = sy + Math.sin(a) * spread * 0.48 - prog * 18 * pp;
-              drawCardboardCutoutChip(ctx, makeEllipsePts(px, py, rBase, rBase * 0.80, 12, f.seed + p), p % 2 ? "#c48d56" : f.tint, f.seed + p, { thickX: 4, thickY: 3, lw: 2.0 });
+              const px = sx + Math.cos(a) * spread * 0.82;
+              const py = sy + Math.sin(a) * spread * 0.50 - prog * 22 * pp;
+              drawCardboardCutoutChip(ctx, makeEllipsePts(px, py, rBase, rBase * 0.78, 12, f.seed + p), p % 2 ? "#c48d56" : f.tint, f.seed + p, { thickX: 3.5, thickY: 2.5, lw: 1.8 });
             }
+          } else if (f.k === "footprint") {
+            ctx.save(); ctx.translate(sx, sy); ctx.rotate(f.ang || 0);
+            ctx.fillStyle = "rgba(84, 56, 28, 0.42)";
+            ctx.beginPath(); ctx.ellipse(-3 * pp, -2.5 * pp, 3.6 * pp, 2.2 * pp, 0, 0, TAU); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(3 * pp, 2.5 * pp, 3.6 * pp, 2.2 * pp, 0, 0, TAU); ctx.fill();
+            ctx.restore();
+          } else if (f.k === "slimePrint") {
+            const r = cam.unit * 0.17 * (0.85 + prog * 0.25) * pp;
+            fillWaxCrayon(ctx, makeEllipsePts(sx, sy, r, r * 0.45, 12, f.seed), f.col || "#76d038", f.seed, {
+              withBase: false, coverage: 0.48, toothAlpha: 0.45, lw: 1.4, ol: "rgba(45, 32, 24, 0.45)"
+            });
+          } else if (f.k === "stepScrap") {
+            const sz = Math.max(3.5, cam.unit * 0.05 * pp);
+            fillWaxCrayon(ctx, [[-sz + sx, sy - sz], [sz + sx, sy - sz * 0.6], [sz + sx, sy + sz], [-sz + sx, sy + sz * 0.7]], f.col || "#c8915a", f.seed, {
+              withBase: false, lw: 1.2, softEdge: false
+            });
           } else if (f.k === "dust") {
             const sc = f.small ? 0.65 : 1.0;
             const sp = cam.unit * (0.12 + prog * 0.22) * sc * pp;

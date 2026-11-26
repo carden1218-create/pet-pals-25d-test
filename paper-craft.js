@@ -111,16 +111,16 @@
         const n3 = hash(x * 13 + y * 97, 73);
         const tooth = n1 * 0.30 + n2 * 0.42 + n3 * 0.28;
 
-        if (tooth > 0.62) {
-          const a = Math.min(255, Math.round((tooth - 0.62) * 560));
-          d[idx] = 252; d[idx + 1] = 245; d[idx + 2] = 225; d[idx + 3] = a;
+        if (tooth > 0.56) {
+          const a = Math.min(255, Math.round((tooth - 0.56) * 640));
+          d[idx] = 253; d[idx + 1] = 246; d[idx + 2] = 226; d[idx + 3] = a;
         }
-        if (tooth < 0.36) {
-          const a = Math.min(185, Math.round((0.36 - tooth) * 320));
-          dd[idx] = 35; dd[idx + 1] = 20; dd[idx + 2] = 15; dd[idx + 3] = a;
+        if (tooth < 0.42) {
+          const a = Math.min(210, Math.round((0.42 - tooth) * 380));
+          dd[idx] = 42; dd[idx + 1] = 24; dd[idx + 2] = 14; dd[idx + 3] = a;
         }
-        if (tooth > 0.72) {
-          const a = Math.min(200, Math.round((tooth - 0.72) * 650));
+        if (tooth > 0.66) {
+          const a = Math.min(215, Math.round((tooth - 0.66) * 680));
           od[idx] = 0; od[idx + 1] = 0; od[idx + 2] = 0; od[idx + 3] = a;
         }
       }
@@ -230,6 +230,18 @@
     }
 
     c.restore();
+
+    // Optional soft uneven wax bleed slightly outside the line (real hand-colored crayon!)
+    if (opts.bleed) {
+      c.save();
+      c.globalAlpha = opts.bleedAlpha ?? 0.28;
+      tracePoly(c, pts.map(([x, y], i) => [x + jit(i, seed + 53) * 5.0, y + jit(i + 9, seed + 61) * 5.0]));
+      c.strokeStyle = col;
+      c.lineWidth = opts.bleedW ?? 5.5;
+      c.lineJoin = "round";
+      c.stroke();
+      c.restore();
+    }
 
     const lw = opts.lw ?? 0;
     if (lw > 0) {
@@ -491,8 +503,7 @@
     const cx = S * 0.5, by = S - 24;
     const layers = {};
 
-    // 1. World props (ONE whole Gen-1 orchard-style crayon shape per standee, NO multi-piece!)
-    // Tree (matching Gen-1 orchard.webp scalloped apple tree!)
+    // 1. World props (ONE whole heavy real-crayon shape per standee on thick corrugated cardboard!)
     const treeOuter = sampleSmoothLoop([
       [cx - 17, by], [cx - 14, by - 66],
       [cx - 42, by - 68], [cx - 66, by - 92], [cx - 72, by - 122], [cx - 58, by - 154],
@@ -503,50 +514,57 @@
 
     layers.tree = [{
       zOff: 0,
-      cv: makeCardboardSlab(S, S, treeOuter, { thickX: 11, thickY: 8, lip: 3.8, seed: 601 }, (c) => {
+      cv: makeCardboardSlab(S, S, treeOuter, { thickX: 11, thickY: 8, lip: 3.8, seed: 601, ol: "#322118", outerLw: 4.8 }, (c) => {
         const trunkPts = sampleSmoothLoop([[cx - 19, by], [cx - 14, by - 76], [cx + 15, by - 76], [cx + 20, by]], 3);
-        fillWaxCrayon(c, trunkPts, "#8c5630", 601, { coverage: 0.94, toothAlpha: 0.52 });
-        strokeWaxCrayon(c, [[cx - 5, by - 10], [cx - 4, by - 54]], "#4f2b14", 2.6, 602, false);
-        strokeWaxCrayon(c, [[cx + 6, by - 18], [cx + 6, by - 58]], "#4f2b14", 2.4, 603, false);
+        fillWaxCrayon(c, trunkPts, "#925a32", 601, { coverage: 0.88, toothAlpha: 0.72, clumpAlpha: 0.34, bleed: true, bleedW: 4 });
+        fillWaxCrayon(c, sampleSmoothLoop([[cx + 2, by - 4], [cx + 4, by - 72], [cx + 15, by - 72], [cx + 18, by - 4]], 2), "#6e4020", 602, { withBase: false, coverage: 0.55, toothAlpha: 0.45 });
+        strokeWaxCrayon(c, [[cx - 5, by - 8], [cx - 4, by - 56]], "#452412", 2.8, 602, false);
+        strokeWaxCrayon(c, [[cx + 6, by - 16], [cx + 6, by - 60]], "#452412", 2.6, 603, false);
 
         const crownPts = sampleSmoothLoop([
           [cx - 42, by - 68], [cx - 66, by - 92], [cx - 72, by - 122], [cx - 58, by - 154],
           [cx - 28, by - 174], [cx, by - 180], [cx + 28, by - 174],
           [cx + 58, by - 154], [cx + 72, by - 122], [cx + 66, by - 92], [cx + 42, by - 68], [cx, by - 62]
         ], 4);
-        fillWaxCrayon(c, crownPts, "#59ad3e", 604, { withBase: false, coverage: 0.94, toothAlpha: 0.56, clumpAlpha: 0.22 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 12, by - 138, 46, 30, 24, 605), "#7fd456", 605, { withBase: false, coverage: 0.65, toothAlpha: 0.45 });
-        strokeWaxCrayon(c, [[cx - 44, by - 72], [cx, by - 62], [cx + 44, by - 72]], "#274520", 3.6, 606, false);
+        fillWaxCrayon(c, crownPts, "#5cb43e", 604, { withBase: false, coverage: 0.87, toothAlpha: 0.74, clumpAlpha: 0.36 });
+        // Rich crayon colour variation (sunlit chartreuse top-left + deep leafy green lower-right)
+        fillWaxCrayon(c, makeEllipsePts(cx - 16, by - 142, 46, 28, 22, 605, 0.08), "#8ae05a", 605, { withBase: false, coverage: 0.62, toothAlpha: 0.58 });
+        fillWaxCrayon(c, makeEllipsePts(cx + 22, by - 94, 42, 24, 22, 610, 0.09), "#3d8c28", 610, { withBase: false, coverage: 0.52, toothAlpha: 0.55 });
+        // Sketchy crayon leaf doodles inside canopy
+        strokeWaxCrayon(c, [[cx - 44, by - 72], [cx, by - 62], [cx + 44, by - 72]], "#2b4a20", 3.8, 606, false);
+        strokeWaxCrayon(c, [[cx - 42, by - 116], [cx - 30, by - 124], [cx - 20, by - 114]], "#387826", 2.6, 611, false);
+        strokeWaxCrayon(c, [[cx + 22, by - 134], [cx + 34, by - 142], [cx + 42, by - 132]], "#387826", 2.6, 612, false);
 
-        // Gen-1 orchard-style bright red apple with tiny green leaf!
-        fillWaxCrayon(c, makeEllipsePts(cx - 2, by - 122, 16, 15, 18, 607), "#e52d22", 607, { withBase: false, coverage: 0.96, lw: 3.0 });
+        // Bright crayon apple (with subtle warm wax highlight)
+        fillWaxCrayon(c, makeEllipsePts(cx - 2, by - 122, 16, 15, 18, 607), "#e83424", 607, { withBase: false, coverage: 0.90, toothAlpha: 0.52, lw: 3.2, bleed: true, bleedW: 3 });
         strokeWaxCrayon(c, [[cx - 2, by - 137], [cx, by - 147]], "#3d2214", 2.8, 608, false);
-        fillWaxCrayon(c, sampleSmoothLoop([[cx, by - 142], [cx + 12, by - 150], [cx + 10, by - 138]], 2), "#58ba40", 609, { withBase: false, coverage: 0.95, lw: 2.0 });
+        fillWaxCrayon(c, sampleSmoothLoop([[cx, by - 142], [cx + 12, by - 150], [cx + 10, by - 138]], 2), "#66c844", 609, { withBase: false, coverage: 0.90, lw: 2.2 });
       })
     }];
 
-    // Bush (whole Gen-1 crayon bush)
     const bushOuter = sampleSmoothLoop([
       [cx - 60, by - 12], [cx - 66, by - 36], [cx - 44, by - 66], [cx - 12, by - 74],
       [cx + 16, by - 74], [cx + 48, by - 64], [cx + 66, by - 34], [cx + 58, by - 12], [cx, by - 6]
     ], 4);
     layers.bush = [{
       zOff: 0,
-      cv: makeCardboardSlab(S, S, bushOuter, { thickX: 10, thickY: 7, lip: 3.8, seed: 701 }, (c) => {
-        fillWaxCrayon(c, bushOuter, "#52a838", 701, { coverage: 0.93, toothAlpha: 0.56 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 8, by - 46, 44, 22, 22, 702), "#7ad452", 702, { withBase: false, coverage: 0.65, toothAlpha: 0.44 });
-        fillWaxCrayon(c, makeEllipsePts(cx - 20, by - 42, 8.5, 8, 14, 703), "#ff88ba", 703, { withBase: false, coverage: 0.95, lw: 2.2 });
-        fillWaxCrayon(c, makeEllipsePts(cx + 18, by - 32, 8, 8, 14, 704), "#ffe054", 704, { withBase: false, coverage: 0.95, lw: 2.2 });
+      cv: makeCardboardSlab(S, S, bushOuter, { thickX: 10, thickY: 7, lip: 3.8, seed: 701, ol: "#322118", outerLw: 4.5 }, (c) => {
+        fillWaxCrayon(c, bushOuter, "#54ad38", 701, { coverage: 0.87, toothAlpha: 0.74, clumpAlpha: 0.34 });
+        fillWaxCrayon(c, makeEllipsePts(cx - 12, by - 48, 44, 22, 22, 702, 0.08), "#85de56", 702, { withBase: false, coverage: 0.62, toothAlpha: 0.55 });
+        fillWaxCrayon(c, makeEllipsePts(cx + 18, by - 24, 38, 16, 20, 705, 0.08), "#3a8824", 705, { withBase: false, coverage: 0.48, toothAlpha: 0.50 });
+        fillWaxCrayon(c, makeEllipsePts(cx - 20, by - 42, 9, 8.5, 14, 703), "#ff84ba", 703, { withBase: false, coverage: 0.90, toothAlpha: 0.45, lw: 2.4 });
+        fillWaxCrayon(c, makeEllipsePts(cx + 18, by - 32, 8.5, 8.5, 14, 704), "#ffe24e", 704, { withBase: false, coverage: 0.90, toothAlpha: 0.45, lw: 2.4 });
       })
     }];
 
-    // Rock, Signpost, Fence (whole single-piece standees)
     const rockOuter = sampleSmoothLoop([[cx - 56, by], [cx - 42, by - 56], [cx + 10, by - 66], [cx + 54, by - 26], [cx + 46, by + 2]], 4);
     layers.rock = [{
       zOff: 0,
-      cv: makeCardboardSlab(S, S, rockOuter, { thickX: 10, thickY: 7, lip: 3.5, seed: 720 }, (c) => {
-        fillWaxCrayon(c, rockOuter, "#9c9488", 720, { coverage: 0.93, toothAlpha: 0.55 });
-        fillWaxCrayon(c, sampleSmoothLoop([[cx - 32, by - 16], [cx - 22, by - 50], [cx + 16, by - 54], [cx + 28, by - 24]], 3), "#cbc2b6", 721, { withBase: false, coverage: 0.72, toothAlpha: 0.45 });
+      cv: makeCardboardSlab(S, S, rockOuter, { thickX: 10, thickY: 7, lip: 3.5, seed: 720, ol: "#362822", outerLw: 4.5 }, (c) => {
+        fillWaxCrayon(c, rockOuter, "#9a9184", 720, { coverage: 0.88, toothAlpha: 0.72, clumpAlpha: 0.34 });
+        fillWaxCrayon(c, sampleSmoothLoop([[cx - 34, by - 16], [cx - 24, by - 50], [cx + 16, by - 54], [cx + 28, by - 24]], 3), "#d4cabd", 721, { withBase: false, coverage: 0.68, toothAlpha: 0.56 });
+        fillWaxCrayon(c, makeEllipsePts(cx + 22, by - 12, 22, 12, 14, 722), "#7a8c58", 722, { withBase: false, coverage: 0.45, toothAlpha: 0.50 });
+        strokeWaxCrayon(c, [[cx - 18, by - 14], [cx + 6, by - 22], [cx + 26, by - 16]], "#4b4238", 2.4, 723, false);
       })
     }];
 
@@ -557,11 +575,13 @@
     ], 3);
     layers.sign = [{
       zOff: 0,
-      cv: makeCardboardSlab(S, S, signOuter, { thickX: 9, thickY: 7, lip: 3.5, seed: 740 }, (c) => {
+      cv: makeCardboardSlab(S, S, signOuter, { thickX: 9, thickY: 7, lip: 3.5, seed: 740, ol: "#3a2414", outerLw: 4.2 }, (c) => {
         const signPost = sampleSmoothLoop([[cx - 8, by], [cx - 7, by - 60], [cx + 8, by - 60], [cx + 8, by]], 3);
         const signBoard = sampleSmoothLoop([[cx - 42, by - 94], [cx + 28, by - 96], [cx + 54, by - 74], [cx + 28, by - 52], [cx - 42, by - 54]], 3);
-        fillWaxCrayon(c, signPost, "#966034", 740, { coverage: 0.94, toothAlpha: 0.50 });
-        fillWaxCrayon(c, signBoard, "#f0c268", 741, { withBase: false, coverage: 0.95, toothAlpha: 0.50, lw: 3.0 });
+        fillWaxCrayon(c, signPost, "#966034", 740, { coverage: 0.88, toothAlpha: 0.70, clumpAlpha: 0.32 });
+        fillWaxCrayon(c, signBoard, "#f2c468", 741, { withBase: false, coverage: 0.90, toothAlpha: 0.68, clumpAlpha: 0.28, lw: 3.2 });
+        strokeWaxCrayon(c, [[cx - 24, by - 74], [cx + 26, by - 74], [cx + 16, by - 82]], "#7a441e", 2.8, 742, false);
+        strokeWaxCrayon(c, [[cx + 26, by - 74], [cx + 16, by - 66]], "#7a441e", 2.8, 743, false);
       })
     }];
 
@@ -578,12 +598,13 @@
     ], 2);
     layers.fence = [{
       zOff: 0,
-      cv: makeCardboardSlab(S, S, fenceOuter, { thickX: 9, thickY: 7, lip: 3.5, seed: 760 }, (c) => {
-        fillWaxCrayon(c, sampleSmoothLoop([[cx - 84, by - 36], [cx + 84, by - 38], [cx + 84, by - 20], [cx - 84, by - 20]], 2), "#d49854", 760, { coverage: 0.94, lw: 2.4 });
-        fillWaxCrayon(c, sampleSmoothLoop([[cx - 84, by - 68], [cx + 84, by - 68], [cx + 84, by - 52], [cx - 84, by - 52]], 2), "#e4ae68", 761, { withBase: false, coverage: 0.94, lw: 2.4 });
+      cv: makeCardboardSlab(S, S, fenceOuter, { thickX: 9, thickY: 7, lip: 3.5, seed: 760, ol: "#3a2414", outerLw: 4.2 }, (c) => {
+        fillWaxCrayon(c, sampleSmoothLoop([[cx - 84, by - 36], [cx + 84, by - 38], [cx + 84, by - 20], [cx - 84, by - 20]], 2), "#cc904c", 760, { coverage: 0.88, toothAlpha: 0.68, lw: 2.6 });
+        fillWaxCrayon(c, sampleSmoothLoop([[cx - 84, by - 68], [cx + 84, by - 68], [cx + 84, by - 52], [cx - 84, by - 52]], 2), "#dfaa64", 761, { withBase: false, coverage: 0.88, toothAlpha: 0.68, lw: 2.6 });
         [-60, -20, 20, 60].forEach((px, idx) => {
           const pPts = sampleSmoothLoop([[cx + px - 10, by], [cx + px - 9, by - 72], [cx + px, by - 88], [cx + px + 9, by - 72], [cx + px + 10, by]], 2);
-          fillWaxCrayon(c, pPts, "#f2c682", 770 + idx, { withBase: false, coverage: 0.95, lw: 2.6 });
+          fillWaxCrayon(c, pPts, "#f0c480", 770 + idx, { withBase: false, coverage: 0.90, toothAlpha: 0.66, lw: 2.8 });
+          strokeWaxCrayon(c, [[cx + px - 2, by - 10], [cx + px - 1, by - 46]], "#9e6632", 1.8, 780 + idx, false);
         });
       })
     }];
@@ -616,9 +637,127 @@
     return layers;
   }
 
+  // Procedural Crumpled Paper Fold & Crease Overlay (true 3D facet normals + diagonal creases + crayon skip)
+  function drawCrumpledPaperOverlay(c, w, h, seed = 404, opts = {}) {
+    ensureToothTextures();
+    const cell = opts.cell ?? 66;
+    const strength = opts.strength ?? 1.0;
+    const isColoredSurface = !!opts.coloredSurface;
+    const zScale = cell * 0.62;
+    const cols = Math.ceil(w / cell) + 3;
+    const rows = Math.ceil(h / cell) + 3;
+
+    // Build jittered vertex mesh (x, y, height z in [0,1])
+    const grid = [];
+    for (let r = 0; r < rows; r++) {
+      const row = [];
+      for (let q = 0; q < cols; q++) {
+        const bx = (q - 1) * cell;
+        const by = (r - 1) * cell;
+        const jx = (hash(q * 19 + r * 37, seed) - 0.5) * cell * 0.82;
+        const jy = (hash(q * 41 + r * 13, seed + 5) - 0.5) * cell * 0.82;
+        const hz = hash(q * 29 + r * 53, seed + 11);
+        row.push([bx + jx, by + jy, hz]);
+      }
+      grid.push(row);
+    }
+
+    const tris = [];
+    const edges = [];
+    for (let r = 0; r < rows - 1; r++) {
+      for (let q = 0; q < cols - 1; q++) {
+        const p00 = grid[r][q], p10 = grid[r][q + 1];
+        const p01 = grid[r + 1][q], p11 = grid[r + 1][q + 1];
+        edges.push([p00, p10, q * 7 + r]);
+        edges.push([p00, p01, q * 13 + r]);
+        if (hash(q * 17 + r * 31, seed + 19) > 0.5) {
+          tris.push([p00, p10, p11]);
+          tris.push([p00, p11, p01]);
+          edges.push([p00, p11, q * 23 + r]);
+        } else {
+          tris.push([p00, p10, p01]);
+          tris.push([p10, p11, p01]);
+          edges.push([p10, p01, q * 29 + r]);
+        }
+      }
+    }
+
+    c.save();
+    // 1. Faceted light/shadow paper folds using true scaled 3D normals
+    for (let i = 0; i < tris.length; i++) {
+      const [a, b, d] = tris[i];
+      const ux = b[0] - a[0], uy = b[1] - a[1], uz = (b[2] - a[2]) * zScale;
+      const vx = d[0] - a[0], vy = d[1] - a[1], vz = (d[2] - a[2]) * zScale;
+      let nx = uy * vz - uz * vy;
+      let ny = uz * vx - ux * vz;
+      let nz = ux * vy - uy * vx;
+      if (nz < 0) { nx = -nx; ny = -ny; nz = -nz; }
+      const len = Math.max(1e-4, Math.hypot(nx, ny, nz));
+      // Light from top-left (-0.72, -0.68, 0.14); subtract flat baseline 0.14 so facets swing -..+
+      const tilt = ((nx / len) * -0.72 + (ny / len) * -0.68 + (nz / len) * 0.14) - 0.14;
+      const ridge = (a[2] + b[2] + d[2]) / 3;
+
+      c.beginPath();
+      c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.lineTo(d[0], d[1]); c.closePath();
+
+      if (tilt > 0.03) {
+        c.fillStyle = `rgba(255, 253, 244, ${Math.min(0.28, tilt * 0.44 * strength)})`;
+        c.fill();
+      } else if (tilt < -0.03) {
+        c.fillStyle = `rgba(86, 64, 38, ${Math.min(0.16, -tilt * 0.26 * strength)})`;
+        c.fill();
+      }
+      // On colored grass/path: crayon pigment catches slightly denser on ridges & skips lightly in valleys
+      if (isColoredSurface) {
+        if (ridge > 0.56) {
+          c.fillStyle = `rgba(36, 54, 18, ${Math.min(0.11, (ridge - 0.56) * 0.24 * strength)})`;
+          c.fill();
+        } else if (ridge < 0.40) {
+          c.fillStyle = `rgba(253, 248, 232, ${Math.min(0.18, (0.40 - ridge) * 0.42 * strength)})`;
+          c.fill();
+        }
+      }
+    }
+
+    // 2. Crisp crumpled paper creases + crayon-skipping wrinkle ridges along every sharp fold
+    c.lineCap = "round";
+    c.lineJoin = "round";
+    for (let i = 0; i < edges.length; i++) {
+      const [pA, pB, eSeed] = edges[i];
+      const dz = Math.abs(pA[2] - pB[2]);
+      if (dz < 0.22) continue;
+      const aNorm = Math.min(1, (dz - 0.22) * 1.8) * strength;
+      const mx = (pA[0] + pB[0]) * 0.5 + (hash(eSeed, seed + 31) - 0.5) * 6;
+      const my = (pA[1] + pB[1]) * 0.5 + (hash(eSeed, seed + 37) - 0.5) * 6;
+
+      // Shadowed fold line
+      c.strokeStyle = `rgba(84, 62, 36, ${(isColoredSurface ? 0.14 : 0.19) * aNorm})`;
+      c.lineWidth = 1.0 + dz * 0.7;
+      c.beginPath(); c.moveTo(pA[0], pA[1]); c.lineTo(mx, my); c.lineTo(pB[0], pB[1]); c.stroke();
+
+      // Highlighted ridge / crayon skip over wrinkle
+      c.strokeStyle = isColoredSurface
+        ? `rgba(253, 248, 230, ${0.34 * aNorm})`
+        : `rgba(255, 254, 248, ${0.54 * aNorm})`;
+      c.lineWidth = isColoredSurface ? 1.6 : 1.4;
+      c.beginPath();
+      c.moveTo(pA[0] + 1.3, pA[1] + 1.2);
+      c.lineTo(mx + 1.3, my + 1.2);
+      c.lineTo(pB[0] + 1.3, pB[1] + 1.2);
+      c.stroke();
+    }
+
+    // 3. Extra paper-tooth grain across folds
+    const pat = c.createPattern(toothPatCanvas, "repeat");
+    c.globalAlpha = (isColoredSurface ? 0.18 : 0.22) * strength;
+    c.fillStyle = pat;
+    c.fillRect(0, 0, w, h);
+    c.restore();
+  }
+
   window.PaperCraft = {
     hash, jit, sampleSmoothLoop, makeEllipsePts, tracePoly,
     strokeWaxCrayon, fillWaxCrayon, makeCardboardSlab,
-    buildCardboardStandees, whenReady
+    buildCardboardStandees, whenReady, drawCrumpledPaperOverlay
   };
 })();
