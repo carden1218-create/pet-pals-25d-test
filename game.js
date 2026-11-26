@@ -218,24 +218,24 @@
     canvas.height = Math.round(H * DPR);
 
     const portrait = W < H;
-    // v1's iconic 3D isometric angle (slightly tailored for 11x7 board so front-left & front-right cardboard walls shine!)
-    const ang = portrait ? 1.06 : 0.64;
+    // Close-up 3D isometric framing: fills screen on desktop (1280x720) & mobile portrait (390x844) with strong 3D walls!
+    const ang = portrait ? 1.18 : 0.34;
     const cosA = Math.cos(ang), sinA = Math.sin(ang);
-    const tilt = portrait ? 0.68 : 0.44;
-    const spanU = COLS * cosA + ROWS * sinA + 1.25;
-    const spanV = COLS * sinA + ROWS * cosA + 1.15;
-    const maxTwByW = (W * (portrait ? 0.88 : 0.82)) / (spanU * 0.96);
-    const maxTwByH = (H * (portrait ? 0.62 : 0.69)) / (spanV * tilt * 0.96 + 1.5);
-    const tw = Math.max(24, Math.min(maxTwByW, maxTwByH));
+    const tilt = portrait ? 0.64 : 0.48;
+    const spanU = COLS * cosA + ROWS * sinA + 0.55;
+    const spanV = COLS * sinA + ROWS * cosA + 0.55;
+    const maxTwByW = (W * (portrait ? 0.96 : 0.94)) / (spanU * 0.96);
+    const maxTwByH = (H * (portrait ? 0.72 : 0.80)) / (spanV * tilt * 0.96 + 0.75);
+    const tw = Math.max(28, Math.min(maxTwByW, maxTwByH));
     const th = tw * tilt;
 
     cam = {
       ox: W * 0.50,
-      oy: H * (portrait ? 0.54 : 0.55),
+      oy: H * (portrait ? 0.53 : 0.54),
       tw, th,
-      zs: tw * (portrait ? 1.15 : 1.04),
-      slab: Math.max(22, tw * 0.52),
-      unit: tw * 1.12,
+      zs: tw * (portrait ? 1.02 : 0.96),
+      slab: Math.max(24, tw * 0.46),
+      unit: tw * 1.02,
       portrait, cosA, sinA
     };
     bgCache = null;
@@ -345,7 +345,7 @@
     c.restore();
 
     // Rolling Gen-1 Orchard green meadow hills behind the floating 2.5D island
-    const hillY = cam.oy - cam.th * (cam.portrait ? 3.2 : 4.2);
+    const hillY = cam.oy - cam.th * (cam.portrait ? 4.4 : 4.1);
     c.save();
     const hill1 = [[0, H], [0, hillY + 28]];
     for (let x = 0; x <= W + 60; x += 60) hill1.push([x, hillY + Math.sin(x * 0.0055 + 0.7) * 24 + 18]);
@@ -1085,8 +1085,14 @@
       slash: ["#1a2858", "#4eeeff", "#ffffff"]
     };
     const [rimCol, midCol, coreCol] = colMap[fxKind] || colMap.fire;
+    let offX = (Math.random() - 0.5) * 0.14, offY = -0.10;
+    if (game && game.hero) {
+      const dx = gx - game.hero.gx, dy = gy - game.hero.gy;
+      const d = Math.hypot(dx, dy);
+      if (d > 0.05 && d < 2.4) { offX = (dx / d) * 0.34; offY = (dy / d) * 0.24 - 0.08; }
+    }
     addFx({
-      k: "hit", fxKind, gx: gx + (Math.random() - 0.5) * 0.12, gy: gy - 0.08, gz: gz + 0.42,
+      k: "hit", fxKind, gx: gx + offX, gy: gy + offY, gz: gz + 0.46,
       word, big: isCrit, burstCol: opt.burstCol || midCol, wordOl: opt.wordOl || rimCol,
       scale: bScale * (isCrit ? 1.30 : 1.06),
       life: 0.44, max: 0.44, seed: Math.floor(Math.random() * 9999)
@@ -2805,7 +2811,7 @@
     if (game.hero) {
       const hero = game.hero;
       drawList.push({
-        depth: depthOf(hero.gx, hero.gy),
+        depth: depthOf(hero.gx, hero.gy) + 0.36,
         draw: () => {
           if (hero.deadT > 0) {
             const [rx, ry, rpp] = proj(5.5, 6.35, 0);
@@ -3393,11 +3399,15 @@
               midPts.push([hx + Math.cos(a + 0.16) * rr * 0.64, hy + Math.sin(a + 0.16) * rr * 0.54]);
               corePts.push([hx + Math.cos(a + 0.32) * rr * 0.34, hy + Math.sin(a + 0.32) * rr * 0.28]);
             }
+            ctx.save();
+            ctx.globalAlpha = fade * 0.80;
             drawCardboardCutoutChip(ctx, outerPts, f.burstCol || "#ffe24a", f.seed, { thickX: 6, thickY: 4.5, lw: 2.5 });
             const midCol = f.fxKind === "frost" ? "#2672e8" : (f.fxKind === "lightning" ? "#1e96ff" : (f.fxKind === "water" ? "#2498ff" : (f.fxKind === "slash" ? "#4eeeff" : "#ff3b14")));
             drawCardboardCutoutChip(ctx, midPts, midCol, f.seed + 3, { thickX: 4, thickY: 3, lw: 2.0 });
+            ctx.globalAlpha = fade * 0.58;
             const coreCol = f.fxKind === "frost" ? "#eefaff" : "#fff799";
             fillWaxCrayon(ctx, corePts, coreCol, f.seed + 7, { lw: 1.4, softEdge: false });
+            ctx.restore();
             ctx.save();
             ctx.translate(hx, hy - rOut * 0.10);
             ctx.rotate((hash(f.seed, 2) - 0.5) * 0.22);
