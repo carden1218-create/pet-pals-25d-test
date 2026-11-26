@@ -56,7 +56,7 @@
       words: ["CRASH!", "浪涌!", "湿!"], slowDur: 2.6, splash: 1.15, knock: 0.25
     },
     taro: {
-      img: "taro", name: "芋岩熊", fxKind: "rock", moveSpd: 3.9, range: 3.20, atkRate: 0.78, dmg: 32, maxHp: 135,
+      img: "taro", name: "芋岩熊", fxKind: "rock", moveSpd: 4.1, range: 3.40, atkRate: 0.56, dmg: 46, maxHp: 140,
       projCol: "#8c7464", coreCol: "#e8d6c0", burstCol: "#c9925a", wordOl: "#3e2614",
       words: ["SMASH!", "石化!", "砸!"], splash: 1.05, knock: 0.28
     },
@@ -112,6 +112,8 @@
     { id: "perk_pierce", ico: "🗡️", title: "贯穿飞刃 · 穿透增程", desc: "攻击穿透 +1 个目标、射程 +15%，命中飞溅碎屑！", apply: (h) => { h.pierce += 1; h.rangeMul = (h.rangeMul || 1) + 0.15; } },
     { id: "perk_crit", ico: "💥", title: "雷霆暴击 · 闪光震环", desc: "暴击率 +14%，暴击触发瞬间亮光闪烁与双层冲击环！", apply: (h) => { h.critChance = Math.min(0.75, (h.critChance || 0.20) + 0.14); } },
     { id: "perk_haste", ico: "💨", title: "疾风步法 · 残影加速", desc: "移速 +16%、攻速 +22%，移动与攻击留下帅气残影！", apply: (h) => { h.moveMul = (h.moveMul || 1) + 0.16; h.atkSpdMul += 0.22; } },
+    { id: "perk_power", ico: "💪", title: "火力全开 · 爆裂强化", desc: "攻击和技能伤害 +25%，爆炸特效范围更大！", apply: (h) => { h.dmgMul += 0.25; h.blastScale = (h.blastScale || 1) + 0.08; } },
+    { id: "perk_vital", ico: "💖", title: "坚韧体魄 · 生命强化", desc: "最大生命 +35 并立即回满，复活更快！", apply: (h) => { h.maxHp += 35; h.hp = h.maxHp; h.fastRevive = true; } },
     { id: "perk_econ", ico: "🪙", title: "丰收活力 · 掉币回血", desc: "打怪金币 +35%、经验 +30%，立即回复主角 35 点生命！", apply: (h) => { h.goldMul = (h.goldMul || 1) + 0.35; h.xpMul = (h.xpMul || 1) + 0.30; h.hp = Math.min(h.maxHp, h.hp + 35); } }
   ];
 
@@ -148,8 +150,9 @@
 
   function generateWave(waveNum) {
     // Wave 1-4 gentle warm-up on main path; Wave 5+ ramps steeply with Bosses, 3 lanes, gliders & archers so camping exit fails ~W6-9!
-    const count = waveNum <= 2 ? 5 + waveNum * 2 : Math.min(54, 7 + waveNum * 3 + Math.floor(waveNum * waveNum * 0.18));
-    const baseDelay = waveNum <= 3 ? Math.max(0.75, 1.35 - waveNum * 0.14) : Math.max(0.24, 1.10 - waveNum * 0.08);
+    // Balance v20: after wave 4 the count grows slowly and caps at 40 so a decent player can reach wave 20-30+
+    const count = waveNum <= 2 ? 5 + waveNum * 2 : (waveNum <= 4 ? 7 + waveNum * 3 + Math.floor(waveNum * waveNum * 0.18) : Math.min(40, 13 + Math.floor((waveNum - 4) * 1.5)));
+    const baseDelay = waveNum <= 3 ? Math.max(0.75, 1.35 - waveNum * 0.14) : Math.max(0.40, 1.02 - waveNum * 0.035);
     const pool = ["z1", "z2"];
     if (waveNum >= 2) pool.push("z3");
     if (waveNum >= 3) pool.push("z4", "z3");
@@ -238,7 +241,36 @@
       unit: tw * 1.02,
       portrait, cosA, sinA
     };
+    if (portrait) fitPortraitCamera();
     bgCache = null;
+  }
+
+  // v20: portrait fit measures the real projected island + edge props so nothing is clipped on the right/left edge
+  function fitPortraitCamera() {
+    const M = 0.58;
+    const measure = () => {
+      let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      const add = (x, y) => { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; };
+      for (const [gx, gy] of [[-M, -M], [COLS + M, -M], [COLS + M, ROWS + M], [-M, ROWS + M]]) {
+        const [x, y, pp] = proj(gx, gy, 0);
+        add(x, y); add(x, y + cam.slab * pp * 1.25);
+      }
+      for (const pr of SCENIC_PROPS) {
+        const [x, y, pp] = proj(pr.gx, pr.gy, 0);
+        const hPx = cam.unit * 1.68 * (pr.kind === "tree" ? 1.25 : 0.94) * pr.scale * pp;
+        add(x - hPx * 0.42, y - hPx); add(x + hPx * 0.42, y);
+      }
+      return { x0, x1, y0, y1 };
+    };
+    const padX = 6, top = 96, bottom = H - 70;
+    for (let it = 0; it < 3; it++) {
+      const b = measure();
+      const sc = Math.min(1, (W - padX * 2) / (b.x1 - b.x0), (bottom - top) / (b.y1 - b.y0));
+      cam.tw *= sc; cam.th *= sc; cam.zs *= sc; cam.slab = Math.max(18, cam.slab * sc); cam.unit *= sc;
+      const b2 = measure();
+      cam.ox += W * 0.5 - (b2.x0 + b2.x1) * 0.5;
+      cam.oy += (top + bottom) * 0.5 - (b2.y0 + b2.y1) * 0.5;
+    }
   }
 
   function depthOf(gx, gy) {
@@ -584,7 +616,7 @@
     selectedComp = null;
     game = {
       started: false, waveNum: 1, waveEntries: generateWave(1), spawnIdx: 0, spawnTimer: 0.35, wavePause: 0,
-      lives: 5, gold: 60, over: false, levelPick: null,
+      lives: 10, gold: 60, over: false, levelPick: null,
       hero: makeHero(chosenHeroKey), companions: [], enemies: [], dying: [],
       shots: [], enemyShots: [], fx: [], scorch: [], puddles: [], rubbles: [],
       activeZones: [], telegraphs: [], iceFloorT: 0, darkSkyT: 0, swordOrbitT: 0,
@@ -601,7 +633,7 @@
     selectedComp = null;
     game = {
       started: true, waveNum: 1, waveEntries: generateWave(1), spawnIdx: 0, spawnTimer: 0.25, wavePause: 0,
-      lives: 5, gold: 60, over: false, levelPick: null,
+      lives: 10, gold: 60, over: false, levelPick: null,
       hero: makeHero(chosenHeroKey), companions: [], enemies: [], dying: [],
       shots: [], enemyShots: [], fx: [], scorch: [], puddles: [], rubbles: [],
       activeZones: [], telegraphs: [], iceFloorT: 0, darkSkyT: 0, swordOrbitT: 0,
@@ -702,7 +734,7 @@
     spawnDmgPop(h.gx, h.gy - 0.1, h.gz + 1.5, "-" + dmg + "💔", "#ff4a5a", true);
     AudioSys.sfxHit("fire", false);
     if (h.hp <= 0) {
-      h.deadT = 5.0;
+      h.deadT = h.fastRevive ? 3.5 : 5.0;
       h.target = null;
       h.dashState = null;
       h.ridingSwordT = 0;
@@ -943,7 +975,9 @@
     if (h.xp >= h.xpNext && !game.levelPick) {
       h.xp -= h.xpNext;
       h.level += 1;
-      h.xpNext = Math.round(h.xpNext * 1.42 + 2);
+      h.xpNext = Math.round(h.xpNext * 1.24 + 2);
+      // Balance v20: every level-up also grows the hero (+10% damage, +8 max HP, heal 20)
+      h.dmgMul += 0.10; h.maxHp += 8; h.hp = Math.min(h.maxHp, h.hp + 20);
       openLevelUpPicker();
     }
     syncHud();
@@ -1166,13 +1200,13 @@
     }
   }
 
-  function spawnDeathPuff(gx, gy, tint, reward) {
+  function spawnDeathPuff(gx, gy, tint, reward, xpVal = 1) {
     addFx({ k: "puff", gx, gy, gz: 0.34, tint: tint || "#86de44", life: 0.44, max: 0.44, seed: Math.floor(Math.random() * 9999) });
     spawnPaperConfetti(gx, gy, tint);
     if (reward) {
       addFx({ k: "pop", gx: gx + 0.24, gy, gz: 1.25, text: "+" + reward + "🪙", col: "#ffd83a", life: 0.72, max: 0.72, seed: Math.floor(Math.random() * 9999) });
     }
-    grantHeroXp(1);
+    grantHeroXp(xpVal || 1);
     game.scorch.push({ gx, gy, life: 1.6, max: 1.6, seed: Math.floor(Math.random() * 999) });
   }
 
@@ -1314,6 +1348,7 @@
       if (prio === "nearest") sc = -d;
       else if (prio === "maxhp") sc = e.hp;
       else if (prio === "boss") sc = (e.boss ? 10000 : 0) + e.hp;
+      if (e.petrified) sc -= 100000; // statues already block the road: shoot live slimes first
       if (sc > bestScore) { bestScore = sc; best = e; }
     }
     return best;
@@ -1429,7 +1464,7 @@
         game.activeZones.push({
           kind: "taroSkyRock", attackerRef: attacker, gx: attacker.gx, gy: attacker.gy, gz: 2.2,
           target: tg, tx: tg.gx, ty: tg.gy,
-          t: 0, dropDur: 0.22, headbuttDur: 0.09, flyDur: 0.20, hit: false,
+          t: 0, dropDur: 0.18, headbuttDur: 0.08, flyDur: 0.18, hit: false,
           dmg: dmgVal, crit: isCritRoll, knock: opt.knock || 0.28, seed: Math.floor(Math.random() * 9999)
         });
       }
@@ -1475,22 +1510,25 @@
   }
   function spawnSlimeEntry(kind, laneIdx, opts = {}) {
     const def = ENEMY_DEF[kind] || ENEMY_DEF.z1;
-    const waveScaleHp = opts.hpMul || (game.waveNum <= 5
-      ? (0.48 + (game.waveNum - 1) * 0.11)
-      : (1.05 + (game.waveNum - 5) * 0.50 + Math.pow(game.waveNum - 5, 1.6) * 0.18));
-    const waveScaleSpd = opts.spdMul || (game.waveNum <= 5
-      ? (0.74 + (game.waveNum - 1) * 0.04)
-      : (0.98 + Math.min(0.95, (game.waveNum - 5) * 0.09)));
+    // Balance v20: waves 1-4 unchanged; afterwards HP grows gently (x7 at W20, x14 at W30, x23 at W40) and speed caps at +40%
+    const wN = game.waveNum;
+    const waveScaleHp = opts.hpMul || (wN <= 5
+      ? (0.48 + (wN - 1) * 0.11)
+      : (0.92 + (wN - 5) * 0.20 + Math.pow(wN - 5, 1.75) * 0.03));
+    const waveScaleSpd = opts.spdMul || (wN <= 5
+      ? (0.74 + (wN - 1) * 0.04)
+      : (0.90 + Math.min(0.40, (wN - 5) * 0.02)));
+    const bossHpMul = def.boss && !opts.isMini ? 0.85 : 1;
     const isFly = !!def.fly;
     const flyMeta = isFly ? {
       sx: 0.3, sy: 0.7 + hash(game.spawnsDone, game.waveNum * 7) * 5.2,
       tx: 10.4, ty: 3.5, totalLen: 10.6
     } : null;
     const [sx, sy] = opts.gx != null ? [opts.gx, opts.gy] : lanePos(laneIdx, 0, flyMeta);
-    const hp = Math.round((opts.hpOverride || def.hp) * waveScaleHp);
+    const hp = Math.round((opts.hpOverride || def.hp) * waveScaleHp * bossHpMul);
     const e = {
       kind, img: def.img, tint: def.tint, role: def.role || "normal",
-      reward: Math.round(def.reward * (1 + Math.min(1.5, game.waveNum * 0.06))),
+      reward: Math.round(def.reward * (1 + Math.min(1.5, game.waveNum * 0.06))), xpVal: def.boss && !opts.isMini ? 6 : 1,
       boss: !!def.boss && !opts.isMini,
       isMini: !!opts.isMini,
       hp, maxHp: hp,
@@ -1604,7 +1642,7 @@
         game.spawnTimer = 0.30;
         game.wavePause = 0;
         // Slight wave recovery if alive
-        if (game.hero.deadT <= 0) game.hero.hp = Math.min(game.hero.maxHp, game.hero.hp + 12);
+        if (game.hero.deadT <= 0) game.hero.hp = Math.min(game.hero.maxHp, game.hero.hp + Math.round(game.hero.maxHp * 0.25));
         addFx({ k: "pop", gx: 5.5, gy: 2.6, gz: 1.6, text: "🌊 第 " + game.waveNum + " 波!", col: "#ffe45c", crit: true, life: 1.1, max: 1.1, seed: game.waveNum });
         syncHud();
       }
@@ -1887,6 +1925,13 @@
           if (z.target && z.target.hp > 0) {
             applyRockShell(z.target, 1);
             damageEnemy(z.target, z.dmg, false, { fxKind: "rock", dirX: z.tx - z.startGx, dirY: z.ty - z.startGy, knock: z.knock, crit: z.crit });
+          }
+          // Balance v20: the shattering boulder also splashes nearby slimes (55% dmg) so Taro keeps up in late waves
+          const splR = 1.15 * ((att && att.blastScale) || 1);
+          for (const o of game.enemies) {
+            if (o !== z.target && o.hp > 0 && Math.hypot(o.gx - z.tx, o.gy - z.ty) <= splR) {
+              damageEnemy(o, Math.round(z.dmg * 0.55), false, { fxKind: "rock", dirX: o.gx - z.tx, dirY: o.gy - z.ty, knock: z.knock * 0.6 });
+            }
           }
           spawnImpactDoodle(z.tx, z.ty, 0.30, z.target && z.target.hp <= 0, { fxKind: "rock", crit: z.crit, words: HERO_DEFS.taro.words });
         }
@@ -2208,7 +2253,7 @@
         game.slimesKilled++;
         const goldGain = Math.round(e.reward * (hero.goldMul || 1));
         game.gold += goldGain; syncHud();
-        spawnDeathPuff(e.gx, e.gy, e.tint, goldGain);
+        spawnDeathPuff(e.gx, e.gy, e.tint, goldGain, e.xpVal || 1);
         if (e.splits > 0) {
           for (let sp = 0; sp < e.splits; sp++) {
             spawnSlimeEntry("z1", e.lane, {
@@ -2358,7 +2403,7 @@
 
       const maxD = e.flyMeta ? e.flyMeta.totalLen : (LANES[e.lane] || PATH).length - 1;
       if (e.dist >= maxD) {
-        game.lives = Math.max(0, game.lives - (e.boss ? 5 : 1));
+        game.lives = Math.max(0, game.lives - (e.boss ? 3 : 1));
         syncHud();
         spawnImpactDoodle(e.gx, e.gy, 0.45, true, { fxKind: "fire", words: ["失守!"] });
         game.enemies.splice(i, 1);
@@ -2419,7 +2464,7 @@
   }
 
   function damageEnemy(e, dmg, isBurn, hitOpt = {}) {
-    if (e.petrified) dmg = Math.round(dmg * 0.65);
+    if (e.petrified) dmg = Math.round(dmg * 0.85);
     e.hp -= dmg;
     const fk = hitOpt.fxKind || "fire";
     const isCrit = !!hitOpt.crit || (e.hp <= 0 && !isBurn);
