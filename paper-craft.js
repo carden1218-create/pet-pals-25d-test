@@ -285,9 +285,9 @@
 
     const boardMask = dilateMask(innerMask, lip);
 
-    // 1. Extruded thick brown corrugated cardboard side wall
-    const steps = Math.max(9, Math.round(Math.hypot(thickX, thickY)));
-    const stepMasks = ["#4a2c14", "#6e431f", "#8a582e"].map((col) => {
+    // 1. Extruded thick brown corrugated cardboard side wall with outer kraft liners + wavy flute core!
+    const steps = Math.max(10, Math.round(Math.hypot(thickX, thickY)));
+    const stepMasks = ["#331908", "#5e3616", "#8c592c", "#b8824d"].map((col) => {
       const m = document.createElement("canvas");
       m.width = w; m.height = h;
       const mc = m.getContext("2d");
@@ -298,18 +298,19 @@
       return m;
     });
 
-    for (let s = steps; s >= 1; s--) {
-      const t = s / steps;
-      const idx = s === steps ? 0 : (t > 0.55 ? 1 : 2);
+    for (let sIdx = steps; sIdx >= 1; sIdx--) {
+      const t = sIdx / steps;
+      // Outer back liner (last 2 steps), inner hollow channel (middle steps), front liner (first 2 steps)
+      const idx = (sIdx >= steps - 1) ? 0 : (sIdx <= 2 ? 3 : (t > 0.5 ? 1 : 2));
       c.drawImage(stepMasks[idx], thickX * t, thickY * t);
     }
 
-    // 2. Carve VISIBLE CORRUGATED FLUTES (一格一格 shipping-box ribbed cross-section) into the side wall
+    // 2. Real corrugated flute wave & kraft fiber mottling inside the extruded cardboard edge
     const wallMask = document.createElement("canvas");
     wallMask.width = w; wallMask.height = h;
     const wc = wallMask.getContext("2d");
-    for (let s = steps; s >= 1; s--) {
-      const t = s / steps;
+    for (let sIdx = steps; sIdx >= 1; sIdx--) {
+      const t = sIdx / steps;
       wc.drawImage(boardMask, thickX * t, thickY * t);
     }
     wc.globalCompositeOperation = "destination-out";
@@ -318,16 +319,24 @@
     const wallArt = document.createElement("canvas");
     wallArt.width = w; wallArt.height = h;
     const ac = wallArt.getContext("2d");
-    ac.fillStyle = "#8c592e";
+    // Dark hollow core + mottled kraft variation
+    ac.fillStyle = "#3a1d0b";
     ac.fillRect(0, 0, w, h);
+    for (let mi = 0; mi < 160; mi++) {
+      const mx = hash(mi * 7, 13) * w, my = hash(mi * 11, 29) * h;
+      ac.fillStyle = mi % 2 ? "rgba(182, 126, 72, 0.25)" : "rgba(38, 18, 6, 0.28)";
+      ac.beginPath(); ac.ellipse(mx, my, 8, 5, 0, 0, TAU); ac.fill();
+    }
 
-    // Scan boundary pixels of boardMask & place crisp 一格一格 corrugated flutes at ~5.5px spacing
+    // Scan outer perimeter and draw continuous angled corrugated flute waves between top/bottom liners!
     const bmData = boardMask.getContext("2d").getImageData(0, 0, w, h).data;
-    const cellSz = 5;
+    const cellSz = 4.5;
     const cols = Math.ceil(w / cellSz);
     const seen = new Uint8Array(cols * Math.ceil(h / cellSz));
     const wallAng = Math.atan2(thickY, thickX);
 
+    ac.lineCap = "round";
+    ac.lineJoin = "round";
     for (let y = 1; y < h - 1; y++) {
       for (let x = 1; x < w - 1; x++) {
         if (bmData[(y * w + x) * 4 + 3] < 140) continue;
@@ -341,54 +350,67 @@
         if (seen[bIdx]) continue;
         seen[bIdx] = 1;
 
-        const mx = x + thickX * 0.50;
-        const my = y + thickY * 0.50;
-        ac.fillStyle = "#2f1707";
-        ac.beginPath();
-        ac.ellipse(mx, my, 2.5, 2.1, wallAng, 0, TAU);
-        ac.fill();
-
-        ac.fillStyle = "#daa36a";
-        ac.beginPath();
-        ac.ellipse(mx + 2.0, my - 1.4, 1.4, 1.2, 0, 0, TAU);
-        ac.fill();
+        // Draw diagonal corrugated wave rib spanning from front liner (x,y) to back liner (x+thickX, y+thickY)
+        const x0 = x + thickX * 0.12, y0 = y + thickY * 0.12;
+        const x1 = x + thickX * 0.88, y1 = y + thickY * 0.88;
+        const xm = (x0 + x1) * 0.5 - Math.sin(wallAng) * 2.2;
+        const ym = (y0 + y1) * 0.5 + Math.cos(wallAng) * 2.2;
+        ac.strokeStyle = "#220e04";
+        ac.lineWidth = 3.2;
+        ac.beginPath(); ac.moveTo(x0, y0); ac.lineTo(xm, ym); ac.lineTo(x1, y1); ac.stroke();
+        ac.strokeStyle = "#dba469";
+        ac.lineWidth = 1.6;
+        ac.beginPath(); ac.moveTo(x0 + 1.2, y0 - 0.8); ac.lineTo(xm + 1.2, ym - 0.8); ac.lineTo(x1 + 1.2, y1 - 0.8); ac.stroke();
       }
     }
 
+    // Outer back kraft liner sheet + dark cut edge
     ac.globalCompositeOperation = "destination-in";
     ac.drawImage(wallMask, 0, 0);
     c.drawImage(wallArt, 0, 0);
 
-    // Crisp dark cut line on back rim of extruded wall
-    const backRim = dilateMask(boardMask, 1.3);
+    // Highlighted kraft liner strip along back rim
+    const backLiner = dilateMask(boardMask, 1.5);
+    const blc = backLiner.getContext("2d");
+    blc.globalCompositeOperation = "source-in";
+    blc.fillStyle = "#aa7642";
+    blc.fillRect(0, 0, w, h);
+    blc.globalCompositeOperation = "destination-out";
+    blc.drawImage(boardMask, -1.8, -1.5);
+    c.drawImage(backLiner, thickX * 0.88, thickY * 0.88);
+
+    const backRim = dilateMask(boardMask, 1.4);
     const brc = backRim.getContext("2d");
     brc.globalCompositeOperation = "source-in";
-    brc.fillStyle = "#3a210e";
+    brc.fillStyle = "#331a08";
     brc.fillRect(0, 0, w, h);
     brc.globalCompositeOperation = "destination-out";
     brc.drawImage(boardMask, 0, 0);
     c.drawImage(backRim, thickX, thickY);
 
-    // 3. Front kraft-brown cardboard face (NO white torn paper!)
+    // 3. Front kraft-brown cardboard face with realistic light/dark kraft mottling + frayed wood fibers!
     const frontBoard = document.createElement("canvas");
     frontBoard.width = w; frontBoard.height = h;
     const fc = frontBoard.getContext("2d");
-    fc.fillStyle = "#c8915a";
+    fc.fillStyle = "#c9925a";
     fc.fillRect(0, 0, w, h);
-    for (let i = 0; i < 180; i++) {
-      const fx = hash(i * 3, 17) * w;
-      const fy = hash(i * 5, 31) * h;
-      fc.fillStyle = i % 2 ? "rgba(74, 44, 20, 0.14)" : "rgba(242, 212, 172, 0.16)";
-      fc.fillRect(fx, fy, 2.2, 1.4);
+    for (let i = 0; i < 48; i++) {
+      const mx = hash(i * 7, 11) * w, my = hash(i * 13, 23) * h;
+      fc.fillStyle = i % 2 ? "rgba(156, 102, 52, 0.22)" : "rgba(224, 182, 132, 0.22)";
+      fc.beginPath(); fc.ellipse(mx, my, 14, 9, hash(i, 5) * 3, 0, TAU); fc.fill();
+    }
+    for (let i = 0; i < 240; i++) {
+      const fx = hash(i * 3, 17) * w, fy = hash(i * 5, 31) * h;
+      fc.fillStyle = i % 3 === 0 ? "rgba(62, 34, 14, 0.22)" : (i % 2 ? "rgba(96, 56, 24, 0.16)" : "rgba(244, 218, 178, 0.20)");
+      fc.fillRect(fx, fy, 2.8, 1.2);
     }
     fc.globalCompositeOperation = "destination-in";
     fc.drawImage(boardMask, 0, 0);
 
-    // Subtle dark kraft rim along front cardboard edge
-    const frontRim = dilateMask(boardMask, 1.2);
+    const frontRim = dilateMask(boardMask, 1.3);
     const frc = frontRim.getContext("2d");
     frc.globalCompositeOperation = "source-in";
-    frc.fillStyle = "#4d2f16";
+    frc.fillStyle = "#482a12";
     frc.fillRect(0, 0, w, h);
     c.drawImage(frontRim, 0, 0);
     c.drawImage(frontBoard, 0, 0);
@@ -638,25 +660,24 @@
     return layers;
   }
 
-  // Procedural Crumpled Paper Fold & Crease Overlay (true 3D facet normals + diagonal creases + crayon skip)
+  // Procedural Soft Crumpled Paper Overlay (organic curved wrinkles, gentle light/shadow facets, no geometric glass shards)
   function drawCrumpledPaperOverlay(c, w, h, seed = 404, opts = {}) {
     ensureToothTextures();
-    const cell = opts.cell ?? 66;
+    const cell = opts.cell ?? 112;
     const strength = opts.strength ?? 1.0;
     const isColoredSurface = !!opts.coloredSurface;
-    const zScale = cell * 0.62;
+    const zScale = cell * 0.42;
     const cols = Math.ceil(w / cell) + 3;
     const rows = Math.ceil(h / cell) + 3;
 
-    // Build jittered vertex mesh (x, y, height z in [0,1])
     const grid = [];
     for (let r = 0; r < rows; r++) {
       const row = [];
       for (let q = 0; q < cols; q++) {
         const bx = (q - 1) * cell;
         const by = (r - 1) * cell;
-        const jx = (hash(q * 19 + r * 37, seed) - 0.5) * cell * 0.82;
-        const jy = (hash(q * 41 + r * 13, seed + 5) - 0.5) * cell * 0.82;
+        const jx = (hash(q * 19 + r * 37, seed) - 0.5) * cell * 0.85;
+        const jy = (hash(q * 41 + r * 13, seed + 5) - 0.5) * cell * 0.85;
         const hz = hash(q * 29 + r * 53, seed + 11);
         row.push([bx + jx, by + jy, hz]);
       }
@@ -684,7 +705,7 @@
     }
 
     c.save();
-    // 1. Faceted light/shadow paper folds using true scaled 3D normals
+    // 1. Soft, subtle faceted light/shadow paper folds (low contrast so it never looks like glass shards)
     for (let i = 0; i < tris.length; i++) {
       const [a, b, d] = tris[i];
       const ux = b[0] - a[0], uy = b[1] - a[1], uz = (b[2] - a[2]) * zScale;
@@ -694,71 +715,210 @@
       let nz = ux * vy - uy * vx;
       if (nz < 0) { nx = -nx; ny = -ny; nz = -nz; }
       const len = Math.max(1e-4, Math.hypot(nx, ny, nz));
-      // Light from top-left (-0.72, -0.68, 0.14); subtract flat baseline 0.14 so facets swing -..+
       const tilt = ((nx / len) * -0.72 + (ny / len) * -0.68 + (nz / len) * 0.14) - 0.14;
       const ridge = (a[2] + b[2] + d[2]) / 3;
 
       c.beginPath();
       c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.lineTo(d[0], d[1]); c.closePath();
 
-      if (tilt > 0.025) {
-        c.fillStyle = `rgba(255, 253, 244, ${Math.min(isColoredSurface ? 0.34 : 0.30, tilt * (isColoredSurface ? 0.54 : 0.46) * strength)})`;
+      if (tilt > 0.04) {
+        c.fillStyle = `rgba(255, 253, 245, ${Math.min(0.10, tilt * 0.18 * strength)})`;
         c.fill();
-      } else if (tilt < -0.025) {
-        c.fillStyle = `rgba(62, 42, 20, ${Math.min(isColoredSurface ? 0.22 : 0.18, -tilt * (isColoredSurface ? 0.36 : 0.28) * strength)})`;
+      } else if (tilt < -0.04) {
+        c.fillStyle = `rgba(72, 58, 36, ${Math.min(0.075, -tilt * 0.13 * strength)})`;
         c.fill();
       }
-      // On colored grass/path: crayon pigment catches denser on ridges & visibly skips in fold valleys
       if (isColoredSurface) {
-        if (ridge > 0.54) {
-          c.fillStyle = `rgba(30, 48, 14, ${Math.min(0.16, (ridge - 0.54) * 0.34 * strength)})`;
+        if (ridge > 0.57) {
+          c.fillStyle = `rgba(36, 56, 18, ${Math.min(0.06, (ridge - 0.57) * 0.14 * strength)})`;
           c.fill();
-        } else if (ridge < 0.43) {
-          c.fillStyle = `rgba(255, 251, 236, ${Math.min(0.24, (0.43 - ridge) * 0.54 * strength)})`;
+        } else if (ridge < 0.42) {
+          c.fillStyle = `rgba(255, 251, 236, ${Math.min(0.09, (0.42 - ridge) * 0.22 * strength)})`;
           c.fill();
         }
       }
     }
 
-    // 2. Crisp crumpled paper creases + crayon-skipping wrinkle ridges along every sharp fold
+    // 2. Organic wavy paper creases (only stronger folds, soft translucent curves — NO harsh straight dark lines)
     c.lineCap = "round";
     c.lineJoin = "round";
     for (let i = 0; i < edges.length; i++) {
       const [pA, pB, eSeed] = edges[i];
       const dz = Math.abs(pA[2] - pB[2]);
-      if (dz < 0.22) continue;
-      const aNorm = Math.min(1, (dz - 0.22) * 1.8) * strength;
-      const mx = (pA[0] + pB[0]) * 0.5 + (hash(eSeed, seed + 31) - 0.5) * 6;
-      const my = (pA[1] + pB[1]) * 0.5 + (hash(eSeed, seed + 37) - 0.5) * 6;
+      if (dz < 0.34) continue;
+      const aNorm = Math.min(1, (dz - 0.34) * 2.1) * strength;
+      const dx = pB[0] - pA[0], dy = pB[1] - pA[1];
+      const len = Math.max(1, Math.hypot(dx, dy));
+      const nx = -dy / len, ny = dx / len;
+      const bend1 = (hash(eSeed, seed + 31) - 0.5) * 14;
+      const bend2 = (hash(eSeed, seed + 47) - 0.5) * 14;
+      const p1x = pA[0] + dx * 0.33 + nx * bend1, p1y = pA[1] + dy * 0.33 + ny * bend1;
+      const p2x = pA[0] + dx * 0.67 + nx * bend2, p2y = pA[1] + dy * 0.67 + ny * bend2;
 
-      // Shadowed fold line
-      c.strokeStyle = `rgba(64, 44, 20, ${(isColoredSurface ? 0.24 : 0.20) * aNorm})`;
-      c.lineWidth = (isColoredSurface ? 1.35 : 1.0) + dz * 0.85;
-      c.beginPath(); c.moveTo(pA[0], pA[1]); c.lineTo(mx, my); c.lineTo(pB[0], pB[1]); c.stroke();
-
-      // Highlighted ridge / crayon skip over wrinkle
-      c.strokeStyle = isColoredSurface
-        ? `rgba(255, 252, 236, ${0.32 * aNorm})`
-        : `rgba(255, 254, 248, ${0.54 * aNorm})`;
-      c.lineWidth = isColoredSurface ? 1.7 : 1.5;
+      // Soft shadowed paper wrinkle
+      c.strokeStyle = `rgba(76, 62, 42, ${(isColoredSurface ? 0.08 : 0.095) * aNorm})`;
+      c.lineWidth = 1.2 + dz * 0.5;
       c.beginPath();
-      c.moveTo(pA[0] + 1.3, pA[1] + 1.2);
-      c.lineTo(mx + 1.3, my + 1.2);
-      c.lineTo(pB[0] + 1.3, pB[1] + 1.2);
+      c.moveTo(pA[0], pA[1]);
+      c.bezierCurveTo(p1x, p1y, p2x, p2y, pB[0], pB[1]);
+      c.stroke();
+
+      // Gentle highlight / crayon-skip beside the wrinkle
+      c.strokeStyle = isColoredSurface
+        ? `rgba(255, 252, 238, ${0.18 * aNorm})`
+        : `rgba(255, 254, 248, ${0.24 * aNorm})`;
+      c.lineWidth = 1.4;
+      c.beginPath();
+      c.moveTo(pA[0] + 1.5, pA[1] + 1.3);
+      c.bezierCurveTo(p1x + 1.5, p1y + 1.3, p2x + 1.5, p2y + 1.3, pB[0] + 1.5, pB[1] + 1.3);
       c.stroke();
     }
 
-    // 3. Extra paper-tooth grain across folds
+    // 3. Soft paper-tooth grain across folds
     const pat = c.createPattern(toothPatCanvas, "repeat");
-    c.globalAlpha = (isColoredSurface ? 0.18 : 0.22) * strength;
+    c.globalAlpha = (isColoredSurface ? 0.14 : 0.16) * strength;
     c.fillStyle = pat;
     c.fillRect(0, 0, w, h);
     c.restore();
   }
 
+  // Paint realistic kraft paper mottling + pulp fibers inside current clip
+  function paintKraftMottle(c, minX, minY, w, h, seed = 101, shadeBias = 0) {
+    c.save();
+    for (let i = 0; i < 26; i++) {
+      const mx = minX + hash(i * 7, seed + 3) * w;
+      const my = minY + hash(i * 11, seed + 7) * h;
+      const rx = 12 + hash(i, seed + 11) * 28;
+      const ry = 6 + hash(i, seed + 17) * 14;
+      c.fillStyle = i % 2 === 0
+        ? `rgba(222, 178, 126, ${0.18 + Math.max(0, shadeBias) * 0.08})`
+        : `rgba(112, 66, 28, ${0.18 + Math.max(0, -shadeBias) * 0.10})`;
+      c.beginPath(); c.ellipse(mx, my, rx, ry, hash(i, seed) * 2, 0, TAU); c.fill();
+    }
+    for (let i = 0; i < 160; i++) {
+      const fx = minX + hash(i * 13, seed + 23) * w;
+      const fy = minY + hash(i * 17, seed + 29) * h;
+      c.fillStyle = i % 3 === 0 ? "rgba(58, 32, 12, 0.24)" : "rgba(242, 212, 170, 0.22)";
+      c.fillRect(fx, fy, 2.5 + hash(i, seed + 31) * 3.0, 1.1);
+    }
+    c.restore();
+  }
+
+  // Draw authentic corrugated cardboard cross-section along an exposed wall mask:
+  // two kraft liner sheets + continuous sinusoidal flute wave + directional sunlit/shaded contrast + dents + peeled tabs
+  function drawCorrugatedWallFlutes(fc, layerPts, yOff, layerH, seed, minX, maxX) {
+    const samples = [];
+    let totalLen = 0;
+    for (let i = 0; i < layerPts.length; i++) {
+      const p0 = layerPts[i], p1 = layerPts[(i + 1) % layerPts.length];
+      const dx = p1[0] - p0[0], dy = p1[1] - p0[1];
+      const seg = Math.hypot(dx, dy);
+      if (seg < 0.5) continue;
+      // Outward normal for clockwise loop (or detect downward-facing front walls where dx > 0 on bottom edge)
+      const nX = dy / seg, nY = -dx / seg;
+      const nSub = Math.max(1, Math.ceil(seg / 2.2));
+      for (let k = 0; k < nSub; k++) {
+        const t = k / nSub;
+        const x = p0[0] + dx * t;
+        const y = p0[1] + dy * t;
+        const dentWave = Math.sin(totalLen * 0.025 + seed) * 0.10 + (hash(Math.floor(totalLen / 44), seed + 9) > 0.85 ? -0.24 : 0);
+        const localH = Math.max(7.5, layerH * (0.96 + dentWave));
+        samples.push({ x, y, s: totalLen, h: localH, nX, nY });
+        totalLen += seg / nSub;
+      }
+    }
+    if (samples.length < 3) return;
+
+    fc.lineCap = "round";
+    fc.lineJoin = "round";
+
+    // 1. Hollow inner corrugated channel (deep warm umber #3b1c09, not pure black!)
+    fc.strokeStyle = "#3b1c09";
+    fc.lineWidth = layerH * 0.54;
+    fc.beginPath();
+    samples.forEach((pt, idx) => {
+      const yy = pt.y + yOff + pt.h * 0.52;
+      if (idx === 0) fc.moveTo(pt.x, yy); else fc.lineTo(pt.x, yy);
+    });
+    fc.stroke();
+
+    // 2. Continuous sinusoidal corrugated flute wave (~10.5px pitch, softer organic kraft contrast)
+    const waveFreq = 0.60;
+    const wavePts = samples.map((pt) => {
+      const phase = pt.s * waveFreq + seed * 0.7;
+      // Occasional subtle flattened/crushed stretch where wave amplitude dips
+      const crush = hash(Math.floor(pt.s / 55), seed + 17) > 0.86 ? 0.55 : 1.0;
+      const amp = pt.h * 0.23 * crush;
+      return { x: pt.x, y: pt.y + yOff + pt.h * 0.52 + Math.sin(phase) * amp, nx: pt.x };
+    });
+
+    // Shaded underside of flute wave
+    fc.strokeStyle = "#6e3e1a";
+    fc.lineWidth = 2.6;
+    fc.beginPath();
+    wavePts.forEach((pt, idx) => idx === 0 ? fc.moveTo(pt.x, pt.y + 0.85) : fc.lineTo(pt.x, pt.y + 0.85));
+    fc.stroke();
+
+    // Sunlit kraft flute ribbon (gradient from warm tan left-sunlit to shaded caramel right)
+    const fluteGrad = fc.createLinearGradient(minX, 0, maxX, 0);
+    fluteGrad.addColorStop(0, "#e3b278");
+    fluteGrad.addColorStop(0.55, "#c99056");
+    fluteGrad.addColorStop(1, "#9d6838");
+    fc.strokeStyle = fluteGrad;
+    fc.lineWidth = 1.85;
+    fc.beginPath();
+    wavePts.forEach((pt, idx) => idx === 0 ? fc.moveTo(pt.x, pt.y) : fc.lineTo(pt.x, pt.y));
+    fc.stroke();
+
+    // 3. Prominent top & bottom kraft liner sheets sandwiching the corrugated wave!
+    const topLinerGrad = fc.createLinearGradient(minX, 0, maxX, 0);
+    topLinerGrad.addColorStop(0, "#d7a872");
+    topLinerGrad.addColorStop(0.6, "#be8a52");
+    topLinerGrad.addColorStop(1, "#986435");
+    fc.strokeStyle = topLinerGrad;
+    fc.lineWidth = Math.max(2.6, layerH * 0.24);
+    fc.beginPath();
+    samples.forEach((pt, idx) => {
+      const yy = pt.y + yOff + layerH * 0.14;
+      if (idx === 0) fc.moveTo(pt.x, yy); else fc.lineTo(pt.x, yy);
+    });
+    fc.stroke();
+
+    fc.strokeStyle = "#8a562a";
+    fc.lineWidth = Math.max(2.4, layerH * 0.21);
+    fc.beginPath();
+    samples.forEach((pt, idx) => {
+      const yy = pt.y + yOff + pt.h * 0.88;
+      if (idx === 0) fc.moveTo(pt.x, yy); else fc.lineTo(pt.x, yy);
+    });
+    fc.stroke();
+
+    // 4. Subtle peeled top-liner flaps + frayed kraft fibers on front-facing edges
+    for (let i = 18; i < samples.length - 18; i += 34) {
+      const pt = samples[i];
+      if (hash(i, seed + 41) > 0.62) {
+        fc.fillStyle = "#dfb37b";
+        fc.strokeStyle = "#522f14";
+        fc.lineWidth = 1.05;
+        fc.beginPath();
+        fc.moveTo(pt.x - 5.5, pt.y + yOff + 1.2);
+        fc.lineTo(pt.x + 3.5, pt.y + yOff - 2.8);
+        fc.lineTo(pt.x + 8.5, pt.y + yOff + 2.2);
+        fc.closePath();
+        fc.fill(); fc.stroke();
+      }
+      fc.strokeStyle = "rgba(232, 198, 152, 0.55)";
+      fc.lineWidth = 1.0;
+      fc.beginPath();
+      fc.moveTo(pt.x, pt.y + yOff + pt.h * 0.32);
+      fc.lineTo(pt.x + (hash(i, seed + 7) - 0.5) * 5.5, pt.y + yOff + pt.h * 0.32 + 4.8);
+      fc.stroke();
+    }
+  }
+
   window.PaperCraft = {
     hash, jit, sampleSmoothLoop, makeEllipsePts, tracePoly,
     strokeWaxCrayon, fillWaxCrayon, makeCardboardSlab,
-    buildCardboardStandees, whenReady, drawCrumpledPaperOverlay
+    buildCardboardStandees, whenReady, drawCrumpledPaperOverlay, paintKraftMottle, drawCorrugatedWallFlutes
   };
 })();
